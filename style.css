@@ -64,19 +64,24 @@ body{
   background:white;
   width:90%;
   max-width:520px;
-  max-height:65vh;
-  overflow-y:auto;
+  max-height:80vh;
   border-radius:22px;
   padding:22px;
-  margin-top:40px;
-  margin-bottom:140px;
+  display:flex;
+  flex-direction:column;
 }
+
 .cart-item{margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #ddd}
+.cart-items-scroll{
+  overflow-y:auto;
+  max-height:48vh;
+  padding-right:10px;
+}
+
 .cart-summary{
-  position:sticky;
-  bottom:0;
   background:white;
-  padding:16px 0 0;
+  padding-top:16px;
   margin-top:16px;
   border-top:1px solid #eee;
+  flex-shrink:0;
 }
