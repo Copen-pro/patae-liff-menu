@@ -22,13 +22,21 @@
 </div>
 
 <div id="cart-modal" class="modal hidden">
-<div class="modal-content">
-<h2>🛒 Your Cart</h2>
-<div id="cart-items"></div>
-<div class="cart-summary">Total: <strong id="modal-total">0</strong> บาท</div>
-<button id="checkout-btn">Checkout</button>
-<button id="close-cart-btn" class="secondary">Close</button>
-</div>
+  <div class="modal-content">
+    <h2>🛒 Your Cart</h2>
+
+    <div id="cart-items" class="cart-items-scroll"></div>
+
+    <div class="cart-summary">
+      <div class="summary-row">
+        <span>Total</span>
+        <strong><span id="modal-total">0</span> บาท</strong>
+      </div>
+
+      <button id="checkout-btn" class="checkout-btn">Checkout</button>
+      <button id="close-cart-btn" class="secondary">Close</button>
+    </div>
+  </div>
 </div>
 
 <script src="app.js"></script>
