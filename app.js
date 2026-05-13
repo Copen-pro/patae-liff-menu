@@ -1,159 +1,209 @@
-const PRODUCTS_API="https://copen.app.n8n.cloud/webhook/patae/products";
+const PRODUCTS_API = "https://copen.app.n8n.cloud/webhook/patae/products";
 const CREATE_ORDER_API = "https://copen.app.n8n.cloud/webhook/patae/create-order";
-const LIFF_ID="PUT_YOUR_LIFF_ID_HERE";
+const LIFF_ID = "PUT_YOUR_LIFF_ID_HERE";
 
-let allProducts=[];
-let currentCategory=null;
-let cart={};
+let allProducts = [];
+let currentCategory = null;
+let cart = {};
 
 function optimizeImage(url){
-return url.replace(
-'/upload/',
-'/upload/f_auto,q_auto,w_500/'
-);
+  return url.replace(
+    "/upload/",
+    "/upload/f_auto,q_auto,w_500/"
+  );
 }
 
 async function initLiff(){
-try{
-if(LIFF_ID!=="PUT_YOUR_LIFF_ID_HERE"){
-await liff.init({liffId:LIFF_ID});
-}
-}catch(err){console.error(err);}
+  try{
+    if(LIFF_ID !== "PUT_YOUR_LIFF_ID_HERE"){
+      await liff.init({ liffId: LIFF_ID });
+    }
+  }catch(err){
+    console.error(err);
+  }
 }
 
 async function loadProducts(){
-const res=await fetch(PRODUCTS_API);
-const data=await res.json();
-allProducts=data.products||[];
-buildTabs();
-renderProducts();
+  const res = await fetch(PRODUCTS_API);
+  const data = await res.json();
+
+  allProducts = data.products || [];
+
+  buildTabs();
+  renderProducts();
 }
 
 function buildTabs(){
-const tabs=document.getElementById("category-tabs");
-const categories=[...new Set(allProducts.map(p=>p.category))];
+  const tabs = document.getElementById("category-tabs");
+  tabs.innerHTML = "";
 
-categories.forEach(cat=>{
-const btn=document.createElement("button");
-btn.innerText=cat;
+  const categories = [...new Set(allProducts.map(p => p.category))];
 
-if(!currentCategory){
-currentCategory=cat;
-btn.classList.add("active");
-}
+  categories.forEach(cat => {
+    const btn = document.createElement("button");
+    btn.innerText = cat;
 
-btn.onclick=()=>{
-currentCategory=cat;
-document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
-btn.classList.add("active");
-renderProducts();
-};
+    if(!currentCategory){
+      currentCategory = cat;
+      btn.classList.add("active");
+    }
 
-tabs.appendChild(btn);
-});
+    btn.onclick = () => {
+      currentCategory = cat;
+
+      document.querySelectorAll(".tabs button")
+        .forEach(b => b.classList.remove("active"));
+
+      btn.classList.add("active");
+      renderProducts();
+    };
+
+    tabs.appendChild(btn);
+  });
 }
 
 function renderProducts(){
-const container=document.getElementById("products");
-container.innerHTML="";
+  const container = document.getElementById("products");
+  container.innerHTML = "";
 
-const products=allProducts.filter(p=>p.category===currentCategory);
+  const products = allProducts.filter(
+    p => p.category === currentCategory
+  );
 
-products.forEach(product=>{
-const qty=cart[product.product_id]?.qty||0;
+  products.forEach(product => {
+    const qty = cart[product.product_id]?.qty || 0;
 
-const card=document.createElement("div");
-card.className="card";
+    const card = document.createElement("div");
+    card.className = "card";
 
-card.innerHTML=`
-<img 
-loading="lazy"
-src="${optimizeImage(product.image_url)}"
->
-<div class="card-content">
-<h3>${product.product_name}</h3>
-<div class="price">${product.price} บาท</div>
-<div class="qty-row">
-<button onclick="decreaseQty('${product.product_id}')">-</button>
-<span>${qty}</span>
-<button onclick="increaseQty('${product.product_id}')">+</button>
-</div>
-</div>
-`;
+    card.innerHTML = `
+      <img 
+        loading="lazy"
+        src="${optimizeImage(product.image_url)}"
+      >
+      <div class="card-content">
+        <h3>${product.product_name}</h3>
+        <div class="price">${product.price} บาท</div>
 
-container.appendChild(card);
-});
+        <div class="qty-row">
+          <button onclick="decreaseQty('${product.product_id}')">-</button>
+          <span>${qty}</span>
+          <button onclick="increaseQty('${product.product_id}')">+</button>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
 }
 
 function increaseQty(productId){
-const product=allProducts.find(p=>p.product_id===productId);
+  const product = allProducts.find(
+    p => p.product_id === productId
+  );
 
-if(!cart[productId]){
-cart[productId]={...product,qty:0};
-}
+  if(!product) return;
 
-cart[productId].qty++;
-updateCart();
-renderProducts();
+  if(!cart[productId]){
+    cart[productId] = {
+      ...product,
+      qty: 0
+    };
+  }
+
+  cart[productId].qty++;
+
+  updateCart();
+  renderProducts();
 }
 
 function decreaseQty(productId){
-if(!cart[productId]) return;
-cart[productId].qty--;
+  if(!cart[productId]) return;
 
-if(cart[productId].qty<=0){
-delete cart[productId];
-}
+  cart[productId].qty--;
 
-updateCart();
-renderProducts();
+  if(cart[productId].qty <= 0){
+    delete cart[productId];
+  }
+
+  updateCart();
+  renderProducts();
 }
 
 function updateCart(){
-const items=Object.values(cart);
+  const items = Object.values(cart);
 
-const totalQty=items.reduce((sum,i)=>sum+i.qty,0);
-const totalAmount=items.reduce((sum,i)=>sum+(i.qty*i.price),0);
+  const totalQty = items.reduce(
+    (sum, i) => sum + i.qty,
+    0
+  );
 
-document.getElementById("cart-count").innerText=totalQty;
-document.getElementById("cart-total").innerText=totalAmount;
-document.getElementById("modal-total").innerText=totalAmount;
+  const totalAmount = items.reduce(
+    (sum, i) => sum + (i.qty * i.price),
+    0
+  );
 
-renderCartItems();
+  document.getElementById("cart-count").innerText = totalQty;
+  document.getElementById("cart-total").innerText = totalAmount;
+  document.getElementById("modal-total").innerText = totalAmount;
+
+  const checkoutTotal = document.getElementById("checkout-total");
+  if(checkoutTotal){
+    checkoutTotal.innerText = totalAmount;
+  }
+
+  renderCartItems();
 }
 
 function renderCartItems(){
-const container=document.getElementById("cart-items");
-container.innerHTML="";
+  const container = document.getElementById("cart-items");
+  const items = Object.values(cart);
 
-Object.values(cart).forEach(item=>{
-const div=document.createElement("div");
-div.className="cart-item";
+  container.innerHTML = "";
 
-div.innerHTML=`
-<strong>${item.product_name}</strong><br/>
-Qty: ${item.qty}<br/>
-Total: ${item.qty*item.price} บาท
-`;
+  if(items.length === 0){
+    container.innerHTML = `
+      <p style="text-align:center;color:#777;padding:20px;">
+        Your cart is empty ☕
+      </p>
+    `;
+    return;
+  }
 
-container.appendChild(div);
-});
+  items.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "cart-item";
+
+    div.innerHTML = `
+      <div>
+        <div class="cart-item-name">${item.product_name}</div>
+        <div class="cart-item-detail">
+          ${item.qty} x ${item.price} บาท
+        </div>
+      </div>
+
+      <div class="cart-item-total">
+        ${item.qty * item.price} บาท
+      </div>
+    `;
+
+    container.appendChild(div);
+  });
 }
 
-document.getElementById("view-cart-btn").onclick = () => {
+function openCart(){
   updateCart();
 
   document.getElementById("cart-view").classList.remove("hidden");
   document.getElementById("checkout-view").classList.add("hidden");
-
   document.getElementById("cart-modal").classList.remove("hidden");
-};
+}
 
-document.getElementById("close-cart-btn").onclick = () => {
+function closeCart(){
   document.getElementById("cart-modal").classList.add("hidden");
-};
+}
 
-document.getElementById("go-checkout-btn").onclick = () => {
+function goCheckout(){
   const items = Object.values(cart);
 
   if(items.length === 0){
@@ -161,43 +211,24 @@ document.getElementById("go-checkout-btn").onclick = () => {
     return;
   }
 
-  document.getElementById("checkout-total").innerText =
-    document.getElementById("modal-total").innerText;
+  updateCart();
 
   document.getElementById("cart-view").classList.add("hidden");
   document.getElementById("checkout-view").classList.remove("hidden");
-};
+}
 
-document.getElementById("back-to-cart-btn").onclick = () => {
+function backToCart(){
   document.getElementById("checkout-view").classList.add("hidden");
   document.getElementById("cart-view").classList.remove("hidden");
-};
+}
 
-document.getElementById("confirm-order-btn").onclick = async () => {
+async function confirmOrder(){
   const items = Object.values(cart);
 
   if(items.length === 0){
     alert("กรุณาเลือกสินค้าก่อนค่ะ ☕");
     return;
   }
-
-  const customerName = document.getElementById("customer-name").value.trim();
-  const customerPhone = document.getElementById("customer-phone").value.trim();
-  const fulfillmentType = document.getElementById("fulfillment-type").value;
-  const customerNote = document.getElementById("customer-note").value.trim();
-
-  if(!customerName){
-    alert("กรุณาใส่ชื่อลูกค้าค่ะ");
-    return;
-  }
-
-  if(!customerPhone){
-    alert("กรุณาใส่เบอร์โทรค่ะ");
-    return;
-  }
-
-  alert("Next Step: Create Order API");
-};
 
   const customerName = document.getElementById("customer-name").value.trim();
   const customerPhone = document.getElementById("customer-phone").value.trim();
@@ -237,62 +268,35 @@ document.getElementById("confirm-order-btn").onclick = async () => {
     const data = await res.json();
 
     if(data.success){
-      alert(`รับออเดอร์แล้วค่ะ\\nOrder No: ${data.order_no}`);
+      alert(`รับออเดอร์แล้วค่ะ\nOrder No: ${data.order_no}`);
 
       cart = {};
       updateCart();
       renderProducts();
+      closeCart();
 
-      document.getElementById("cart-modal").classList.add("hidden");
     }else{
       alert("ส่งออเดอร์ไม่สำเร็จ กรุณาลองใหม่ค่ะ");
     }
 
   }catch(err){
     console.error(err);
-    alert("ระบบขัดข้อง กรุณาลองใหม่ค่ะ");
+    alert("ยังไม่ได้เปิด Create Order API หรือระบบขัดข้องค่ะ");
   }
-};
-
-async function start(){
-await initLiff();
-await loadProducts();
 }
 
-document.getElementById("view-cart-btn").onclick = () => {
-  updateCart();
+function bindEvents(){
+  document.getElementById("view-cart-btn").onclick = openCart;
+  document.getElementById("close-cart-btn").onclick = closeCart;
+  document.getElementById("go-checkout-btn").onclick = goCheckout;
+  document.getElementById("back-to-cart-btn").onclick = backToCart;
+  document.getElementById("confirm-order-btn").onclick = confirmOrder;
+}
 
-  document.getElementById("cart-view").classList.remove("hidden");
-  document.getElementById("checkout-view").classList.add("hidden");
-  document.getElementById("cart-modal").classList.remove("hidden");
-};
-
-document.getElementById("close-cart-btn").onclick = () => {
-  document.getElementById("cart-modal").classList.add("hidden");
-};
-
-document.getElementById("go-checkout-btn").onclick = () => {
-  const items = Object.values(cart);
-
-  if(items.length === 0){
-    alert("กรุณาเลือกสินค้าก่อนค่ะ ☕");
-    return;
-  }
-
-  document.getElementById("checkout-total").innerText =
-    document.getElementById("modal-total").innerText;
-
-  document.getElementById("cart-view").classList.add("hidden");
-  document.getElementById("checkout-view").classList.remove("hidden");
-};
-
-document.getElementById("back-to-cart-btn").onclick = () => {
-  document.getElementById("checkout-view").classList.add("hidden");
-  document.getElementById("cart-view").classList.remove("hidden");
-};
-
-document.getElementById("confirm-order-btn").onclick = () => {
-  alert("Next Step: Create Order API");
-};
+async function start(){
+  bindEvents();
+  await initLiff();
+  await loadProducts();
+}
 
 start();
