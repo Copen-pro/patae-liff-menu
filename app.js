@@ -140,21 +140,64 @@ container.appendChild(div);
 });
 }
 
-document.getElementById("view-cart-btn").onclick=()=>{
-document.getElementById("cart-modal").classList.remove("hidden");
+document.getElementById("view-cart-btn").onclick = () => {
+  updateCart();
+
+  document.getElementById("cart-view").classList.remove("hidden");
+  document.getElementById("checkout-view").classList.add("hidden");
+
+  document.getElementById("cart-modal").classList.remove("hidden");
 };
 
-document.getElementById("close-cart-btn").onclick=()=>{
-document.getElementById("cart-modal").classList.add("hidden");
+document.getElementById("close-cart-btn").onclick = () => {
+  document.getElementById("cart-modal").classList.add("hidden");
 };
 
-document.getElementById("checkout-btn").onclick = async () => {
+document.getElementById("go-checkout-btn").onclick = () => {
   const items = Object.values(cart);
 
   if(items.length === 0){
     alert("กรุณาเลือกสินค้าก่อนค่ะ ☕");
     return;
   }
+
+  document.getElementById("checkout-total").innerText =
+    document.getElementById("modal-total").innerText;
+
+  document.getElementById("cart-view").classList.add("hidden");
+  document.getElementById("checkout-view").classList.remove("hidden");
+};
+
+document.getElementById("back-to-cart-btn").onclick = () => {
+  document.getElementById("checkout-view").classList.add("hidden");
+  document.getElementById("cart-view").classList.remove("hidden");
+};
+
+document.getElementById("confirm-order-btn").onclick = async () => {
+  const items = Object.values(cart);
+
+  if(items.length === 0){
+    alert("กรุณาเลือกสินค้าก่อนค่ะ ☕");
+    return;
+  }
+
+  const customerName = document.getElementById("customer-name").value.trim();
+  const customerPhone = document.getElementById("customer-phone").value.trim();
+  const fulfillmentType = document.getElementById("fulfillment-type").value;
+  const customerNote = document.getElementById("customer-note").value.trim();
+
+  if(!customerName){
+    alert("กรุณาใส่ชื่อลูกค้าค่ะ");
+    return;
+  }
+
+  if(!customerPhone){
+    alert("กรุณาใส่เบอร์โทรค่ะ");
+    return;
+  }
+
+  alert("Next Step: Create Order API");
+};
 
   const customerName = document.getElementById("customer-name").value.trim();
   const customerPhone = document.getElementById("customer-phone").value.trim();
