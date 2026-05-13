@@ -250,10 +250,12 @@ async function confirmOrder(){
     customer_phone: customerPhone,
     fulfillment_type: fulfillmentType,
     customer_note: customerNote,
-    items: items.map(item => ({
-      product_id: item.product_id,
-      qty: item.qty
-    }))
+   items: items.map(item => ({
+    product_id: item.product_id,
+    product_name: item.product_name,
+    price: item.price,
+    qty: item.qty
+  }))
   };
 
   try{
