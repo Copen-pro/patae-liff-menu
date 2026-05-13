@@ -1,4 +1,5 @@
 const PRODUCTS_API="https://copen.app.n8n.cloud/webhook/patae/products";
+const CREATE_ORDER_API = "https://copen.app.n8n.cloud/webhook/patae/create-order";
 const LIFF_ID="PUT_YOUR_LIFF_ID_HERE";
 
 let allProducts=[];
@@ -147,9 +148,67 @@ document.getElementById("close-cart-btn").onclick=()=>{
 document.getElementById("cart-modal").classList.add("hidden");
 };
 
-document.getElementById("checkout-btn").onclick=()=>{
-alert("Next Step: Create Order API");
-console.log(cart);
+document.getElementById("checkout-btn").onclick = async () => {
+  const items = Object.values(cart);
+
+  if(items.length === 0){
+    alert("กรุณาเลือกสินค้าก่อนค่ะ ☕");
+    return;
+  }
+
+  const customerName = document.getElementById("customer-name").value.trim();
+  const customerPhone = document.getElementById("customer-phone").value.trim();
+  const fulfillmentType = document.getElementById("fulfillment-type").value;
+  const customerNote = document.getElementById("customer-note").value.trim();
+
+  if(!customerName){
+    alert("กรุณาใส่ชื่อลูกค้าค่ะ");
+    return;
+  }
+
+  if(!customerPhone){
+    alert("กรุณาใส่เบอร์โทรค่ะ");
+    return;
+  }
+
+  const payload = {
+    customer_name: customerName,
+    customer_phone: customerPhone,
+    fulfillment_type: fulfillmentType,
+    customer_note: customerNote,
+    items: items.map(item => ({
+      product_id: item.product_id,
+      qty: item.qty
+    }))
+  };
+
+  try{
+    const res = await fetch(CREATE_ORDER_API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if(data.success){
+      alert(`รับออเดอร์แล้วค่ะ\\nOrder No: ${data.order_no}`);
+
+      cart = {};
+      updateCart();
+      renderProducts();
+
+      document.getElementById("cart-modal").classList.add("hidden");
+    }else{
+      alert("ส่งออเดอร์ไม่สำเร็จ กรุณาลองใหม่ค่ะ");
+    }
+
+  }catch(err){
+    console.error(err);
+    alert("ระบบขัดข้อง กรุณาลองใหม่ค่ะ");
+  }
 };
 
 async function start(){
