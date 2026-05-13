@@ -21,7 +21,12 @@ body{
   height:100px;
 }
 .card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.card img{width:100%;aspect-ratio:1/1;object-fit:cover}
+.card img{
+  width:100%;
+  height:300px;
+  object-fit:contain;
+  background:#f8f5f1;
+}
 .card-content{padding:12px}
 .price{font-weight:bold;margin-top:6px}
 .qty-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
