@@ -259,4 +259,40 @@ await initLiff();
 await loadProducts();
 }
 
+document.getElementById("view-cart-btn").onclick = () => {
+  updateCart();
+
+  document.getElementById("cart-view").classList.remove("hidden");
+  document.getElementById("checkout-view").classList.add("hidden");
+  document.getElementById("cart-modal").classList.remove("hidden");
+};
+
+document.getElementById("close-cart-btn").onclick = () => {
+  document.getElementById("cart-modal").classList.add("hidden");
+};
+
+document.getElementById("go-checkout-btn").onclick = () => {
+  const items = Object.values(cart);
+
+  if(items.length === 0){
+    alert("กรุณาเลือกสินค้าก่อนค่ะ ☕");
+    return;
+  }
+
+  document.getElementById("checkout-total").innerText =
+    document.getElementById("modal-total").innerText;
+
+  document.getElementById("cart-view").classList.add("hidden");
+  document.getElementById("checkout-view").classList.remove("hidden");
+};
+
+document.getElementById("back-to-cart-btn").onclick = () => {
+  document.getElementById("checkout-view").classList.add("hidden");
+  document.getElementById("cart-view").classList.remove("hidden");
+};
+
+document.getElementById("confirm-order-btn").onclick = () => {
+  alert("Next Step: Create Order API");
+};
+
 start();
