@@ -123,3 +123,26 @@ body{
   border-top:1px solid #eee;
   flex-shrink:0;
 }
+
+.checkout-form{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:16px;
+}
+
+.checkout-form input,
+.checkout-form select,
+.checkout-form textarea{
+  width:100%;
+  box-sizing:border-box;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  font-size:15px;
+}
+
+.checkout-form textarea{
+  min-height:80px;
+  resize:vertical;
+}
