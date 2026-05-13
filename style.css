@@ -49,6 +49,22 @@ body{
 .secondary{background:#ccc!important}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;justify-content:center;align-items:center}
 .hidden{display:none}
-.modal-content{background:#fff;width:90%;max-width:420px;border-radius:16px;padding:20px}
+.modal-content{
+  background:white;
+  width:90%;
+  max-width:520px;
+  max-height:70vh;
+  overflow-y:auto;
+  border-radius:22px;
+  padding:22px;
+  margin-bottom:100px;
+}
 .cart-item{margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #ddd}
-.cart-summary{margin-top:20px;font-size:18px}
+.cart-summary{
+  position:sticky;
+  bottom:0;
+  background:white;
+  padding-top:16px;
+  margin-top:16px;
+  border-top:1px solid #eee;
+}
