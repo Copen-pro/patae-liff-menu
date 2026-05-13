@@ -27,13 +27,25 @@
 
     <div id="cart-items" class="cart-items-scroll"></div>
 
+    <div class="checkout-form">
+      <input id="customer-name" type="text" placeholder="ชื่อลูกค้า" />
+      <input id="customer-phone" type="tel" placeholder="เบอร์โทร" />
+
+      <select id="fulfillment-type">
+        <option value="pickup">รับที่ร้าน / Pickup</option>
+        <option value="delivery">จัดส่ง / Delivery</option>
+      </select>
+
+      <textarea id="customer-note" placeholder="หมายเหตุ เช่น หวานน้อย ไม่ใส่น้ำแข็ง"></textarea>
+    </div>
+
     <div class="cart-summary">
       <div class="summary-row">
         <span>Total</span>
         <strong><span id="modal-total">0</span> บาท</strong>
       </div>
 
-      <button id="checkout-btn" class="checkout-btn">Checkout</button>
+      <button id="checkout-btn" class="checkout-btn">Confirm Order</button>
       <button id="close-cart-btn" class="secondary">Close</button>
     </div>
   </div>
