@@ -25,28 +25,44 @@
   <div class="modal-content">
     <h2>🛒 Your Cart</h2>
 
-    <div id="cart-items" class="cart-items-scroll"></div>
+    <div id="cart-view">
+      <div id="cart-items" class="cart-items-scroll"></div>
 
-    <div class="checkout-form">
-      <input id="customer-name" type="text" placeholder="ชื่อลูกค้า" />
-      <input id="customer-phone" type="tel" placeholder="เบอร์โทร" />
+      <div class="cart-summary">
+        <div class="summary-row">
+          <span>Total</span>
+          <strong><span id="modal-total">0</span> บาท</strong>
+        </div>
 
-      <select id="fulfillment-type">
-        <option value="pickup">รับที่ร้าน / Pickup</option>
-        <option value="delivery">จัดส่ง / Delivery</option>
-      </select>
-
-      <textarea id="customer-note" placeholder="หมายเหตุ เช่น หวานน้อย ไม่ใส่น้ำแข็ง"></textarea>
+        <button id="go-checkout-btn" class="checkout-btn">Checkout</button>
+        <button id="close-cart-btn" class="secondary">Close</button>
+      </div>
     </div>
 
-    <div class="cart-summary">
-      <div class="summary-row">
-        <span>Total</span>
-        <strong><span id="modal-total">0</span> บาท</strong>
+    <div id="checkout-view" class="hidden">
+      <h3>ข้อมูลสำหรับออเดอร์</h3>
+
+      <div class="checkout-form">
+        <input id="customer-name" type="text" placeholder="ชื่อลูกค้า" />
+        <input id="customer-phone" type="tel" placeholder="เบอร์โทร" />
+
+        <select id="fulfillment-type">
+          <option value="pickup">รับที่ร้าน / Pickup</option>
+          <option value="delivery">จัดส่ง / Delivery</option>
+        </select>
+
+        <textarea id="customer-note" placeholder="หมายเหตุ เช่น หวานน้อย ไม่ใส่น้ำแข็ง"></textarea>
       </div>
 
-      <button id="checkout-btn" class="checkout-btn">Confirm Order</button>
-      <button id="close-cart-btn" class="secondary">Close</button>
+      <div class="cart-summary">
+        <div class="summary-row">
+          <span>Total</span>
+          <strong><span id="checkout-total">0</span> บาท</strong>
+        </div>
+
+        <button id="confirm-order-btn" class="checkout-btn">Confirm Order</button>
+        <button id="back-to-cart-btn" class="secondary">Back to Cart</button>
+      </div>
     </div>
   </div>
 </div>
