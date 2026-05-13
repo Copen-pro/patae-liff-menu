@@ -47,24 +47,36 @@ body{
 }
 .cart-bar button,.modal button{background:#d4a373;border:none;padding:10px 16px;border-radius:10px;cursor:pointer}
 .secondary{background:#ccc!important}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;justify-content:center;align-items:center}
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.55);
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding-top:24px;
+  padding-bottom:140px;
+  z-index:999;
+  overflow:auto;
+}
 .hidden{display:none}
 .modal-content{
   background:white;
   width:90%;
   max-width:520px;
-  max-height:70vh;
+  max-height:65vh;
   overflow-y:auto;
   border-radius:22px;
   padding:22px;
-  margin-bottom:100px;
+  margin-top:40px;
+  margin-bottom:140px;
 }
 .cart-item{margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #ddd}
 .cart-summary{
   position:sticky;
   bottom:0;
   background:white;
-  padding-top:16px;
+  padding:16px 0 0;
   margin-top:16px;
   border-top:1px solid #eee;
 }
