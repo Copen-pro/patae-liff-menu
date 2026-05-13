@@ -5,6 +5,13 @@ let allProducts=[];
 let currentCategory=null;
 let cart={};
 
+function optimizeImage(url){
+return url.replace(
+'/upload/',
+'/upload/f_auto,q_auto,w_500/'
+);
+}
+
 async function initLiff(){
 try{
 if(LIFF_ID!=="PUT_YOUR_LIFF_ID_HERE"){
@@ -58,7 +65,10 @@ const card=document.createElement("div");
 card.className="card";
 
 card.innerHTML=`
-<img src="${product.image_url}">
+<img 
+loading="lazy"
+src="${optimizeImage(product.image_url)}"
+>
 <div class="card-content">
 <h3>${product.product_name}</h3>
 <div class="price">${product.price} บาท</div>
