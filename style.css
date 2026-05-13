@@ -1,0 +1,20 @@
+body{margin:0;font-family:Arial,sans-serif;background:#f8f5f1;color:#333}
+.header{background:#4b2e1f;color:#fff;padding:20px;text-align:center}
+.tabs{display:flex;overflow-x:auto;gap:10px;padding:12px;background:#fff;position:sticky;top:0}
+.tabs button{border:none;padding:10px 14px;border-radius:20px;background:#e6ddd4;cursor:pointer}
+.tabs button.active{background:#4b2e1f;color:#fff}
+.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;padding:16px}
+.card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.card img{width:100%;aspect-ratio:1/1;object-fit:cover}
+.card-content{padding:12px}
+.price{font-weight:bold;margin-top:6px}
+.qty-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.qty-row button{width:32px;height:32px;border:none;border-radius:50%;background:#4b2e1f;color:#fff;cursor:pointer}
+.cart-bar{position:fixed;bottom:0;left:0;right:0;background:#4b2e1f;color:#fff;display:flex;justify-content:space-between;padding:14px 18px;align-items:center}
+.cart-bar button,.modal button{background:#d4a373;border:none;padding:10px 16px;border-radius:10px;cursor:pointer}
+.secondary{background:#ccc!important}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;justify-content:center;align-items:center}
+.hidden{display:none}
+.modal-content{background:#fff;width:90%;max-width:420px;border-radius:16px;padding:20px}
+.cart-item{margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #ddd}
+.cart-summary{margin-top:20px;font-size:18px}

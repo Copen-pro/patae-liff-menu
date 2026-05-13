@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PaTae Cafe</title>
+<link rel="stylesheet" href="style.css" />
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+<header class="header">
+<h1>☕ PaTae Cafe</h1>
+<p>Fresh Coffee Everyday</p>
+</header>
+
+<div id="category-tabs" class="tabs"></div>
+<main id="products" class="products"></main>
+
+<div class="cart-bar">
+<div><strong id="cart-count">0</strong> items | <strong id="cart-total">0</strong> บาท</div>
+<button id="view-cart-btn">View Cart</button>
+</div>
+
+<div id="cart-modal" class="modal hidden">
+<div class="modal-content">
+<h2>🛒 Your Cart</h2>
+<div id="cart-items"></div>
+<div class="cart-summary">Total: <strong id="modal-total">0</strong> บาท</div>
+<button id="checkout-btn">Checkout</button>
+<button id="close-cart-btn" class="secondary">Close</button>
+</div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
