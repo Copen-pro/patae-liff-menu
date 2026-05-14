@@ -74,8 +74,30 @@
           <option value="pickup">รับที่ร้าน / Pickup</option>
           <option value="delivery">จัดส่ง / Delivery</option>
         </select>
+<select id="fulfillment-type">
+  <option value="pickup">รับที่ร้าน / Pickup</option>
+  <option value="delivery">จัดส่ง / Delivery</option>
+</select>
 
-        <textarea id="customer-note" placeholder="หมายเหตุ เช่น หวานน้อย ไม่ใส่น้ำแข็ง"></textarea>
+<div id="delivery-fields" class="hidden">
+
+  <textarea
+    id="delivery-address"
+    placeholder="กรุณาระบุบ้านเลขที่ / อาคาร / ชั้น / จุดสังเกต"
+  ></textarea>
+
+  <div class="delivery-help">
+    และส่ง Location ทาง LINE Chat เพิ่มเติม
+    เพื่อความรวดเร็วในการจัดส่ง 📍
+  </div>
+
+</div>
+
+<textarea
+  id="customer-note"
+  placeholder="หมายเหตุ เช่น หวานน้อย ไม่ใส่น้ำแข็ง"
+></textarea>
+        
       </div>
 
       <div class="cart-summary">
