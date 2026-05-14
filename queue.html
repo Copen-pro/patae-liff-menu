@@ -38,6 +38,29 @@
       margin-bottom:20px;
     }
 
+.status-badge{
+  display:inline-block;
+  padding:6px 14px;
+  border-radius:999px;
+  font-weight:bold;
+  color:white;
+}
+
+.status-new{
+  background:#8e8e93;
+}
+
+.status-preparing{
+  background:#f5a623;
+}
+
+.status-ready{
+  background:#34c759;
+}
+
+.status-done{
+  background:#5ac8fa;
+}    
     .items{
       text-align:left;
       background:#f5f5f5;
@@ -137,8 +160,19 @@ async function start(){
   document.getElementById("queue-no").innerText =
     data.queue_no;
 
-  document.getElementById("order-status").innerText =
-    data.order_status;
+const statusMap = {
+  NEW: "รับออเดอร์แล้ว",
+  PREPARING: "กำลังทำ",
+  READY: "พร้อมรับแล้ว",
+  DONE: "เสร็จแล้ว"
+};
+
+const status = data.order_status || "NEW";
+const statusText = statusMap[status] || status;
+
+const statusEl = document.getElementById("order-status");
+statusEl.innerText = statusText;
+statusEl.className = "status-badge status-" + status.toLowerCase();
 
   document.getElementById("order-no").innerText =
     data.order_no;
