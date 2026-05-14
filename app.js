@@ -256,8 +256,8 @@ async function confirmOrder(){
 
 const payload = {
   line_user_id: lineProfile?.userId || "",
-  display_name: lineProfile?.displayName || customerName,
-
+  line_display_name: lineProfile?.displayName || "",
+  
   customer_name: customerName,
   customer_phone: customerPhone,
   fulfillment_type: fulfillmentType,
