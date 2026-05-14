@@ -245,7 +245,14 @@ async function confirmOrder(){
   const customerPhone = document.getElementById("customer-phone").value.trim();
   const fulfillmentType = document.getElementById("fulfillment-type").value;
   const customerNote = document.getElementById("customer-note").value.trim();
-
+if(
+  fulfillmentType === "delivery" &&
+  !document.getElementById("delivery-address").value.trim()
+){
+  alert("กรุณาระบุที่อยู่จัดส่งค่ะ");
+  return;
+}
+  
   if(!customerName){
     alert("กรุณาใส่ชื่อลูกค้าค่ะ");
     return;
@@ -264,6 +271,8 @@ const payload = {
   customer_phone: customerPhone,
   fulfillment_type: fulfillmentType,
   customer_note: customerNote,
+  delivery_address:
+  document.getElementById("delivery-address").value.trim(),
 
   items: items.map(item => ({
     product_id: item.product_id,
@@ -319,18 +328,27 @@ async function start(){
   await initLiff();
   await loadProducts();
 }
-
 document.getElementById("success-close-btn").onclick = () => {
-  document.getElementById("success-modal").classList.add("hidden");
-
+ document.getElementById("success-modal").classList.add("hidden");
   cart = {};
   updateCart();
   renderProducts();
-
   document.getElementById("customer-name").value = "";
   document.getElementById("customer-phone").value = "";
   document.getElementById("customer-note").value = "";
   document.getElementById("fulfillment-type").value = "pickup";
 };
 
+document.getElementById("fulfillment-type")
+.addEventListener("change", (e)=>{
+
+  const deliveryBox =
+    document.getElementById("delivery-fields");
+
+  if(e.target.value === "delivery"){
+    deliveryBox.classList.remove("hidden");
+  }else{
+    deliveryBox.classList.add("hidden");
+  }
+});
 start();
