@@ -7,6 +7,30 @@
 <link rel="stylesheet" href="style.css" />
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
+
+<div id="success-modal" class="modal hidden">
+  <div class="success-content">
+    <div class="success-icon">✅</div>
+    <h2>รับออเดอร์แล้วค่ะ</h2>
+
+    <div class="success-queue">
+      Queue: <span id="success-queue-no">-</span>
+    </div>
+
+    <p>
+      Order No: <span id="success-order-no">-</span>
+    </p>
+
+    <p class="success-note">
+      กรุณารอเรียกคิวที่ร้านนะคะ ☕
+    </p>
+
+    <button id="success-close-btn" class="checkout-btn">
+      กลับไปหน้าเมนู
+    </button>
+  </div>
+</div>
+  
 <body>
 <header class="header">
 <h1>☕ PaTae Cafe</h1>
