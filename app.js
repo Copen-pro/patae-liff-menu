@@ -5,6 +5,7 @@ const LIFF_ID = "2010088421-1DJFs0Xx";
 let allProducts = [];
 let currentCategory = null;
 let cart = {};
+let lineProfile = null;
 
 function optimizeImage(url){
   return url.replace(
@@ -17,9 +18,17 @@ async function initLiff(){
   try{
     if(LIFF_ID !== "PUT_YOUR_LIFF_ID_HERE"){
       await liff.init({ liffId: LIFF_ID });
+
+      if(!liff.isLoggedIn()){
+        liff.login();
+        return;
+      }
+
+      lineProfile = await liff.getProfile();
+      console.log("LINE Profile:", lineProfile);
     }
   }catch(err){
-    console.error(err);
+    console.error("LIFF error:", err);
   }
 }
 
@@ -245,18 +254,22 @@ async function confirmOrder(){
     return;
   }
 
-  const payload = {
-    customer_name: customerName,
-    customer_phone: customerPhone,
-    fulfillment_type: fulfillmentType,
-    customer_note: customerNote,
-   items: items.map(item => ({
+const payload = {
+  line_user_id: lineProfile?.userId || "",
+  display_name: lineProfile?.displayName || customerName,
+
+  customer_name: customerName,
+  customer_phone: customerPhone,
+  fulfillment_type: fulfillmentType,
+  customer_note: customerNote,
+
+  items: items.map(item => ({
     product_id: item.product_id,
     product_name: item.product_name,
     price: item.price,
     qty: item.qty
   }))
-  };
+};
 
   try{
     const res = await fetch(CREATE_ORDER_API, {
