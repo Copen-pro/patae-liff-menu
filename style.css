@@ -146,3 +146,29 @@ body{
   min-height:80px;
   resize:vertical;
 }
+
+.success-content{
+  background:white;
+  width:90%;
+  max-width:420px;
+  border-radius:24px;
+  padding:28px;
+  text-align:center;
+}
+
+.success-icon{
+  font-size:48px;
+  margin-bottom:10px;
+}
+
+.success-queue{
+  font-size:28px;
+  font-weight:bold;
+  color:var(--primary);
+  margin:18px 0;
+}
+
+.success-note{
+  color:var(--muted);
+  margin:18px 0 24px;
+}
