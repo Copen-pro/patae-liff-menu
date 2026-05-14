@@ -19,13 +19,15 @@ async function initLiff(){
     if(LIFF_ID !== "PUT_YOUR_LIFF_ID_HERE"){
       await liff.init({ liffId: LIFF_ID });
 
-      if(!liff.isLoggedIn()){
-        liff.login();
+      if(!liff.isInClient() && !liff.isLoggedIn()){
+        liff.login({ redirectUri: window.location.href });
         return;
       }
 
-      lineProfile = await liff.getProfile();
-      console.log("LINE Profile:", lineProfile);
+      if(liff.isLoggedIn()){
+        lineProfile = await liff.getProfile();
+        console.log("LINE Profile:", lineProfile);
+      }
     }
   }catch(err){
     console.error("LIFF error:", err);
