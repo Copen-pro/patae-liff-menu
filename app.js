@@ -337,6 +337,8 @@ document.getElementById("success-close-btn").onclick = () => {
   document.getElementById("customer-phone").value = "";
   document.getElementById("customer-note").value = "";
   document.getElementById("fulfillment-type").value = "pickup";
+  document.getElementById("delivery-address").value = "";
+  document.getElementById("delivery-fields").classList.add("hidden");
 };
 
 document.getElementById("fulfillment-type")
@@ -345,10 +347,16 @@ document.getElementById("fulfillment-type")
   const deliveryBox =
     document.getElementById("delivery-fields");
 
+  const deliveryAddress =
+    document.getElementById("delivery-address");
+
   if(e.target.value === "delivery"){
     deliveryBox.classList.remove("hidden");
   }else{
     deliveryBox.classList.add("hidden");
+    deliveryAddress.value = "";
   }
+
 });
+
 start();
