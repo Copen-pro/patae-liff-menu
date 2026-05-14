@@ -1,6 +1,6 @@
 const PRODUCTS_API = "https://copen.app.n8n.cloud/webhook/patae/products";
 const CREATE_ORDER_API = "https://copen.app.n8n.cloud/webhook/patae/create-order";
-const LIFF_ID = "PUT_YOUR_LIFF_ID_HERE";
+const LIFF_ID = "2010088421-1DJFs0Xx";
 
 let allProducts = [];
 let currentCategory = null;
