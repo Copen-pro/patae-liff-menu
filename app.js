@@ -270,7 +270,11 @@ async function confirmOrder(){
     const data = await res.json();
 
     if(data.success){
-      alert(`รับออเดอร์แล้วค่ะ\nOrder No: ${data.order_no}`);
+      document.getElementById("success-order-no").innerText = data.order_no;
+      document.getElementById("success-queue-no").innerText = data.queue_no || "-";
+
+      document.getElementById("cart-modal").classList.add("hidden");
+      document.getElementById("success-modal").classList.remove("hidden");
 
       cart = {};
       updateCart();
@@ -300,5 +304,18 @@ async function start(){
   await initLiff();
   await loadProducts();
 }
+
+document.getElementById("success-close-btn").onclick = () => {
+  document.getElementById("success-modal").classList.add("hidden");
+
+  cart = {};
+  updateCart();
+  renderProducts();
+
+  document.getElementById("customer-name").value = "";
+  document.getElementById("customer-phone").value = "";
+  document.getElementById("customer-note").value = "";
+  document.getElementById("fulfillment-type").value = "pickup";
+};
 
 start();
