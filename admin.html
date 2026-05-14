@@ -40,14 +40,30 @@
       color:#5b3a2e;
     }
 
-    .status{
-      display:inline-block;
-      padding:6px 12px;
-      border-radius:999px;
-      font-weight:bold;
-      margin:8px 0;
-      background:#eee;
-    }
+.status{
+  display:inline-block;
+  padding:6px 12px;
+  border-radius:999px;
+  font-weight:bold;
+  margin:8px 0;
+  color:white;
+}
+
+.status-new{
+  background:#8e8e93;
+}
+
+.status-preparing{
+  background:#f5a623;
+}
+
+.status-ready{
+  background:#34c759;
+}
+
+.status-done{
+  background:#5ac8fa;
+}
 
     .items{
       background:#f3f3f3;
@@ -132,8 +148,16 @@ async function loadOrders(){
 
       div.innerHTML = `
         <div class="queue">${order.queue_no}</div>
-        <div class="status">${order.order_status || "NEW"}</div>
-
+        <div class="status status-${(order.order_status || "NEW").toLowerCase()}">
+  ${
+{
+  NEW:"รับออเดอร์แล้ว",
+  PREPARING:"กำลังทำ",
+  READY:"พร้อมรับ",
+  DONE:"เสร็จแล้ว"
+}[order.order_status || "NEW"]
+}
+</div>
         <div><strong>ลูกค้า:</strong> ${order.customer_name || "-"}</div>
         <div><strong>เบอร์:</strong> ${order.customer_phone || "-"}</div>
         <div><strong>ประเภท:</strong> ${order.fulfillment_type || "-"}</div>
