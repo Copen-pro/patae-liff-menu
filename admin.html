@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PaTae Admin</title>
+
+  <style>
+    body{
+      margin:0;
+      font-family:Arial, sans-serif;
+      background:#f6f2ed;
+      color:#222;
+    }
+
+    .header{
+      background:#233b2a;
+      color:white;
+      padding:18px;
+      text-align:center;
+      font-size:22px;
+      font-weight:bold;
+    }
+
+    .container{
+      padding:14px;
+    }
+
+    .order-card{
+      background:white;
+      border-radius:18px;
+      padding:16px;
+      margin-bottom:14px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .queue{
+      font-size:34px;
+      font-weight:bold;
+      color:#5b3a2e;
+    }
+
+    .status{
+      display:inline-block;
+      padding:6px 12px;
+      border-radius:999px;
+      font-weight:bold;
+      margin:8px 0;
+      background:#eee;
+    }
+
+    .items{
+      background:#f3f3f3;
+      border-radius:12px;
+      padding:10px;
+      margin:10px 0;
+      white-space:pre-wrap;
+      line-height:1.5;
+    }
+
+    .btn-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    button{
+      border:none;
+      border-radius:12px;
+      padding:12px 14px;
+      font-size:15px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    .btn-preparing{ background:#f5b95f; }
+    .btn-ready{ background:#6fd08c; }
+    .btn-done{ background:#ddd; }
+
+    .refresh{
+      width:100%;
+      background:#233b2a;
+      color:white;
+      margin:14px 0;
+    }
+
+    .empty{
+      text-align:center;
+      color:#666;
+      margin-top:40px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    ☕ PaTae Admin
+  </div>
+
+  <div class="container">
+    <button class="refresh" onclick="loadOrders()">Refresh Orders</button>
+    <div id="orders">Loading...</div>
+  </div>
+
+<script>
+const GET_ORDERS_API =
+  "https://copen.app.n8n.cloud/webhook/patae/admin/orders";
+
+const UPDATE_STATUS_API =
+  "https://copen.app.n8n.cloud/webhook/patae/admin/update-status";
+
+async function loadOrders(){
+  const box = document.getElementById("orders");
+  box.innerHTML = "Loading...";
+
+  try{
+    const res = await fetch(GET_ORDERS_API);
+    const data = await res.json();
+
+    if(!data.orders || data.orders.length === 0){
+      box.innerHTML = `<div class="empty">ยังไม่มีออเดอร์ที่ต้องทำค่ะ ☕</div>`;
+      return;
+    }
+
+    box.innerHTML = "";
+
+    data.orders.forEach(order => {
+      const div = document.createElement("div");
+      div.className = "order-card";
+
+      div.innerHTML = `
+        <div class="queue">${order.queue_no}</div>
+        <div class="status">${order.order_status || "NEW"}</div>
+
+        <div><strong>ลูกค้า:</strong> ${order.customer_name || "-"}</div>
+        <div><strong>เบอร์:</strong> ${order.customer_phone || "-"}</div>
+        <div><strong>ประเภท:</strong> ${order.fulfillment_type || "-"}</div>
+
+        ${
+          order.delivery_address
+          ? `<div><strong>ที่อยู่:</strong> ${order.delivery_address}</div>`
+          : ""
+        }
+
+        <div class="items">${order.items_summary || ""}</div>
+
+        <div><strong>Total:</strong> ${order.total_amount || 0} บาท</div>
+
+        <div class="btn-row">
+          <button class="btn-preparing" onclick="updateStatus('${order.queue_no}','PREPARING')">
+            ☕ กำลังทำ
+          </button>
+
+          <button class="btn-ready" onclick="updateStatus('${order.queue_no}','READY')">
+            ✅ พร้อมรับ
+          </button>
+
+          <button class="btn-done" onclick="updateStatus('${order.queue_no}','DONE')">
+            ✔ เสร็จแล้ว
+          </button>
+        </div>
+      `;
+
+      box.appendChild(div);
+    });
+
+  }catch(err){
+    console.error(err);
+    box.innerHTML = "โหลดออเดอร์ไม่สำเร็จค่ะ";
+  }
+}
+
+async function updateStatus(queueNo, status){
+  if(!confirm(`อัปเดต ${queueNo} เป็น ${status}?`)){
+    return;
+  }
+
+  try{
+    const res = await fetch(UPDATE_STATUS_API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        queue_no: queueNo,
+        order_status: status
+      })
+    });
+
+    const data = await res.json();
+
+    if(data.success){
+      alert("อัปเดตสำเร็จค่ะ");
+      loadOrders();
+    }else{
+      alert(data.message || "อัปเดตไม่สำเร็จค่ะ");
+    }
+
+  }catch(err){
+    console.error(err);
+    alert("ระบบขัดข้องค่ะ");
+  }
+}
+
+loadOrders();
+setInterval(loadOrders, 30000);
+</script>
+
+</body>
+</html>
