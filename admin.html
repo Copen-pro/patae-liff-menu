@@ -149,15 +149,15 @@ async function loadOrders(){
         <div><strong>Total:</strong> ${order.total_amount || 0} บาท</div>
 
         <div class="btn-row">
-          <button class="btn-preparing" onclick="updateStatus('${order.queue_no}','PREPARING')">
+          <button class="btn-preparing" onclick="updateStatus('${order.order_no}','PREPARING')">
             ☕ กำลังทำ
           </button>
 
-          <button class="btn-ready" onclick="updateStatus('${order.queue_no}','READY')">
+          <button class="btn-ready" onclick="updateStatus('${order.order_no}','READY')">
             ✅ พร้อมรับ
           </button>
 
-          <button class="btn-done" onclick="updateStatus('${order.queue_no}','DONE')">
+          <button class="btn-done" onclick="updateStatus('${order.order_no}','DONE')">
             ✔ เสร็จแล้ว
           </button>
         </div>
@@ -172,8 +172,8 @@ async function loadOrders(){
   }
 }
 
-async function updateStatus(queueNo, status){
-  if(!confirm(`อัปเดต ${queueNo} เป็น ${status}?`)){
+async function updateStatus(orderNo, status){
+  if(!confirm(`อัปเดต ${orderNo} เป็น ${status}?`)){
     return;
   }
 
@@ -184,7 +184,7 @@ async function updateStatus(queueNo, status){
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        queue_no: queueNo,
+        order_no: orderNo,
         order_status: status
       })
     });
