@@ -141,14 +141,26 @@ let firstLoad = true;
 function toggleSound(){
   soundEnabled = !soundEnabled;
 
+  const audio = document.getElementById("new-order-sound");
+
+  if(!soundEnabled){
+    audio.pause();
+    audio.currentTime = 0;
+  }
+
   document.getElementById("sound-toggle").innerText =
     soundEnabled ? "🔔 Sound: ON" : "🔕 Sound: OFF";
 }
 
 function playNewOrderSound(){
-  if(!soundEnabled) return;
-
   const audio = document.getElementById("new-order-sound");
+
+  if(!soundEnabled){
+    audio.pause();
+    audio.currentTime = 0;
+    return;
+  }
+
   audio.currentTime = 0;
   audio.play().catch(err => {
     console.log("Sound blocked until user interacts", err);
