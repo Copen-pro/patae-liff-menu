@@ -117,6 +117,13 @@
 
   <div class="container">
     <button class="refresh" onclick="loadOrders()">Refresh Orders</button>
+    <button id="sound-toggle" class="refresh" onclick="toggleSound()">
+  🔔 Sound: ON
+</button>
+
+<audio id="new-order-sound">
+  <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+</audio>
     <div id="orders">Loading...</div>
   </div>
 
@@ -127,6 +134,27 @@ const GET_ORDERS_API =
 const UPDATE_STATUS_API =
   "https://copen.app.n8n.cloud/webhook/patae/admin/update-status";
 
+let soundEnabled = true;
+let knownOrderNos = new Set();
+let firstLoad = true; 
+
+function toggleSound(){
+  soundEnabled = !soundEnabled;
+
+  document.getElementById("sound-toggle").innerText =
+    soundEnabled ? "🔔 Sound: ON" : "🔕 Sound: OFF";
+}
+
+function playNewOrderSound(){
+  if(!soundEnabled) return;
+
+  const audio = document.getElementById("new-order-sound");
+  audio.currentTime = 0;
+  audio.play().catch(err => {
+    console.log("Sound blocked until user interacts", err);
+  });
+}
+  
 async function loadOrders(){
   const box = document.getElementById("orders");
   box.innerHTML = "Loading...";
@@ -142,6 +170,23 @@ async function loadOrders(){
 
     box.innerHTML = "";
 
+    const currentOrderNos = new Set(
+  data.orders.map(order => order.order_no)
+);
+
+if(!firstLoad){
+  const hasNewOrder = data.orders.some(order =>
+    !knownOrderNos.has(order.order_no)
+  );
+
+  if(hasNewOrder){
+    playNewOrderSound();
+  }
+}
+
+knownOrderNos = currentOrderNos;
+firstLoad = false;
+    
     data.orders.forEach(order => {
       const div = document.createElement("div");
       div.className = "order-card";
