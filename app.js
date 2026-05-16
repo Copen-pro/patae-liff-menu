@@ -5,6 +5,7 @@ const LIFF_ID = "2010088421-1DJFs0Xx";
 let allProducts = [];
 let currentCategory = null;
 let cart = {};
+let isSubmitting = false;
 let lineProfile = null;
 
 function optimizeImage(url){
@@ -234,12 +235,31 @@ function backToCart(){
 }
 
 async function confirmOrder(){
-  const items = Object.values(cart);
 
-  if(items.length === 0){
-    alert("กรุณาเลือกสินค้าก่อนค่ะ ☕");
+  if(isSubmitting){
     return;
   }
+
+  isSubmitting = true;
+
+  const confirmBtn =
+    document.getElementById("confirm-order-btn");
+
+  confirmBtn.disabled = true;
+  confirmBtn.innerText = "กำลังส่งออเดอร์...";
+
+  const items = Object.values(cart);
+
+if(items.length === 0){
+
+  isSubmitting = false;
+
+  confirmBtn.disabled = false;
+  confirmBtn.innerText = "Confirm Order";
+
+  alert("กรุณาเลือกสินค้าก่อนค่ะ ☕");
+  return;
+}
 
   const customerName = document.getElementById("customer-name").value.trim();
   const customerPhone = document.getElementById("customer-phone").value.trim();
@@ -310,9 +330,16 @@ const payload = {
     }
 
   }catch(err){
+
+    isSubmitting = false;
+
+    confirmBtn.disabled = false;
+
+    confirmBtn.innerText = "Confirm Order";
+
     console.error(err);
+
     alert("ยังไม่ได้เปิด Create Order API หรือระบบขัดข้องค่ะ");
-  }
 }
 
 function bindEvents(){
