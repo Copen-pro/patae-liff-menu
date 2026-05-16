@@ -11,7 +11,7 @@ let lineProfile = null;
 function optimizeImage(url){
   return url.replace(
     "/upload/",
-    "/upload/f_auto,q_auto,w_500/"
+    "/upload/f_auto,q_auto,w_360/"
   );
 }
 
@@ -36,6 +36,8 @@ async function initLiff(){
 }
 
 async function loadProducts(){
+  document.getElementById("products").innerHTML =
+  "<div class='loading'>กำลังโหลดเมนู...</div>";
   const res = await fetch(PRODUCTS_API);
   const data = await res.json();
 
