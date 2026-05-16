@@ -277,9 +277,18 @@ firstLoad = false;
             ✔ เสร็จแล้ว
           </button>
 
-          <button class="btn-paid" onclick="markPaid('${order.order_no}')">
-            💰 PAID
-          </button>
+${
+order.payment_status==="PAID"
+
+? `<button class="btn-paid" disabled>
+     ✅ PAID
+   </button>`
+
+: `<button class="btn-paid"
+onclick="markPaid('${order.order_no}')">
+💰 PAID
+</button>`
+}
 
         </div>
       `;
