@@ -294,58 +294,25 @@ firstLoad = false;
 }
 
 async function updateStatus(orderNo, status){
+
   if(!confirm(`อัปเดต ${orderNo} เป็น ${status}?`)){
     return;
   }
 
-async function markPaid(orderNo){
-
-  if(!confirm(`บันทึกว่า ${orderNo} ชำระเงินแล้ว?`)){
-    return;
-  }
-
-  console.log("MARK PAID CLICKED:", orderNo);
-  
   try{
-    const res = await fetch(UPDATE_STATUS_API, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
+
+    const res = await fetch(UPDATE_STATUS_API,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
       },
-      body: JSON.stringify({
-        order_no: orderNo,
-        payment_status: "PAID"
+      body:JSON.stringify({
+        order_no:orderNo,
+        order_status:status
       })
     });
 
-    const data = await res.json();
-
-    if(data.success){
-      alert("บันทึก PAID สำเร็จค่ะ");
-      loadOrders();
-    }else{
-      alert(data.message || "บันทึก PAID ไม่สำเร็จค่ะ");
-    }
-
-  }catch(err){
-    console.error(err);
-    alert("ระบบขัดข้องค่ะ");
-  }
-}
-  
-  try{
-    const res = await fetch(UPDATE_STATUS_API, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        order_no: orderNo,
-        order_status: status
-      })
-    });
-
-    const data = await res.json();
+    const data=await res.json();
 
     if(data.success){
       alert("อัปเดตสำเร็จค่ะ");
@@ -355,8 +322,47 @@ async function markPaid(orderNo){
     }
 
   }catch(err){
+
     console.error(err);
     alert("ระบบขัดข้องค่ะ");
+
+  }
+}
+
+
+async function markPaid(orderNo){
+
+  if(!confirm(`บันทึกว่า ${orderNo} ชำระเงินแล้ว?`)){
+    return;
+  }
+
+  try{
+
+    const res = await fetch(UPDATE_STATUS_API,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        order_no:orderNo,
+        payment_status:"PAID"
+      })
+    });
+
+    const data=await res.json();
+
+    if(data.success){
+      alert("บันทึก PAID สำเร็จค่ะ");
+      loadOrders();
+    }else{
+      alert(data.message || "บันทึก PAID ไม่สำเร็จค่ะ");
+    }
+
+  }catch(err){
+
+    console.error(err);
+    alert("ระบบขัดข้องค่ะ");
+
   }
 }
 
