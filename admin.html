@@ -306,17 +306,42 @@ order.fulfillment_type === "delivery"
 }
 
         <div class="btn-row">
-          <button class="btn-preparing" onclick="updateStatus('${order.order_no}','PREPARING')">
-            ☕ กำลังทำ
-          </button>
+${
+order.fulfillment_type === "delivery" &&
+order.delivery_confirm_status !== "CONFIRMED"
 
-          <button class="btn-ready" onclick="updateStatus('${order.order_no}','READY')">
-            ✅ พร้อมรับ
-          </button>
+? `
+<button class="btn-preparing" disabled>
+  ☕ กำลังทำ
+</button>
 
-          <button class="btn-done" onclick="updateStatus('${order.order_no}','DONE')">
-            ✔ เสร็จแล้ว
-          </button>
+<button class="btn-ready" disabled>
+  ✅ พร้อมรับ
+</button>
+
+<button class="btn-done" disabled>
+  ✔ เสร็จแล้ว
+</button>
+
+<div style="width:100%;color:#a15c00;font-weight:bold;margin-top:6px;">
+  รอลูกค้ายืนยันค่าส่งก่อน
+</div>
+`
+
+: `
+<button class="btn-preparing" onclick="updateStatus('${order.order_no}','PREPARING')">
+  ☕ กำลังทำ
+</button>
+
+<button class="btn-ready" onclick="updateStatus('${order.order_no}','READY')">
+  ✅ พร้อมรับ
+</button>
+
+<button class="btn-done" onclick="updateStatus('${order.order_no}','DONE')">
+  ✔ เสร็จแล้ว
+</button>
+`
+}
 
 ${
 order.payment_status==="PAID"
