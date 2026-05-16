@@ -248,6 +248,18 @@ function backToCart(){
   document.getElementById("cart-view").classList.remove("hidden");
 }
 
+function resetConfirmButton(){
+
+  isSubmitting = false;
+
+  const confirmBtn =
+    document.getElementById("confirm-order-btn");
+
+  confirmBtn.disabled = false;
+
+  confirmBtn.innerText = "Confirm Order";
+}
+
 async function confirmOrder(){
 
   if(isSubmitting){
@@ -283,19 +295,22 @@ if(
   fulfillmentType === "delivery" &&
   !document.getElementById("delivery-address").value.trim()
 ){
+  resetConfirmButton();
   alert("กรุณาระบุที่อยู่จัดส่งค่ะ");
   return;
 }
-  
-  if(!customerName){
-    alert("กรุณาใส่ชื่อลูกค้าค่ะ");
-    return;
-  }
 
-  if(!customerPhone){
-    alert("กรุณาใส่เบอร์โทรค่ะ");
-    return;
-  }
+if(!customerName){
+  resetConfirmButton();
+  alert("กรุณาใส่ชื่อลูกค้าค่ะ");
+  return;
+}
+
+if(!customerPhone){
+  resetConfirmButton();
+  alert("กรุณาใส่เบอร์โทรค่ะ");
+  return;
+}
 
 const payload = {
   line_user_id: lineProfile?.userId || "",
@@ -343,7 +358,7 @@ const payload = {
       alert("ส่งออเดอร์ไม่สำเร็จ กรุณาลองใหม่ค่ะ");
     }
 
-  }catch(err){
+    }catch(err){
 
     isSubmitting = false;
 
@@ -354,6 +369,7 @@ const payload = {
     console.error(err);
 
     alert("ยังไม่ได้เปิด Create Order API หรือระบบขัดข้องค่ะ");
+  }
 }
 
 function bindEvents(){
