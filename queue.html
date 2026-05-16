@@ -100,11 +100,7 @@
       <span id="order-no"></span>
     </div>
 
-    <div style="margin-top:10px;">
-      Total:
-      <span id="total-amount"></span>
-      บาท
-    </div>
+    <div id="amount-box" style="margin-top:10px;"></div>
 
     <div class="items" id="items-summary"></div>
 
@@ -177,8 +173,23 @@ statusEl.className = "status-badge status-" + status.toLowerCase();
   document.getElementById("order-no").innerText =
     data.order_no;
 
-  document.getElementById("total-amount").innerText =
-    data.total_amount;
+  const amountBox = document.getElementById("amount-box");
+
+if(data.fulfillment_type === "delivery"){
+
+  amountBox.innerHTML = `
+    <div><strong>ยอดสินค้า:</strong> ${data.total_amount || 0} บาท</div>
+    <div><strong>ค่าส่ง:</strong> ${data.delivery_fee || 0} บาท</div>
+    <div><strong>รวมทั้งหมด:</strong> ${data.grand_total || data.total_amount || 0} บาท</div>
+  `;
+
+}else{
+
+  amountBox.innerHTML = `
+    <div><strong>Total:</strong> ${data.total_amount || 0} บาท</div>
+  `;
+
+}
 
   document.getElementById("items-summary").innerText =
     data.items_summary;
