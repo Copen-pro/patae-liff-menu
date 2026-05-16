@@ -356,6 +356,8 @@ const payload = {
       renderProducts();
       closeCart();
 
+      resetConfirmButton();
+      
     }else{
       alert("ส่งออเดอร์ไม่สำเร็จ กรุณาลองใหม่ค่ะ");
     }
@@ -398,6 +400,9 @@ document.getElementById("success-close-btn").onclick = () => {
   document.getElementById("fulfillment-type").value = "pickup";
   document.getElementById("delivery-address").value = "";
   document.getElementById("delivery-fields").classList.add("hidden");
+
+  resetConfirmButton();
+  
 };
 
 document.getElementById("fulfillment-type")
