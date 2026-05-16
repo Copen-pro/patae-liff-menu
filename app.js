@@ -331,6 +331,8 @@ if(!customerPhone){
 }
 
 const payload = {
+  order_channel: "LINE",
+  
   line_user_id: lineProfile?.userId || "",
   line_display_name: lineProfile?.displayName || "",
   
