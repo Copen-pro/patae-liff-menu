@@ -304,6 +304,8 @@ async function markPaid(orderNo){
     return;
   }
 
+  console.log("MARK PAID CLICKED:", orderNo);
+  
   try{
     const res = await fetch(UPDATE_STATUS_API, {
       method: "POST",
