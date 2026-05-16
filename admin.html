@@ -264,6 +264,33 @@ firstLoad = false;
 
         <div><strong>Total:</strong> ${order.total_amount || 0} บาท</div>
 
+${
+order.fulfillment_type === "delivery"
+&& order.delivery_confirm_status !== "CONFIRMED"
+
+? `
+<div style="margin-top:10px;">
+  <div><strong>Delivery Fee:</strong></div>
+
+  <input
+    id="delivery-fee-${order.order_no}"
+    type="number"
+    placeholder="ใส่ค่าส่ง"
+    style="width:100%;padding:10px;margin-top:6px;border-radius:10px;border:1px solid #ccc;"
+  >
+
+  <button
+    class="btn-ready"
+    style="margin-top:8px;width:100%;"
+    onclick="sendDeliveryConfirm('${order.order_no}', ${order.total_amount || 0})">
+    ส่งค่าส่งให้ลูกค้า Confirm
+  </button>
+</div>
+`
+
+: ""
+}
+
         <div class="btn-row">
           <button class="btn-preparing" onclick="updateStatus('${order.order_no}','PREPARING')">
             ☕ กำลังทำ
