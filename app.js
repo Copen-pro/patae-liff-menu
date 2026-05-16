@@ -228,6 +228,12 @@ function openCart(){
 }
 
 function closeCart(){
+
+  if(isSubmitting){
+    alert("กำลังส่งออเดอร์ กรุณารอสักครู่ค่ะ");
+    return;
+  }
+
   document.getElementById("cart-modal").classList.add("hidden");
 }
 
@@ -246,6 +252,12 @@ function goCheckout(){
 }
 
 function backToCart(){
+
+  if(isSubmitting){
+    alert("กำลังส่งออเดอร์ กรุณารอสักครู่ค่ะ");
+    return;
+  }
+
   document.getElementById("checkout-view").classList.add("hidden");
   document.getElementById("cart-view").classList.remove("hidden");
 }
@@ -258,8 +270,10 @@ function resetConfirmButton(){
     document.getElementById("confirm-order-btn");
 
   confirmBtn.disabled = false;
-
   confirmBtn.innerText = "Confirm Order";
+
+  document.getElementById("back-to-cart-btn").disabled = false;
+  document.getElementById("close-cart-btn").disabled = false;
 }
 
 async function confirmOrder(){
@@ -275,6 +289,8 @@ async function confirmOrder(){
 
   confirmBtn.disabled = true;
   confirmBtn.innerText = "กำลังส่งออเดอร์...";
+  document.getElementById("back-to-cart-btn").disabled = true;
+  document.getElementById("close-cart-btn").disabled = true;
 
   const items = Object.values(cart);
 
@@ -347,18 +363,17 @@ const payload = {
     if(data.success){
       document.getElementById("success-order-no").innerText = data.order_no;
       document.getElementById("success-queue-no").innerText = data.queue_no || "-";
-
+      
+      resetConfirmButton();
+      
       document.getElementById("cart-modal").classList.add("hidden");
       document.getElementById("success-modal").classList.remove("hidden");
 
       cart = {};
       updateCart();
       renderProducts();
-      closeCart();
-
-      resetConfirmButton();
       
-    }else{
+      }else{
       alert("ส่งออเดอร์ไม่สำเร็จ กรุณาลองใหม่ค่ะ");
     }
 
