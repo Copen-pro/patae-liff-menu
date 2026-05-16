@@ -60,7 +60,23 @@
 
 .status-done{
   background:#5ac8fa;
-}    
+} 
+
+.payment-badge{
+  display:inline-block;
+  padding:6px 12px;
+  border-radius:999px;
+  font-weight:bold;
+  color:white;
+}
+
+.payment-paid{
+  background:#34c759;
+}
+
+.payment-unpaid{
+  background:#f5a623;
+}
     .items{
       text-align:left;
       background:#f5f5f5;
@@ -95,6 +111,11 @@
       </strong>
     </div>
 
+    <div style="margin-top:10px;">
+      Payment:
+      <span id="payment-status"></span>
+    </div>
+    
     <div>
       Order No:
       <span id="order-no"></span>
@@ -173,6 +194,25 @@ statusEl.className = "status-badge status-" + status.toLowerCase();
   document.getElementById("order-no").innerText =
     data.order_no;
 
+  const paymentEl =
+  document.getElementById("payment-status");
+
+const paymentStatus =
+  data.payment_status || "UNPAID";
+
+paymentEl.innerText =
+  paymentStatus === "PAID"
+    ? "💰 PAID"
+    : "⏳ UNPAID";
+
+paymentEl.className =
+  "payment-badge " +
+  (
+    paymentStatus === "PAID"
+      ? "payment-paid"
+      : "payment-unpaid"
+  );
+  
   const amountBox = document.getElementById("amount-box");
 
 if(data.fulfillment_type === "delivery"){
