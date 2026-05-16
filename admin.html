@@ -349,9 +349,19 @@ async function updateStatus(orderNo, status){
     return;
   }
 
-  const order = currentOrders.find(
-    o => o.order_no === orderNo
-  );
+const order = currentOrders.find(
+  o => String(o.order_no).trim() === String(orderNo).trim()
+);
+
+if(
+  ["PREPARING","READY","DONE"].includes(status) &&
+  order &&
+  order.fulfillment_type === "delivery" &&
+  order.delivery_confirm_status !== "CONFIRMED"
+){
+  alert("ลูกค้ายังไม่ยืนยันค่าส่งค่ะ");
+  return;
+}
 
   if(
     status === "PREPARING" &&
