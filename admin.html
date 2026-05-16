@@ -262,7 +262,19 @@ firstLoad = false;
 
         <div class="items">${order.items_summary || ""}</div>
 
-        <div><strong>Total:</strong> ${order.total_amount || 0} บาท</div>
+        ${
+order.fulfillment_type === "delivery"
+
+? `
+<div><strong>ยอดสินค้า:</strong> ${order.total_amount || 0} บาท</div>
+<div><strong>ค่าส่ง:</strong> ${order.delivery_fee || 0} บาท</div>
+<div><strong>รวมทั้งหมด:</strong> ${order.grand_total || order.total_amount || 0} บาท</div>
+`
+
+: `
+<div><strong>Total:</strong> ${order.total_amount || 0} บาท</div>
+`
+}
 
 ${
 order.fulfillment_type === "delivery"
