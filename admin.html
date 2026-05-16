@@ -365,6 +365,54 @@ async function updateStatus(orderNo, status){
   }
 }
 
+  async function sendDeliveryConfirm(orderNo, totalAmount){
+
+  const input =
+    document.getElementById(`delivery-fee-${orderNo}`);
+
+  const deliveryFee = Number(input.value || 0);
+
+  if(deliveryFee <= 0){
+    alert("กรุณาใส่ค่าส่งค่ะ");
+    return;
+  }
+
+  const grandTotal = Number(totalAmount || 0) + deliveryFee;
+
+  if(!confirm(
+    `ส่งค่าส่งให้ลูกค้า?\n\nค่าสินค้า: ${totalAmount} บาท\nค่าส่ง: ${deliveryFee} บาท\nรวม: ${grandTotal} บาท`
+  )){
+    return;
+  }
+
+  try{
+    const res = await fetch(UPDATE_STATUS_API,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        order_no:orderNo,
+        delivery_fee:deliveryFee,
+        grand_total:grandTotal,
+        delivery_confirm_status:"WAIT_CUSTOMER_CONFIRM"
+      })
+    });
+
+    const data = await res.json();
+
+    if(data.success){
+      alert("ส่งค่าส่งให้ลูกค้าแล้วค่ะ");
+      loadOrders();
+    }else{
+      alert(data.message || "ส่งค่าส่งไม่สำเร็จค่ะ");
+    }
+
+  }catch(err){
+    console.error(err);
+    alert("ระบบขัดข้องค่ะ");
+  }
+}
 
 async function markPaid(orderNo){
 
