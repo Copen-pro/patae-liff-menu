@@ -158,7 +158,9 @@ async function start(){
   });
 
   const data = await res.json();
-
+  
+  alert(JSON.stringify(data));
+  
   console.log("MY QUEUE DATA:", data);
 
   document.getElementById("loading").style.display = "none";
