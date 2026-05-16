@@ -353,24 +353,20 @@ const order = currentOrders.find(
   o => String(o.order_no).trim() === String(orderNo).trim()
 );
 
+const fulfillmentType =
+  String(order?.fulfillment_type || "").toLowerCase();
+
+const deliveryConfirmStatus =
+  String(order?.delivery_confirm_status || "").toUpperCase();
+
 if(
   ["PREPARING","READY","DONE"].includes(status) &&
-  order &&
-  order.fulfillment_type === "delivery" &&
-  order.delivery_confirm_status !== "CONFIRMED"
+  fulfillmentType === "delivery" &&
+  deliveryConfirmStatus !== "CONFIRMED"
 ){
-  alert("ลูกค้ายังไม่ยืนยันค่าส่งค่ะ");
+  alert("กรุณาส่งค่าส่งและรอลูกค้ายืนยันก่อนค่ะ");
   return;
 }
-
-  if(
-    status === "PREPARING" &&
-    order?.fulfillment_type === "delivery" &&
-    order?.delivery_confirm_status !== "CONFIRMED"
-  ){
-    alert("ลูกค้ายังไม่ยืนยันค่าส่งค่ะ");
-    return;
-  }
 
   try{
     const res = await fetch(UPDATE_STATUS_API,{
