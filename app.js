@@ -9,6 +9,9 @@ let isSubmitting = false;
 let lineProfile = null;
 
 function optimizeImage(url){
+  if(!url) return "";
+  if(!url.includes("/upload/")) return url;
+
   return url.replace(
     "/upload/",
     "/upload/f_auto,q_auto,w_360/"
@@ -36,15 +39,24 @@ async function initLiff(){
 }
 
 async function loadProducts(){
-  document.getElementById("products").innerHTML =
-  "<div class='loading'>กำลังโหลดเมนู...</div>";
-  const res = await fetch(PRODUCTS_API);
-  const data = await res.json();
+  const productsBox = document.getElementById("products");
 
-  allProducts = data.products || [];
+  productsBox.innerHTML =
+    "<div class='loading'>กำลังโหลดเมนู...</div>";
 
-  buildTabs();
-  renderProducts();
+  try{
+    const res = await fetch(PRODUCTS_API);
+    const data = await res.json();
+
+    allProducts = data.products || data || [];
+
+    renderProducts();
+
+  }catch(err){
+    console.error("Load products error:", err);
+    productsBox.innerHTML =
+      "<div class='loading'>โหลดเมนูไม่สำเร็จ กรุณาลองใหม่ค่ะ</div>";
+  }
 }
 
 function buildTabs(){
