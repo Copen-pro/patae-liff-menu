@@ -48,9 +48,11 @@ async function loadProducts(){
     const res = await fetch(PRODUCTS_API);
     const data = await res.json();
 
-    allProducts = data.products || data || [];
+allProducts = data.products || data || [];
 
-    renderProducts();
+currentCategory = null;
+buildTabs();
+renderProducts();
 
   }catch(err){
     console.error("Load products error:", err);
