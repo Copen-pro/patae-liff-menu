@@ -160,6 +160,7 @@ const UPDATE_STATUS_API =
 let soundEnabled = true;
 let knownOrderNos = new Set();
 let firstLoad = true; 
+let currentOrders = [];  
 
 function toggleSound(){
   soundEnabled = !soundEnabled;
@@ -197,6 +198,7 @@ async function loadOrders(){
   try{
     const res = await fetch(GET_ORDERS_API);
     const data = await res.json();
+    currentOrders = data.orders || [];
 
     if(!data.orders || data.orders.length === 0){
       box.innerHTML = `<div class="empty">ยังไม่มีออเดอร์ที่ต้องทำค่ะ ☕</div>`;
@@ -347,8 +349,20 @@ async function updateStatus(orderNo, status){
     return;
   }
 
-  try{
+  const order = currentOrders.find(
+    o => o.order_no === orderNo
+  );
 
+  if(
+    status === "PREPARING" &&
+    order?.fulfillment_type === "delivery" &&
+    order?.delivery_confirm_status !== "CONFIRMED"
+  ){
+    alert("ลูกค้ายังไม่ยืนยันค่าส่งค่ะ");
+    return;
+  }
+
+  try{
     const res = await fetch(UPDATE_STATUS_API,{
       method:"POST",
       headers:{
