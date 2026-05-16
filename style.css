@@ -183,6 +183,13 @@ body{
   font-size:14px;
 }
 
+.loading{
+  padding:30px;
+  text-align:center;
+  font-size:18px;
+  color:#666;
+}
+
 .delivery-help{
   font-size:13px;
   color:#777;
