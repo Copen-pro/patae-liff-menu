@@ -116,7 +116,7 @@
       <span id="payment-status"></span>
     </div>
     
-    <div>
+    <div style="margin-top:20px;">
       Order No:
       <span id="order-no"></span>
     </div>
@@ -158,13 +158,7 @@ async function start(){
   });
 
   const data = await res.json();
-
-  alert("payment_status = " + data.payment_status);
-  
-  alert(JSON.stringify(data));
-  
-  console.log("MY QUEUE DATA:", data);
-
+ 
   document.getElementById("loading").style.display = "none";
 
   if(!data.found){
