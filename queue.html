@@ -198,7 +198,9 @@ statusEl.className = "status-badge status-" + status.toLowerCase();
   document.getElementById("payment-status");
 
 const paymentStatus =
-  data.payment_status || "UNPAID";
+  String(data.payment_status || "UNPAID")
+    .trim()
+    .toUpperCase();
 
 paymentEl.innerText =
   paymentStatus === "PAID"
