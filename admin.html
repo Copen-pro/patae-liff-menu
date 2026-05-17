@@ -258,6 +258,27 @@ onclick="saveStoreHours()">
 <audio id="new-order-sound">
   <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
 </audio>
+
+<div class="store-tabs">
+
+<button
+id="orders-tab"
+onclick="showOrderTab('orders')">
+
+☕ Orders
+
+</button>
+
+<button
+id="unpaid-tab"
+onclick="showOrderTab('unpaid')">
+
+💸 Unpaid
+
+</button>
+
+</div>
+    
     <div id="orders">Loading...</div>
   </div>
 
@@ -278,7 +299,8 @@ let soundEnabled = true;
 let knownOrderNos = new Set();
 let firstLoad = true; 
 let currentOrders = [];  
-
+let currentView = "orders";
+  
 function toggleSound(){
   soundEnabled = !soundEnabled;
 
@@ -317,7 +339,26 @@ async function loadOrders(){
     const data = await res.json();
     currentOrders = data.orders || [];
 
-    if(!data.orders || data.orders.length === 0){
+    let orders = currentOrders;
+
+if(currentView === "orders"){
+
+  orders =
+    currentOrders.filter(o =>
+      o.order_status !== "DONE"
+    );
+
+}else{
+
+  orders =
+    currentOrders.filter(o =>
+      o.payment_status !== "PAID"
+    );
+
+}
+    
+    
+    if(!orders.length){
       box.innerHTML = `<div class="empty">ยังไม่มีออเดอร์ที่ต้องทำค่ะ ☕</div>`;
       return;
     }
@@ -341,7 +382,7 @@ if(!firstLoad){
 knownOrderNos = currentOrderNos;
 firstLoad = false;
     
-    data.orders.forEach(order => {
+   orders.forEach(order=>{
       const div = document.createElement("div");
       div.className = "order-card";
 
@@ -714,6 +755,26 @@ bar.innerText =
 
 }
 
+function showOrderTab(view){
+
+  currentView = view;
+
+  document
+    .getElementById("orders-tab")
+    .classList.remove("active");
+
+  document
+    .getElementById("unpaid-tab")
+    .classList.remove("active");
+
+  document
+    .getElementById(view+"-tab")
+    .classList.add("active");
+
+  loadOrders();
+
+}
+  
 loadStoreStatus();
 loadOrders();
 
