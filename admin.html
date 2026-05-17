@@ -228,6 +228,39 @@ firstLoad = false;
       const div = document.createElement("div");
       div.className = "order-card";
 
+
+let paidButton = "";
+
+if(order.payment_status === "PAID"){
+
+  paidButton = `
+    <button class="btn-paid" disabled>
+      ✅ PAID
+    </button>
+  `;
+
+}else if(
+  order.fulfillment_type === "delivery" &&
+  order.delivery_confirm_status !== "CONFIRMED"
+){
+
+  paidButton = `
+    <button class="btn-paid" disabled>
+      💰 PAID
+    </button>
+  `;
+
+}else{
+
+  paidButton = `
+    <button class="btn-paid"
+      onclick="markPaid('${order.order_no}')">
+      💰 PAID
+    </button>
+  `;
+
+}
+      
       div.innerHTML = `
         <div class="queue">${order.queue_no}</div>
         <div class="status status-${(order.order_status || "NEW").toLowerCase()}">
@@ -343,32 +376,9 @@ order.delivery_confirm_status !== "CONFIRMED"
 `
 }
 
-${
-order.payment_status==="PAID"
+${paidButton}
 
-${
-order.payment_status === "PAID"
-
-? `<button class="btn-paid" disabled>
-     ✅ PAID
-   </button>`
-
-: (
-  order.fulfillment_type === "delivery" &&
-  order.delivery_confirm_status !== "CONFIRMED"
-)
-
-? `<button class="btn-paid" disabled>
-     💰 PAID
-   </button>`
-
-: `<button class="btn-paid"
-     onclick="markPaid('${order.order_no}')">
-     💰 PAID
-   </button>`
-}
-
-        </div>
+</div>
       `;
 
       box.appendChild(div);
