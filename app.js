@@ -1,5 +1,6 @@
 const PRODUCTS_API = "https://copen.app.n8n.cloud/webhook/patae/products";
 const CREATE_ORDER_API = "https://copen.app.n8n.cloud/webhook/patae/create-order";
+const STORE_STATUS_API =  "https://copen.app.n8n.cloud/webhook/patae/store/status";
 const LIFF_ID = "2010088421-1DJFs0Xx";
 
 let allProducts = [];
@@ -35,6 +36,31 @@ async function initLiff(){
     }
   }catch(err){
     console.error("LIFF error:", err);
+  }
+}
+
+async function checkStoreStatus(){
+  try{
+    const res = await fetch(STORE_STATUS_API);
+    const data = await res.json();
+
+    if(!data.is_open){
+      document.body.innerHTML = `
+        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f6f2ed;padding:20px;font-family:Arial,sans-serif;text-align:center;">
+          <div style="background:white;padding:28px;border-radius:22px;box-shadow:0 4px 14px rgba(0,0,0,.08);max-width:360px;">
+            <h2>☕ PaTae Cafe</h2>
+            <h3>ร้านปิดรับออเดอร์ค่ะ</h3>
+            <p>${data.message || "กรุณากลับมาสั่งใหม่ในเวลาทำการค่ะ"}</p>
+          </div>
+        </div>
+      `;
+      return false;
+    }
+
+    return true;
+  }catch(err){
+    console.error(err);
+    return true;
   }
 }
 
@@ -404,8 +430,16 @@ function bindEvents(){
 async function start(){
   bindEvents();
   await initLiff();
+
+  const isOpen = await checkStoreStatus();
+
+  if(!isOpen){
+    return;
+  }
+
   await loadProducts();
 }
+
 document.getElementById("success-close-btn").onclick = () => {
  document.getElementById("success-modal").classList.add("hidden");
   cart = {};
