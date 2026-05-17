@@ -643,9 +643,73 @@ async function markPaid(orderNo){
   }
 }
 
-loadOrders();
-setInterval(loadOrders, 30000);
+function showStorePanel(panel){
 
+  const control =
+    document.getElementById("store-control-panel");
+
+  const hours =
+    document.getElementById("store-hours-panel");
+
+  control.classList.remove("active");
+  hours.classList.remove("active");
+
+  if(panel === "control"){
+    control.classList.add("active");
+  }
+
+  if(panel === "hours"){
+    hours.classList.add("active");
+  }
+}
+
+async function loadStoreStatus(){
+
+  try{
+
+    const res =
+      await fetch(STORE_STATUS_API);
+
+    const data =
+      await res.json();
+
+    const bar =
+      document.getElementById(
+        "store-status-bar"
+      );
+
+    bar.innerText =
+      data.is_open
+      ? `🏪 Store Status: 🟢 OPEN (${data.store_open}-${data.store_close})`
+      : `🏪 Store Status: 🔴 CLOSED (${data.store_open}-${data.store_close})`;
+
+    if(data.store_open){
+      document.getElementById(
+        "store-open"
+      ).value = data.store_open;
+    }
+
+    if(data.store_close){
+      document.getElementById(
+        "store-close"
+      ).value = data.store_close;
+    }
+
+  }catch(err){
+
+    console.error(err);
+
+  }
+
+}
+
+loadStoreStatus();
+loadOrders();
+
+setInterval(loadOrders,30000);
+setInterval(loadStoreStatus,60000);
+
+  
 async function quickSetStoreStatus(status){
 
   const confirmText =
