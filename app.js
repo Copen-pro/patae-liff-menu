@@ -356,6 +356,14 @@ if(!customerPhone){
   return;
 }
 
+const isOpen = await checkStoreStatus();
+
+if(!isOpen){
+  resetConfirmButton();
+  return;
+}
+  
+  
 const payload = {
   order_channel: "LINE",
   
@@ -402,21 +410,18 @@ const payload = {
       renderProducts();
       
       }else{
-      alert("ส่งออเดอร์ไม่สำเร็จ กรุณาลองใหม่ค่ะ");
-    }
+      resetConfirmButton();
+      alert(data.message || "ส่งออเดอร์ไม่สำเร็จ กรุณาลองใหม่ค่ะ");
+      }
 
-    }catch(err){
+}catch(err){
 
-    isSubmitting = false;
+  resetConfirmButton();
 
-    confirmBtn.disabled = false;
+  console.error(err);
 
-    confirmBtn.innerText = "Confirm Order";
-
-    console.error(err);
-
-    alert("ยังไม่ได้เปิด Create Order API หรือระบบขัดข้องค่ะ");
-  }
+  alert("ระบบขัดข้อง กรุณาลองใหม่ค่ะ");
+}
 }
 
 function bindEvents(){
