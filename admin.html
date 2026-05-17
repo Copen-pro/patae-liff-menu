@@ -129,6 +129,37 @@
       color:#666;
       margin-top:40px;
     }
+
+    .store-status-bar{
+  background:white;
+  border-radius:16px;
+  padding:12px;
+  margin:12px 0;
+  font-weight:bold;
+  text-align:center;
+  box-shadow:0 3px 10px rgba(0,0,0,0.06);
+}
+
+.store-tabs{
+  display:flex;
+  gap:8px;
+  margin:10px 0;
+}
+
+.store-tabs button{
+  flex:1;
+  background:#eee;
+}
+
+.store-panel{
+  display:none;
+}
+
+.store-panel.active{
+  display:block;
+}
+
+    
   </style>
 </head>
 
@@ -144,42 +175,83 @@
   🔔 Sound: ON
 </button>
 
-<div class="order-card">
-  <h3>🏪 Store Control</h3>
-
-  <div class="btn-row">
-    <button class="btn-ready" onclick="quickSetStoreStatus('OPEN')">
-      🟢 เปิดร้าน
-    </button>
-
-    <button class="btn-done" onclick="quickSetStoreStatus('CLOSED')">
-      🔴 ปิดร้าน
-    </button>
-  </div>
+<div class="store-status-bar" id="store-status-bar">
+🏪 Store Status: Loading...
 </div>
 
-<div class="order-card">
-  <h3>⏰ Store Hours</h3>
+<div class="store-tabs">
 
-  <label>เวลาเปิด</label>
-  <input
-    type="time"
-    id="store-open"
-    value="08:00"
-    style="width:100%;padding:10px;margin:6px 0;border-radius:10px;"
-  >
+<button onclick="showStorePanel('control')">
+🟢 เปิด/ปิดร้าน
+</button>
 
-  <label>เวลาปิด</label>
-  <input
-    type="time"
-    id="store-close"
-    value="18:00"
-    style="width:100%;padding:10px;margin:6px 0;border-radius:10px;"
-  >
+<button onclick="showStorePanel('hours')">
+⏰ เวลาเปิด-ปิด
+</button>
 
-  <button class="refresh" onclick="saveStoreHours()">
-    💾 บันทึกเวลาเปิด/ปิด
-  </button>
+</div>
+
+<div
+id="store-control-panel"
+class="order-card store-panel">
+
+<h3>🏪 Store Control</h3>
+
+<div class="btn-row">
+
+<button
+class="btn-ready"
+onclick="quickSetStoreStatus('OPEN')">
+
+🟢 เปิดร้าน
+
+</button>
+
+<button
+class="btn-done"
+onclick="quickSetStoreStatus('CLOSED')">
+
+🔴 ปิดร้าน
+
+</button>
+
+</div>
+
+</div>
+
+
+<div
+id="store-hours-panel"
+class="order-card store-panel">
+
+<h3>⏰ Store Hours</h3>
+
+<label>เวลาเปิด</label>
+
+<input
+type="time"
+id="store-open"
+value="08:00"
+style="width:100%;padding:10px;margin:6px 0;border-radius:10px;"
+>
+
+<label>เวลาปิด</label>
+
+<input
+type="time"
+id="store-close"
+value="18:00"
+style="width:100%;padding:10px;margin:6px 0;border-radius:10px;"
+>
+
+<button
+class="refresh"
+onclick="saveStoreHours()">
+
+💾 บันทึกเวลาเปิด/ปิด
+
+</button>
+
 </div>
     
     
