@@ -346,14 +346,26 @@ order.delivery_confirm_status !== "CONFIRMED"
 ${
 order.payment_status==="PAID"
 
+${
+order.payment_status === "PAID"
+
 ? `<button class="btn-paid" disabled>
      ✅ PAID
    </button>`
 
+: (
+  order.fulfillment_type === "delivery" &&
+  order.delivery_confirm_status !== "CONFIRMED"
+)
+
+? `<button class="btn-paid" disabled>
+     💰 PAID
+   </button>`
+
 : `<button class="btn-paid"
-onclick="markPaid('${order.order_no}')">
-💰 PAID
-</button>`
+     onclick="markPaid('${order.order_no}')">
+     💰 PAID
+   </button>`
 }
 
         </div>
