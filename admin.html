@@ -681,10 +681,18 @@ async function loadStoreStatus(){
         "store-status-bar"
       );
 
-    bar.innerText =
-      data.is_open
-      ? `🏪 Store Status: 🟢 OPEN (${data.store_open}-${data.store_close})`
-      : `🏪 Store Status: 🔴 CLOSED (${data.store_open}-${data.store_close})`;
+const openTime = data.store_open || "";
+const closeTime = data.store_close || "";
+
+const timeText =
+  openTime && closeTime
+    ? ` (${openTime}-${closeTime})`
+    : "";
+
+bar.innerText =
+  data.is_open
+  ? `🏪 Store Status: 🟢 OPEN${timeText}`
+  : `🏪 Store Status: 🔴 CLOSED${timeText}`;
 
     if(data.store_open){
       document.getElementById(
@@ -768,9 +776,21 @@ async function saveStoreSettings(payload){
 
     const data = await res.json();
 
-    if(data.success){
-      alert(data.message || "บันทึกสำเร็จค่ะ");
-    }else{
+if(data.success){
+
+  alert(data.message || "บันทึกสำเร็จค่ะ");
+
+  document
+    .getElementById("store-control-panel")
+    .classList.remove("active");
+
+  document
+    .getElementById("store-hours-panel")
+    .classList.remove("active");
+
+  loadStoreStatus();
+
+}else{
       alert(data.message || "บันทึกไม่สำเร็จค่ะ");
     }
 
