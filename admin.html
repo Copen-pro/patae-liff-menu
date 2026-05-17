@@ -360,17 +360,30 @@ async function loadOrders(){
 
 if(currentView === "orders"){
 
-  orders =
-    currentOrders.filter(o =>
-      o.order_status !== "DONE"
+orders =
+  currentOrders.filter(o => {
+
+    const status =
+      String(o.order_status || "")
+      .toUpperCase();
+
+    const payment =
+      String(o.payment_status || "UNPAID")
+      .toUpperCase();
+
+    return (
+      status !== "DONE" ||
+      payment !== "PAID"
     );
+
+});
 
 }else{
 
-  orders =
-    currentOrders.filter(o =>
-      o.payment_status !== "PAID"
-    );
+orders = currentOrders.filter(o =>
+  String(o.payment_status || "UNPAID")
+    .toUpperCase() !== "PAID"
+);
 
 }
     
