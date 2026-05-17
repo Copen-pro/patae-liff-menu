@@ -555,8 +555,17 @@ order.fulfillment_type === "delivery"
 
 : ""
 }
+<div class="btn-row">
 
-        <div class="btn-row">
+${
+currentView === "unpaid"
+
+? `
+${paidButton}
+`
+
+: `
+
 ${
 order.fulfillment_type === "delivery" &&
 order.delivery_confirm_status !== "CONFIRMED"
@@ -580,21 +589,32 @@ order.delivery_confirm_status !== "CONFIRMED"
 `
 
 : `
-<button class="btn-preparing" onclick="updateStatus('${order.order_no}','PREPARING')">
-  ☕ กำลังทำ
+<button class="btn-preparing"
+onclick="updateStatus('${order.order_no}','PREPARING')">
+
+☕ กำลังทำ
 </button>
 
-<button class="btn-ready" onclick="updateStatus('${order.order_no}','READY')">
-  ✅ พร้อมรับ
+<button class="btn-ready"
+onclick="updateStatus('${order.order_no}','READY')">
+
+✅ พร้อมรับ
 </button>
 
-<button class="btn-done" onclick="updateStatus('${order.order_no}','DONE')">
-  ✔ เสร็จแล้ว
+<button class="btn-done"
+onclick="updateStatus('${order.order_no}','DONE')">
+
+✔ เสร็จแล้ว
 </button>
 `
 }
 
 ${paidButton}
+
+`
+}
+
+</div>
 
 </div>
       `;
