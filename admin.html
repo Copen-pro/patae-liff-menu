@@ -144,60 +144,42 @@
   🔔 Sound: ON
 </button>
 
-  <div class="order-card">
+<div class="order-card">
+  <h3>🏪 Store Control</h3>
 
-<h3>🏪 Store Settings</h3>
+  <div class="btn-row">
+    <button class="btn-ready" onclick="quickSetStoreStatus('OPEN')">
+      🟢 เปิดร้าน
+    </button>
 
-<div style="margin-top:10px;">
-  <label>สถานะร้าน</label>
-
-  <select id="store-status"
-    style="width:100%;padding:10px;margin-top:5px;border-radius:10px;">
-    
-    <option value="OPEN">
-      🟢 OPEN
-    </option>
-
-    <option value="CLOSED">
-      🔴 CLOSED
-    </option>
-
-  </select>
+    <button class="btn-done" onclick="quickSetStoreStatus('CLOSED')">
+      🔴 ปิดร้าน
+    </button>
+  </div>
 </div>
 
-<div style="margin-top:10px;">
+<div class="order-card">
+  <h3>⏰ Store Hours</h3>
 
-<label>เวลาเปิด</label>
+  <label>เวลาเปิด</label>
+  <input
+    type="time"
+    id="store-open"
+    value="08:00"
+    style="width:100%;padding:10px;margin:6px 0;border-radius:10px;"
+  >
 
-<input
-type="time"
-id="store-open"
-style="width:100%;padding:10px;margin-top:5px;border-radius:10px;"
->
+  <label>เวลาปิด</label>
+  <input
+    type="time"
+    id="store-close"
+    value="18:00"
+    style="width:100%;padding:10px;margin:6px 0;border-radius:10px;"
+  >
 
-</div>
-
-<div style="margin-top:10px;">
-
-<label>เวลาปิด</label>
-
-<input
-type="time"
-id="store-close"
-style="width:100%;padding:10px;margin-top:5px;border-radius:10px;"
->
-
-</div>
-
-<button
-class="refresh"
-style="margin-top:12px;"
-onclick="saveStoreSettings()">
-
-💾 Save Store Settings
-
-</button>
-
+  <button class="refresh" onclick="saveStoreHours()">
+    💾 บันทึกเวลาเปิด/ปิด
+  </button>
 </div>
     
     
@@ -592,63 +574,73 @@ async function markPaid(orderNo){
 loadOrders();
 setInterval(loadOrders, 30000);
 
-async function saveStoreSettings(){
+async function quickSetStoreStatus(status){
 
-const storeStatus =
-document.getElementById("store-status").value;
+  const confirmText =
+    status === "OPEN"
+      ? "ต้องการเปิดร้านใช่ไหม?"
+      : "ต้องการปิดร้านใช่ไหม?";
 
-const storeOpen =
-document.getElementById("store-open").value;
+  if(!confirm(confirmText)){
+    return;
+  }
 
-const storeClose =
-document.getElementById("store-close").value;
-
-try{
-
-const res = await fetch(
-STORE_SETTINGS_API,
-{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-
-store_status:storeStatus,
-store_open:storeOpen,
-store_close:storeClose
-
-})
-}
-);
-
-const data =
-await res.json();
-
-if(data.success){
-
-alert(
-"บันทึกเวลาเปิด/ปิดร้านแล้วค่ะ"
-);
-
-}else{
-
-alert(
-data.message ||
-"บันทึกไม่สำเร็จ"
-);
-
+  await saveStoreSettings({
+    store_status: status,
+    store_open: document.getElementById("store-open").value || "08:00",
+    store_close: document.getElementById("store-close").value || "18:00"
+  });
 }
 
-}catch(err){
+async function saveStoreHours(){
 
-console.error(err);
+  const storeOpen =
+    document.getElementById("store-open").value;
 
-alert(
-"ระบบขัดข้อง"
-);
+  const storeClose =
+    document.getElementById("store-close").value;
 
+  if(!storeOpen || !storeClose){
+    alert("กรุณาระบุเวลาเปิดและเวลาปิดค่ะ");
+    return;
+  }
+
+  await saveStoreSettings({
+    store_status: "OPEN",
+    store_open: storeOpen,
+    store_close: storeClose
+  });
 }
+
+async function saveStoreSettings(payload){
+
+  try{
+
+    const res = await fetch(
+      STORE_SETTINGS_API,
+      {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify(payload)
+      }
+    );
+
+    const data = await res.json();
+
+    if(data.success){
+      alert(data.message || "บันทึกสำเร็จค่ะ");
+    }else{
+      alert(data.message || "บันทึกไม่สำเร็จค่ะ");
+    }
+
+  }catch(err){
+
+    console.error(err);
+    alert("ระบบขัดข้องค่ะ");
+
+  }
 }
   
 </script>
