@@ -836,9 +836,8 @@ document.getElementById("orders-tab").classList.add("active");
 loadStoreStatus();
 loadOrders();
 
-setInterval(loadOrders,30000);
-setInterval(loadStoreStatus,60000);
-
+setInterval(loadOrders,60000); // 1 นาที
+setInterval(loadStoreStatus,120000); // 2 นาที 
   
 async function quickSetStoreStatus(status){
 
