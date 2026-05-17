@@ -144,6 +144,63 @@
   🔔 Sound: ON
 </button>
 
+  <div class="order-card">
+
+<h3>🏪 Store Settings</h3>
+
+<div style="margin-top:10px;">
+  <label>สถานะร้าน</label>
+
+  <select id="store-status"
+    style="width:100%;padding:10px;margin-top:5px;border-radius:10px;">
+    
+    <option value="OPEN">
+      🟢 OPEN
+    </option>
+
+    <option value="CLOSED">
+      🔴 CLOSED
+    </option>
+
+  </select>
+</div>
+
+<div style="margin-top:10px;">
+
+<label>เวลาเปิด</label>
+
+<input
+type="time"
+id="store-open"
+style="width:100%;padding:10px;margin-top:5px;border-radius:10px;"
+>
+
+</div>
+
+<div style="margin-top:10px;">
+
+<label>เวลาปิด</label>
+
+<input
+type="time"
+id="store-close"
+style="width:100%;padding:10px;margin-top:5px;border-radius:10px;"
+>
+
+</div>
+
+<button
+class="refresh"
+style="margin-top:12px;"
+onclick="saveStoreSettings()">
+
+💾 Save Store Settings
+
+</button>
+
+</div>
+    
+    
 <audio id="new-order-sound">
   <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
 </audio>
@@ -157,6 +214,9 @@ const GET_ORDERS_API =
 const UPDATE_STATUS_API =
   "https://copen.app.n8n.cloud/webhook/patae/admin/update-status";
 
+const STORE_SETTINGS_API =
+"https://copen.app.n8n.cloud/webhook/patae/store/settings";
+  
 let soundEnabled = true;
 let knownOrderNos = new Set();
 let firstLoad = true; 
@@ -531,6 +591,66 @@ async function markPaid(orderNo){
 
 loadOrders();
 setInterval(loadOrders, 30000);
+
+async function saveStoreSettings(){
+
+const storeStatus =
+document.getElementById("store-status").value;
+
+const storeOpen =
+document.getElementById("store-open").value;
+
+const storeClose =
+document.getElementById("store-close").value;
+
+try{
+
+const res = await fetch(
+STORE_SETTINGS_API,
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+
+store_status:storeStatus,
+store_open:storeOpen,
+store_close:storeClose
+
+})
+}
+);
+
+const data =
+await res.json();
+
+if(data.success){
+
+alert(
+"บันทึกเวลาเปิด/ปิดร้านแล้วค่ะ"
+);
+
+}else{
+
+alert(
+data.message ||
+"บันทึกไม่สำเร็จ"
+);
+
+}
+
+}catch(err){
+
+console.error(err);
+
+alert(
+"ระบบขัดข้อง"
+);
+
+}
+}
+  
 </script>
 
 </body>
