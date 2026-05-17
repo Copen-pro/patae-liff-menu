@@ -356,37 +356,35 @@ async function loadOrders(){
     const data = await res.json();
     currentOrders = data.orders || [];
 
-    let orders = currentOrders;
+let orders = currentOrders;
 
 if(currentView === "orders"){
 
-orders =
-  currentOrders.filter(o => {
+  orders =
+    currentOrders.filter(o => {
 
-    const status =
-      String(o.order_status || "")
-      .toUpperCase();
+      const status =
+        String(o.order_status || "")
+        .toUpperCase();
 
-    const payment =
-      String(o.payment_status || "UNPAID")
-      .toUpperCase();
+      return status !== "DONE";
 
-    return (
-      status !== "DONE" ||
-      payment !== "PAID"
-    );
-
-});
+    });
 
 }else{
 
-orders = currentOrders.filter(o =>
-  String(o.payment_status || "UNPAID")
-    .toUpperCase() !== "PAID"
-);
+  orders =
+    currentOrders.filter(o => {
+
+      const payment =
+        String(o.payment_status || "UNPAID")
+        .toUpperCase();
+
+      return payment !== "PAID";
+
+    });
 
 }
-    
     
     if(!orders.length){
       box.innerHTML = `<div class="empty">ยังไม่มีออเดอร์ที่ต้องทำค่ะ ☕</div>`;
