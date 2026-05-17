@@ -159,6 +159,19 @@
   display:block;
 }
 
+.store-tabs button.active{
+  background:#233b2a;
+  color:white;
+}
+
+.view-title{
+  background:#fff;
+  border-radius:14px;
+  padding:10px 12px;
+  margin:10px 0;
+  font-weight:bold;
+  text-align:center;
+}
     
   </style>
 </head>
@@ -277,6 +290,10 @@ onclick="showOrderTab('unpaid')">
 
 </button>
 
+</div>
+
+<div id="view-title" class="view-title">
+  ☕ Orders
 </div>
     
     <div id="orders">Loading...</div>
@@ -759,22 +776,20 @@ function showOrderTab(view){
 
   currentView = view;
 
-  document
-    .getElementById("orders-tab")
-    .classList.remove("active");
+  document.getElementById("orders-tab").classList.remove("active");
+  document.getElementById("unpaid-tab").classList.remove("active");
 
-  document
-    .getElementById("unpaid-tab")
-    .classList.remove("active");
+  document.getElementById(view + "-tab").classList.add("active");
 
-  document
-    .getElementById(view+"-tab")
-    .classList.add("active");
+  document.getElementById("view-title").innerText =
+    view === "orders"
+      ? "☕ Orders"
+      : "💸 Unpaid Orders";
 
   loadOrders();
-
 }
-  
+document.getElementById("orders-tab").classList.add("active");
+
 loadStoreStatus();
 loadOrders();
 
