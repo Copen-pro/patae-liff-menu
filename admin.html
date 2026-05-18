@@ -984,29 +984,9 @@ async function quickSetStoreStatus(status){
     return;
   }
 
-async function quickSetStoreStatus(status){
-
-  const confirmText =
-    status === "OPEN"
-      ? "ต้องการเปิดร้านใช่ไหม?"
-      : "ต้องการปิดร้านใช่ไหม?";
-
-  if(!confirm(confirmText)){
-    return;
-  }
-
-  const storeOpen =
-    document.getElementById("store-open").value;
-
-  const storeClose =
-    document.getElementById("store-close").value;
-
   await saveStoreSettings({
-    store_status: status,
-    store_open: storeOpen,
-    store_close: storeClose
+    store_status: status
   });
-}
 }
 
 async function saveStoreHours(){
