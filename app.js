@@ -435,6 +435,8 @@ const payload = {
       cart = {};
       updateCart();
       renderProducts();
+
+      document.getElementById("custom-request").value = "";
       
       }else{
       resetConfirmButton();
@@ -458,9 +460,15 @@ function openCustom(){
 }
 
 function closeCustom(){
+
   document
     .getElementById("custom-modal")
     .classList.add("hidden");
+
+  document
+    .getElementById("custom-request")
+    .value = "";
+
 }
 
 function addCustomOrder(){
