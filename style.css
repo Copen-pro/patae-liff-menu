@@ -62,15 +62,35 @@ body{
   bottom:0;
   left:0;
   right:0;
-  min-height:72px;
+  min-height:88px;
   background:var(--primary);
   color:white;
   display:flex;
   justify-content:space-between;
-  padding:14px 24px;
+  gap:10px;
+  padding:12px 14px;
   align-items:center;
   z-index:900;
+  box-sizing:border-box;
 }
+
+.cart-bar button{
+  white-space:nowrap;
+  font-size:14px;
+  padding:10px 12px;
+}
+
+.cart-bar-actions{
+  display:flex;
+  gap:8px;
+  flex-shrink:0;
+}
+
+.cart-summary-text{
+  font-size:14px;
+  line-height:1.4;
+}
+
 .modal button{background:#d4a373;border:none;padding:10px 16px;border-radius:10px;cursor:pointer}
 .cart-bar button,
 .checkout-btn{
