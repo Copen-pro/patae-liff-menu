@@ -425,7 +425,21 @@ firstLoad = false;
 
 let paidButton = "";
 
-if(order.payment_status === "PAID"){
+const paymentStatus =
+  String(order.payment_status || "UNPAID")
+    .trim()
+    .toUpperCase();
+
+const paidQuoteStatus =
+  String(order.quote_status || "NOT_REQUIRED")
+    .trim()
+    .toUpperCase();
+
+const canMarkPaid =
+  paidQuoteStatus === "CONFIRMED" ||
+  paidQuoteStatus === "NOT_REQUIRED";
+
+if(paymentStatus === "PAID"){
 
   paidButton = `
     <button class="btn-paid" disabled>
@@ -433,10 +447,7 @@ if(order.payment_status === "PAID"){
     </button>
   `;
 
-}else if(
-  String(order.quote_status || "NOT_REQUIRED").toUpperCase() !== "CONFIRMED" &&
-  String(order.quote_status || "NOT_REQUIRED").toUpperCase() !== "NOT_REQUIRED"
-){
+}else if(!canMarkPaid){
 
   paidButton = `
     <button class="btn-paid" disabled>
