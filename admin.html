@@ -389,10 +389,15 @@ if(currentView === "orders"){
 
 }
     
-    if(!orders.length){
-      box.innerHTML = `<div class="empty">ยังไม่มีออเดอร์ที่ต้องทำค่ะ ☕</div>`;
-      return;
-    }
+if(!orders.length){
+
+  box.innerHTML =
+    currentView === "orders"
+      ? `<div class="empty">ยังไม่มีข้อมูลออเดอร์ค่ะ ☕</div>`
+      : `<div class="empty">ยังไม่มีรายการค้างชำระค่ะ 💸</div>`;
+
+  return;
+}
 
     box.innerHTML = "";
 
