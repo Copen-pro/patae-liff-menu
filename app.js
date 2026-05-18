@@ -379,7 +379,21 @@ if(!isOpen){
   
 const payload = {
   order_channel: "LINE",
-  
+
+  order_type:
+    items.every(i => i.order_type === "CUSTOM")
+      ? "CUSTOM"
+      : "NORMAL",
+
+  has_custom:
+    items.some(i => i.order_type === "CUSTOM"),
+
+  custom_request:
+    items
+      .filter(i => i.order_type === "CUSTOM")
+      .map(i => i.custom_request)
+      .join("\n"), 
+ 
   line_user_id: lineProfile?.userId || "",
   line_display_name: lineProfile?.displayName || "",
   
