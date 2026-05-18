@@ -446,8 +446,64 @@ if(order.payment_status === "PAID"){
   `;
 
 }
-      
-      div.innerHTML = `
+
+const quoteStatus =
+  String(order.quote_status || "NOT_REQUIRED")
+    .toUpperCase();
+
+const quoteLocked =
+  quoteStatus !== "NOT_REQUIRED" &&
+  quoteStatus !== "CONFIRMED";
+
+let actionButtons = "";
+
+if(currentView === "unpaid"){
+
+  actionButtons = paidButton;
+
+}else if(quoteLocked){
+
+  actionButtons = `
+    <button class="btn-preparing" disabled>
+      ☕ กำลังทำ
+    </button>
+
+    <button class="btn-ready" disabled>
+      ✅ พร้อมรับ
+    </button>
+
+    <button class="btn-done" disabled>
+      ✔ เสร็จแล้ว
+    </button>
+
+    <div style="width:100%;color:#a15c00;font-weight:bold;margin-top:6px;">
+      รอลูกค้ายืนยันสรุปราคาก่อน
+    </div>
+
+    ${paidButton}
+  `;
+
+}else{
+
+  actionButtons = `
+    <button class="btn-preparing" onclick="updateStatus('${order.order_no}','PREPARING')">
+      ☕ กำลังทำ
+    </button>
+
+    <button class="btn-ready" onclick="updateStatus('${order.order_no}','READY')">
+      ✅ พร้อมรับ
+    </button>
+
+    <button class="btn-done" onclick="updateStatus('${order.order_no}','DONE')">
+      ✔ เสร็จแล้ว
+    </button>
+
+    ${paidButton}
+  `;
+
+}
+     
+  div.innerHTML = `
 <div class="queue">
   ${order.queue_no}
 </div>
@@ -581,36 +637,7 @@ order.quote_status === "WAIT_CUSTOMER_CONFIRM"
 
 : ""
 }
-<div class="btn-row">
 
-${
-currentView === "unpaid"
-
-? `
-${paidButton}
-`
-
-: `
-
-${
-order.quote_status !== "NOT_REQUIRED" &&
-order.quote_status !== "CONFIRMED"
-
-? `
-<button class="btn-preparing" disabled>
-  ☕ กำลังทำ
-</button>
-
-<button class="btn-ready" disabled>
-  ✅ พร้อมรับ
-</button>
-
-<button class="btn-done" disabled>
-  ✔ เสร็จแล้ว
-</button>
-
-<div style="width:100%;color:#a15c00;font-weight:bold;margin-top:6px;">
-  รอลูกค้ายืนยันสรุปราคาก่อน
 </div>
 `
 
@@ -637,36 +664,10 @@ onclick="updateStatus('${order.order_no}','DONE')">
 </button>
 `
 }
+
 <div class="btn-row">
-
-${
-currentView === "unpaid"
-
-? `
-${paidButton}
-`
-
-: `
-
-${
-order.quote_status !== "NOT_REQUIRED" &&
-order.quote_status !== "CONFIRMED"
-
-? `
-<button class="btn-preparing" disabled>
-  ☕ กำลังทำ
-</button>
-
-<button class="btn-ready" disabled>
-  ✅ พร้อมรับ
-</button>
-
-<button class="btn-done" disabled>
-  ✔ เสร็จแล้ว
-</button>
-
-<div style="width:100%;color:#a15c00;font-weight:bold;margin-top:6px;">
-  รอลูกค้ายืนยันสรุปราคาก่อน
+  ${actionButtons}
+</div>                  
 </div>
 `
 
