@@ -354,7 +354,10 @@ async function loadOrders(){
   try{
     const res = await fetch(GET_ORDERS_API);
     const data = await res.json();
-    currentOrders = data.orders || [];
+
+    currentOrders = Array.isArray(data)
+      ? data
+      : (data.orders || data.data || []);
 
 let orders = currentOrders;
 
@@ -393,14 +396,14 @@ if(currentView === "orders"){
 
     box.innerHTML = "";
 
-    const currentOrderNos = new Set(
-  data.orders.map(order => order.order_no)
+const currentOrderNos = new Set(
+  currentOrders.map(order => order.order_no)
 );
 
 if(!firstLoad){
-  const hasNewOrder = data.orders.some(order =>
-    !knownOrderNos.has(order.order_no)
-  );
+const hasNewOrder = currentOrders.some(order =>
+  !knownOrderNos.has(order.order_no)
+);
 
   if(hasNewOrder){
     playNewOrderSound();
@@ -426,8 +429,8 @@ if(order.payment_status === "PAID"){
   `;
 
 }else if(
-  order.fulfillment_type === "delivery" &&
-  order.delivery_confirm_status !== "CONFIRMED"
+  String(order.quote_status || "NOT_REQUIRED").toUpperCase() !== "CONFIRMED" &&
+  String(order.quote_status || "NOT_REQUIRED").toUpperCase() !== "NOT_REQUIRED"
 ){
 
   paidButton = `
@@ -667,18 +670,17 @@ const order = currentOrders.find(
 const fulfillmentType =
   String(order?.fulfillment_type || "").toLowerCase();
 
-const deliveryConfirmStatus =
-  String(order?.delivery_confirm_status || "").toUpperCase();
+const quoteStatus =
+  String(order?.quote_status || "NOT_REQUIRED").toUpperCase();
 
 if(
   ["PREPARING","READY","DONE"].includes(status) &&
-  fulfillmentType === "delivery" &&
-  deliveryConfirmStatus !== "CONFIRMED"
+  quoteStatus !== "CONFIRMED" &&
+  quoteStatus !== "NOT_REQUIRED"
 ){
-  alert("กรุณาส่งค่าส่งและรอลูกค้ายืนยันก่อนค่ะ");
+  alert("กรุณาส่งสรุปราคาและรอลูกค้ายืนยันก่อนค่ะ");
   return;
 }
-
   try{
     const res = await fetch(UPDATE_STATUS_API,{
       method:"POST",
