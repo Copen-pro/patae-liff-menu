@@ -530,26 +530,52 @@ order.fulfillment_type === "delivery"
 }
 
 ${
-order.fulfillment_type === "delivery"
-&& order.delivery_confirm_status !== "CONFIRMED"
+order.quote_status === "PENDING" ||
+order.quote_status === "WAIT_CUSTOMER_CONFIRM"
 
 ? `
 <div style="margin-top:10px;">
-  <div><strong>Delivery Fee:</strong></div>
 
-  <input
-    id="delivery-fee-${order.order_no}"
-    type="number"
-    placeholder="ใส่ค่าส่ง"
-    style="width:100%;padding:10px;margin-top:6px;border-radius:10px;border:1px solid #ccc;"
-  >
+  ${
+    order.custom_request
+    ? `
+    <div style="background:#fff0d6;padding:10px;border-radius:12px;margin-bottom:10px;">
+      <strong>📝 รายการพิเศษ:</strong><br>
+      ${order.custom_request}
+    </div>
+
+    <div><strong>Custom Price:</strong></div>
+    <input
+      id="custom-price-${order.order_no}"
+      type="number"
+      placeholder="ใส่ราคาสินค้าพิเศษ"
+      style="width:100%;padding:10px;margin-top:6px;border-radius:10px;border:1px solid #ccc;"
+    >
+    `
+    : ""
+  }
+
+  ${
+    order.fulfillment_type === "delivery"
+    ? `
+    <div style="margin-top:10px;"><strong>Delivery Fee:</strong></div>
+    <input
+      id="delivery-fee-${order.order_no}"
+      type="number"
+      placeholder="ใส่ค่าส่ง"
+      style="width:100%;padding:10px;margin-top:6px;border-radius:10px;border:1px solid #ccc;"
+    >
+    `
+    : ""
+  }
 
   <button
     class="btn-ready"
     style="margin-top:8px;width:100%;"
-    onclick="sendDeliveryConfirm('${order.order_no}', ${order.total_amount || 0})">
-    ส่งค่าส่งให้ลูกค้า Confirm
+    onclick="sendQuoteConfirm('${order.order_no}', ${order.total_amount || 0})">
+    ส่งสรุปราคาให้ลูกค้า Confirm
   </button>
+
 </div>
 `
 
@@ -567,8 +593,9 @@ ${paidButton}
 : `
 
 ${
-order.fulfillment_type === "delivery" &&
-order.delivery_confirm_status !== "CONFIRMED"
+${
+order.quote_status !== "NOT_REQUIRED" &&
+order.quote_status !== "CONFIRMED"
 
 ? `
 <button class="btn-preparing" disabled>
@@ -584,13 +611,33 @@ order.delivery_confirm_status !== "CONFIRMED"
 </button>
 
 <div style="width:100%;color:#a15c00;font-weight:bold;margin-top:6px;">
-  รอลูกค้ายืนยันค่าส่งก่อน
+  รอลูกค้ายืนยันสรุปราคาก่อน
 </div>
 `
 
 : `
 <button class="btn-preparing"
 onclick="updateStatus('${order.order_no}','PREPARING')">
+
+☕ กำลังทำ
+
+</button>
+
+<button class="btn-ready"
+onclick="updateStatus('${order.order_no}','READY')">
+
+✅ พร้อมรับ
+
+</button>
+
+<button class="btn-done"
+onclick="updateStatus('${order.order_no}','DONE')">
+
+✔ เสร็จแล้ว
+
+</button>
+`
+}
 
 ☕ กำลังทำ
 </button>
@@ -682,6 +729,78 @@ if(
   }
 }
 
+  async function sendQuoteConfirm(orderNo, totalAmount){
+
+  const order = currentOrders.find(
+    o => String(o.order_no).trim() === String(orderNo).trim()
+  );
+
+  const customInput =
+    document.getElementById(`custom-price-${orderNo}`);
+
+  const deliveryInput =
+    document.getElementById(`delivery-fee-${orderNo}`);
+
+  const customPrice =
+    customInput ? Number(customInput.value || 0) : 0;
+
+  const deliveryFee =
+    deliveryInput ? Number(deliveryInput.value || 0) : 0;
+
+  if(order?.custom_request && customPrice <= 0){
+    alert("กรุณาใส่ราคาสินค้าพิเศษค่ะ");
+    return;
+  }
+
+  if(order?.fulfillment_type === "delivery" && deliveryFee <= 0){
+    alert("กรุณาใส่ค่าส่งค่ะ");
+    return;
+  }
+
+  const grandTotal =
+    Number(totalAmount || 0) + customPrice + deliveryFee;
+
+  if(!confirm(
+    `ส่งสรุปราคาให้ลูกค้า?\n\n` +
+    `ค่าสินค้าปกติ: ${totalAmount} บาท\n` +
+    `ค่าสินค้าพิเศษ: ${customPrice} บาท\n` +
+    `ค่าส่ง: ${deliveryFee} บาท\n` +
+    `รวม: ${grandTotal} บาท`
+  )){
+    return;
+  }
+
+  try{
+    const res = await fetch(UPDATE_STATUS_API,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        order_no:orderNo,
+        custom_price:customPrice,
+        delivery_fee:deliveryFee,
+        grand_total:grandTotal,
+        quote_status:"WAIT_CUSTOMER_CONFIRM"
+      })
+    });
+
+    const data = await res.json();
+
+    if(data.success){
+      alert("ส่งสรุปราคาให้ลูกค้าแล้วค่ะ");
+      loadOrders();
+    }else{
+      alert(data.message || "ส่งสรุปราคาไม่สำเร็จค่ะ");
+    }
+
+  }catch(err){
+    console.error(err);
+    alert("ระบบขัดข้องค่ะ");
+  }
+}
+  
+  
   async function sendDeliveryConfirm(orderNo, totalAmount){
 
   const input =
