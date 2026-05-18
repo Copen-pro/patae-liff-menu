@@ -638,61 +638,8 @@ order.quote_status === "WAIT_CUSTOMER_CONFIRM"
 : ""
 }
 
-</div>
-`
-
-: `
-<button class="btn-preparing"
-onclick="updateStatus('${order.order_no}','PREPARING')">
-
-☕ กำลังทำ
-
-</button>
-
-<button class="btn-ready"
-onclick="updateStatus('${order.order_no}','READY')">
-
-✅ พร้อมรับ
-
-</button>
-
-<button class="btn-done"
-onclick="updateStatus('${order.order_no}','DONE')">
-
-✔ เสร็จแล้ว
-
-</button>
-`
-}
-
 <div class="btn-row">
   ${actionButtons}
-</div>                  
-</div>
-`
-
-: `
-<button class="btn-preparing" onclick="updateStatus('${order.order_no}','PREPARING')">
-  ☕ กำลังทำ
-</button>
-
-<button class="btn-ready" onclick="updateStatus('${order.order_no}','READY')">
-  ✅ พร้อมรับ
-</button>
-
-<button class="btn-done" onclick="updateStatus('${order.order_no}','DONE')">
-  ✔ เสร็จแล้ว
-</button>
-`
-}
-
-${paidButton}
-
-`
-}
-
-</div>
-
 </div>
 
 </div>
