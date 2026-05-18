@@ -126,6 +126,33 @@
   </div>
 </div>
 
+<div id="custom-modal" class="modal hidden">
+  <div class="modal-content">
+
+    <h3>📝 สั่งพิเศษ</h3>
+
+    <p style="color:#777;font-size:14px;">
+      ระบุเมนูที่ต้องการ ร้านจะตรวจสอบและแจ้งราคากลับไปให้ยืนยันค่ะ
+    </p>
+
+    <textarea
+      id="custom-request"
+      placeholder="เช่น โกโก้ปั่น เพิ่มวิป ไม่หวาน"
+      style="width:100%;height:120px;padding:12px;border-radius:12px;margin-top:10px;"
+    ></textarea>
+
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button class="secondary" onclick="closeCustom()">
+        ยกเลิก
+      </button>
+
+      <button onclick="addCustomOrder()">
+        เพิ่มรายการ
+      </button>
+    </div>
+
+  </div>
+</div>  
   
 <script src="app.js"></script>
 </body>
