@@ -437,12 +437,51 @@ const payload = {
 }
 }
 
+function openCustom(){
+  document
+    .getElementById("custom-modal")
+    .classList.remove("hidden");
+}
+
+function closeCustom(){
+  document
+    .getElementById("custom-modal")
+    .classList.add("hidden");
+}
+
+function addCustomOrder(){
+  const request =
+    document.getElementById("custom-request")
+      .value
+      .trim();
+
+  if(!request){
+    alert("กรุณาระบุรายการที่ต้องการค่ะ");
+    return;
+  }
+
+  cart["CUSTOM"] = {
+    product_id: "CUSTOM",
+    product_name: "📝 สั่งพิเศษ",
+    price: 0,
+    qty: 1,
+    order_type: "CUSTOM",
+    custom_request: request
+  };
+
+  updateCart();
+  closeCustom();
+
+  alert("เพิ่มรายการสั่งพิเศษแล้วค่ะ");
+}
+
 function bindEvents(){
   document.getElementById("view-cart-btn").onclick = openCart;
   document.getElementById("close-cart-btn").onclick = closeCart;
   document.getElementById("go-checkout-btn").onclick = goCheckout;
   document.getElementById("back-to-cart-btn").onclick = backToCart;
   document.getElementById("confirm-order-btn").onclick = confirmOrder;
+  document.getElementById("custom-order-btn").onclick = openCustom;
 }
 
 async function start(){
