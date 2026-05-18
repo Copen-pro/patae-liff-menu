@@ -74,7 +74,20 @@ async function loadProducts(){
     const res = await fetch(PRODUCTS_API);
     const data = await res.json();
 
-allProducts = data.products || data || [];
+    if(data.is_open === false){
+  document.body.innerHTML = `
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f6f2ed;padding:20px;font-family:Arial,sans-serif;text-align:center;">
+      <div style="background:white;padding:28px;border-radius:22px;box-shadow:0 4px 14px rgba(0,0,0,.08);max-width:360px;">
+        <h2>☕ PaTae Cafe</h2>
+        <h3>ร้านปิดรับออเดอร์ค่ะ</h3>
+        <p>${data.message || "กรุณากลับมาสั่งใหม่ในเวลาทำการค่ะ"}</p>
+      </div>
+    </div>
+  `;
+  return;
+}
+    
+allProducts = data.products || [];
 
 currentCategory = null;
 buildTabs();
@@ -435,12 +448,6 @@ function bindEvents(){
 async function start(){
   bindEvents();
   await initLiff();
-
-  const isOpen = await checkStoreStatus();
-
-  if(!isOpen){
-    return;
-  }
 
   await loadProducts();
 }
