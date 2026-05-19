@@ -985,6 +985,7 @@ async function quickSetStoreStatus(status){
   }
 
   await saveStoreSettings({
+     action: "SET_STATUS",
     store_status: status
   });
 }
@@ -1003,7 +1004,7 @@ async function saveStoreHours(){
   }
 
   await saveStoreSettings({
-    store_status: "OPEN",
+    action: "SET_HOURS",
     store_open: storeOpen,
     store_close: storeClose
   });
