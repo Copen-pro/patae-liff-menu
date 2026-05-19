@@ -423,25 +423,62 @@ const payload = {
 
     const data = await res.json();
 
-    if(data.success){
-      document.getElementById("success-order-no").innerText = data.order_no;
-      document.getElementById("success-queue-no").innerText = data.queue_no || "-";
-      
-      resetConfirmButton();
-      
-      document.getElementById("cart-modal").classList.add("hidden");
-      document.getElementById("success-modal").classList.remove("hidden");
+if(data.success && data.order_created){
 
-      cart = {};
-      updateCart();
-      renderProducts();
+  document.getElementById("success-order-no").innerText =
+    data.order_no || "-";
 
-      document.getElementById("custom-request").value = "";
-      
-      }else{
-      resetConfirmButton();
-      alert(data.message || "ส่งออเดอร์ไม่สำเร็จ กรุณาลองใหม่ค่ะ");
-      }
+  document.getElementById("success-queue-no").innerText =
+    data.queue_no || "-";
+
+  resetConfirmButton();
+
+  document.getElementById("cart-modal").classList.add("hidden");
+  document.getElementById("success-modal").classList.remove("hidden");
+
+  cart = {};
+  updateCart();
+  renderProducts();
+
+  const customRequestInput =
+    document.getElementById("custom-request");
+
+  if(customRequestInput){
+    customRequestInput.value = "";
+  }
+
+  if(data.line_push_warning){
+    alert(
+      data.message ||
+      "สั่งซื้อสำเร็จค่ะ แต่ระบบไม่สามารถส่ง LINE แจ้งเตือนได้ กรุณาดูสถานะได้ที่ My Queue"
+    );
+  }
+
+  return;
+}
+
+if(data.success){
+
+  document.getElementById("success-order-no").innerText =
+    data.order_no || "-";
+
+  document.getElementById("success-queue-no").innerText =
+    data.queue_no || "-";
+
+  resetConfirmButton();
+
+  document.getElementById("cart-modal").classList.add("hidden");
+  document.getElementById("success-modal").classList.remove("hidden");
+
+  cart = {};
+  updateCart();
+  renderProducts();
+
+  return;
+}
+
+resetConfirmButton();
+alert(data.message || "ส่งออเดอร์ไม่สำเร็จ กรุณาลองใหม่ค่ะ");
 
 }catch(err){
 
