@@ -16,14 +16,24 @@
       font-family:sans-serif;
     }
 
-    .queue-card{
+    .page-card{
       background:white;
       border-radius:24px;
-      padding:28px;
-      max-width:420px;
-      margin:40px auto;
+      padding:24px;
+      max-width:460px;
+      margin:30px auto;
       text-align:center;
       box-shadow:0 4px 18px rgba(0,0,0,0.08);
+    }
+
+    .order-mini-card{
+      background:white;
+      border-radius:20px;
+      padding:18px;
+      margin:16px 0;
+      text-align:center;
+      box-shadow:0 3px 12px rgba(0,0,0,0.06);
+      border:1px solid #eee;
     }
 
     .queue-no{
@@ -34,49 +44,50 @@
     }
 
     .status{
-      font-size:20px;
-      margin-bottom:20px;
+      font-size:18px;
+      margin-bottom:14px;
     }
 
-.status-badge{
-  display:inline-block;
-  padding:6px 14px;
-  border-radius:999px;
-  font-weight:bold;
-  color:white;
-}
+    .status-badge{
+      display:inline-block;
+      padding:6px 14px;
+      border-radius:999px;
+      font-weight:bold;
+      color:white;
+    }
 
-.status-new{
-  background:#8e8e93;
-}
+    .status-new{
+      background:#8e8e93;
+    }
 
-.status-preparing{
-  background:#f5a623;
-}
+    .status-preparing{
+      background:#f5a623;
+    }
 
-.status-ready{
-  background:#34c759;
-}
+    .status-ready{
+      background:#34c759;
+    }
 
-.status-done{
-  background:#5ac8fa;
-} 
+    .status-done{
+      background:#5ac8fa;
+    }
 
-.payment-badge{
-  display:inline-block;
-  padding:6px 12px;
-  border-radius:999px;
-  font-weight:bold;
-  color:white;
-}
+    .payment-badge{
+      display:inline-block;
+      padding:6px 12px;
+      border-radius:999px;
+      font-weight:bold;
+      color:white;
+    }
 
-.payment-paid{
-  background:#34c759;
-}
+    .payment-paid{
+      background:#34c759;
+    }
 
-.payment-unpaid{
-  background:#f5a623;
-}
+    .payment-unpaid{
+      background:#f5a623;
+    }
+
     .items{
       text-align:left;
       background:#f5f5f5;
@@ -84,13 +95,50 @@
       border-radius:12px;
       white-space:pre-wrap;
       margin-top:18px;
+      line-height:1.5;
+    }
+
+    .quote-box{
+      margin-top:12px;
+      padding:12px;
+      background:#fff0d6;
+      color:#8a5200;
+      border-radius:14px;
+      font-weight:bold;
+      line-height:1.5;
+    }
+
+    .action-btn{
+      width:100%;
+      margin-top:12px;
+      border:none;
+      border-radius:14px;
+      padding:14px;
+      font-size:16px;
+      font-weight:bold;
+      background:#233b2a;
+      color:white;
+      cursor:pointer;
+    }
+
+    .secondary-btn{
+      width:100%;
+      margin-top:10px;
+      border:none;
+      border-radius:14px;
+      padding:12px;
+      font-size:15px;
+      font-weight:bold;
+      background:#eee;
+      color:#333;
+      cursor:pointer;
     }
   </style>
 </head>
 
 <body>
 
-<div class="queue-card">
+<div class="page-card">
 
   <h2>🧾 MY QUEUE</h2>
 
@@ -98,34 +146,7 @@
     Loading...
   </div>
 
-  <div id="queue-box" style="display:none;">
-
-    <div class="queue-no" id="queue-no">
-      A001
-    </div>
-
-    <div class="status">
-      Status:
-      <strong id="order-status">
-        NEW
-      </strong>
-    </div>
-
-    <div style="margin-top:10px;">
-      Payment:
-      <span id="payment-status"></span>
-    </div>
-    
-    <div style="margin-top:20px;">
-      Order No:
-      <span id="order-no"></span>
-    </div>
-
-    <div id="amount-box" style="margin-top:10px;"></div>
-
-    <div class="items" id="items-summary"></div>
-
-  </div>
+  <div id="orders-list" style="display:none;"></div>
 
 </div>
 
@@ -134,108 +155,267 @@
 const LIFF_ID = "2010088421-yQ9Cqk5p";
 const API_URL = "https://copen.app.n8n.cloud/webhook/patae/my-queue";
 
-async function start(){
+const CONFIRM_URL =
+  "https://copen.app.n8n.cloud/webhook/patae/delivery-confirm";
 
-  await liff.init({
-    liffId: LIFF_ID
-  });
+function openConfirmOrder(orderNo, lineUserId){
+  const url =
+    `${CONFIRM_URL}?action=CUSTOMER_CONFIRM&order_no=${encodeURIComponent(orderNo)}&line_user_id=${encodeURIComponent(lineUserId)}`;
 
-  if(!liff.isLoggedIn()){
-    liff.login();
-    return;
-  }
-
-  const profile = await liff.getProfile();
-
-  const res = await fetch(API_URL,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body:JSON.stringify({
-      line_user_id: profile.userId
-    })
-  });
-
-  const data = await res.json();
- 
-  document.getElementById("loading").style.display = "none";
-
-  if(!data.found){
-
-    document.getElementById("queue-box").style.display = "block";
-
-    document.getElementById("queue-box").innerHTML = `
-      <h3>ยังไม่พบออเดอร์ล่าสุดค่ะ ☕</h3>
-    `;
-
-    return;
-  }
-
-  document.getElementById("queue-box").style.display = "block";
-
-  document.getElementById("queue-no").innerText =
-    data.queue_no;
-
-const statusMap = {
-  NEW: "รับออเดอร์แล้ว",
-  PREPARING: "กำลังทำ",
-  READY: "พร้อมรับแล้ว",
-  DONE: "เสร็จแล้ว"
-};
-
-const status = data.order_status || "NEW";
-const statusText = statusMap[status] || status;
-
-const statusEl = document.getElementById("order-status");
-statusEl.innerText = statusText;
-statusEl.className = "status-badge status-" + status.toLowerCase();
-
-  document.getElementById("order-no").innerText =
-    data.order_no;
-
-  const paymentEl =
-  document.getElementById("payment-status");
-
-const paymentStatus =
-  String(data.payment_status || "UNPAID")
-    .trim()
-    .toUpperCase();
-
-paymentEl.innerText =
-  paymentStatus === "PAID"
-    ? "💰 PAID"
-    : "⏳ UNPAID";
-
-paymentEl.className =
-  "payment-badge " +
-  (
-    paymentStatus === "PAID"
-      ? "payment-paid"
-      : "payment-unpaid"
-  );
-  
-  const amountBox = document.getElementById("amount-box");
-
-if(data.fulfillment_type === "delivery"){
-
-  amountBox.innerHTML = `
-    <div><strong>ยอดสินค้า:</strong> ${data.total_amount || 0} บาท</div>
-    <div><strong>ค่าส่ง:</strong> ${data.delivery_fee || 0} บาท</div>
-    <div><strong>รวมทั้งหมด:</strong> ${data.grand_total || data.total_amount || 0} บาท</div>
-  `;
-
-}else{
-
-  amountBox.innerHTML = `
-    <div><strong>Total:</strong> ${data.total_amount || 0} บาท</div>
-  `;
-
+  window.location.href = url;
 }
 
-  document.getElementById("items-summary").innerText =
-    data.items_summary;
+function buildOrderCard(data, lineUserId){
 
+  const card = document.createElement("div");
+  card.className = "order-mini-card";
+
+  const statusMap = {
+    NEW: "รับออเดอร์แล้ว",
+    PREPARING: "กำลังทำ",
+    READY: "พร้อมรับแล้ว",
+    DONE: "เสร็จแล้ว"
+  };
+
+  const status =
+    String(data.order_status || "NEW")
+      .trim()
+      .toUpperCase();
+
+  const statusText =
+    statusMap[status] || status;
+
+  const paymentStatus =
+    String(data.payment_status || "UNPAID")
+      .trim()
+      .toUpperCase();
+
+  const quoteStatus =
+    String(data.quote_status || "NOT_REQUIRED")
+      .trim()
+      .toUpperCase();
+
+  const totalAmount =
+    Number(data.total_amount || 0);
+
+  const customPrice =
+    Number(data.custom_price || 0);
+
+  const deliveryFee =
+    Number(data.delivery_fee || 0);
+
+  const grandTotal =
+    Number(data.grand_total || 0) ||
+    totalAmount + customPrice + deliveryFee;
+
+  let amountHtml = `
+    <div><strong>ยอดสินค้า:</strong> ${totalAmount} บาท</div>
+  `;
+
+  if(customPrice > 0){
+    amountHtml += `
+      <div><strong>ค่าสั่งพิเศษ:</strong> ${customPrice} บาท</div>
+    `;
+  }
+
+  if(String(data.fulfillment_type || "").toLowerCase() === "delivery"){
+    amountHtml += `
+      <div><strong>ค่าส่ง:</strong> ${deliveryFee} บาท</div>
+    `;
+  }
+
+  amountHtml += `
+    <div><strong>รวมทั้งหมด:</strong> ${grandTotal} บาท</div>
+  `;
+
+  let customHtml = "";
+
+  if(data.custom_request){
+    customHtml = `
+      <div class="items" style="background:#fff0d6;">
+        <strong>📝 รายการสั่งพิเศษ</strong><br>
+        ${data.custom_request}
+      </div>
+    `;
+  }
+
+  let quoteHtml = "";
+
+  if(quoteStatus === "PENDING"){
+    quoteHtml = `
+      <div class="quote-box">
+        ร้านกำลังตรวจสอบราคาเพิ่มเติมค่ะ<br>
+        กรุณารอสรุปราคาจากร้าน
+      </div>
+    `;
+  }
+
+  if(quoteStatus === "WAIT_CUSTOMER_CONFIRM"){
+    quoteHtml = `
+      <div class="quote-box">
+        ร้านสรุปราคาเพิ่มเติมแล้ว กรุณายืนยันออเดอร์ค่ะ
+      </div>
+
+      <button
+        class="action-btn"
+        onclick="openConfirmOrder('${data.order_no}', '${lineUserId}')">
+        ✅ ยืนยันออเดอร์
+      </button>
+    `;
+  }
+
+  if(quoteStatus === "CONFIRMED"){
+    quoteHtml = `
+      <div class="quote-box" style="background:#d9f7df;color:#167c34;">
+        ✅ ยืนยันออเดอร์แล้วค่ะ
+      </div>
+    `;
+  }
+
+  let readyHtml = "";
+
+  if(status === "READY"){
+    readyHtml = `
+      <div class="quote-box" style="background:#d9f7df;color:#167c34;">
+        ☕ ออเดอร์พร้อมรับแล้วค่ะ
+      </div>
+    `;
+  }
+
+  card.innerHTML = `
+    <div class="queue-no">
+      ${data.queue_no || "-"}
+    </div>
+
+    <div class="status">
+      Status:
+      <span class="status-badge status-${status.toLowerCase()}">
+        ${statusText}
+      </span>
+    </div>
+
+    <div style="margin-top:10px;">
+      Payment:
+      <span class="payment-badge ${
+        paymentStatus === "PAID"
+          ? "payment-paid"
+          : "payment-unpaid"
+      }">
+        ${
+          paymentStatus === "PAID"
+            ? "💰 PAID"
+            : "⏳ UNPAID"
+        }
+      </span>
+    </div>
+
+    <div style="margin-top:16px;">
+      Order No:
+      <span>${data.order_no || "-"}</span>
+    </div>
+
+    <div style="margin-top:10px;line-height:1.6;">
+      ${amountHtml}
+    </div>
+
+    <div class="items">
+      ${data.items_summary || "-"}
+    </div>
+
+    ${customHtml}
+    ${quoteHtml}
+    ${readyHtml}
+  `;
+
+  return card;
+}
+
+async function start(){
+
+  const loading =
+    document.getElementById("loading");
+
+  const ordersList =
+    document.getElementById("orders-list");
+
+  loading.style.display = "block";
+  ordersList.style.display = "none";
+  ordersList.innerHTML = "";
+
+  try{
+
+    await liff.init({
+      liffId: LIFF_ID
+    });
+
+    if(!liff.isLoggedIn()){
+      liff.login();
+      return;
+    }
+
+    const profile = await liff.getProfile();
+
+    const res = await fetch(API_URL,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        line_user_id: profile.userId
+      })
+    });
+
+    const data = await res.json();
+
+    loading.style.display = "none";
+    ordersList.style.display = "block";
+    ordersList.innerHTML = "";
+
+    if(!data.found || !data.orders || data.orders.length === 0){
+
+      ordersList.innerHTML = `
+        <h3>ยังไม่พบออเดอร์ที่กำลังดำเนินการค่ะ ☕</h3>
+        <p style="color:#777;line-height:1.5;">
+          หากเพิ่งสั่งซื้อ กรุณากด Refresh อีกครั้ง
+        </p>
+        <button class="secondary-btn" onclick="start()">
+          🔄 Refresh
+        </button>
+      `;
+
+      return;
+    }
+
+    data.orders.forEach(order => {
+      ordersList.appendChild(
+        buildOrderCard(order, profile.userId)
+      );
+    });
+
+    const refreshBtn = document.createElement("button");
+    refreshBtn.className = "secondary-btn";
+    refreshBtn.innerText = "🔄 Refresh";
+    refreshBtn.onclick = start;
+
+    ordersList.appendChild(refreshBtn);
+
+  }catch(err){
+
+    console.error(err);
+
+    loading.style.display = "none";
+    ordersList.style.display = "block";
+
+    ordersList.innerHTML = `
+      <h3>โหลดข้อมูลไม่สำเร็จค่ะ</h3>
+      <p style="color:#777;line-height:1.5;">
+        กรุณาลองใหม่อีกครั้ง
+      </p>
+      <button class="secondary-btn" onclick="start()">
+        🔄 Refresh
+      </button>
+    `;
+  }
 }
 
 start();
