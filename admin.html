@@ -970,7 +970,11 @@ document.getElementById("orders-tab").classList.add("active");
 loadStoreStatus();
 loadOrders();
 
-setInterval(loadOrders,120000); // 2 นาที
+setInterval(() => {
+  if(document.visibilityState === "visible"){
+    loadOrders();
+  }
+}, 600000); // 10 นาที
 
   
 async function quickSetStoreStatus(status){
