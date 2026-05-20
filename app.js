@@ -431,6 +431,9 @@ if(data.success && data.order_created){
   document.getElementById("success-queue-no").innerText =
     data.queue_no || "-";
 
+  document.getElementById("success-message").innerText =
+  data.message || "สั่งซื้อสำเร็จค่ะ กรุณาดูสถานะได้ที่ My Queue";
+  
   resetConfirmButton();
 
   document.getElementById("cart-modal").classList.add("hidden");
@@ -550,8 +553,10 @@ async function start(){
   await loadProducts();
 }
 
-document.getElementById("success-close-btn").onclick = () => {
- document.getElementById("success-modal").classList.add("hidden");
+  document.getElementById("success-close-btn").onclick = () => {
+  document.getElementById("success-modal").classList.add("hidden");
+  document.getElementById("success-message").innerText = "";
+  
   cart = {};
   updateCart();
   renderProducts();
