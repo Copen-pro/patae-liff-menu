@@ -89,23 +89,28 @@
     }
 
     .items{
-      text-align:left;
+      text-align:left !important;
       background:#f5f5f5;
-      padding:14px;
+      padding:14px 16px;
       border-radius:12px;
       white-space:pre-wrap;
       margin-top:18px;
-      line-height:1.5;
+      line-height:1.7;
+      font-size:15px;
+      color:#333;
+      word-break:break-word;
     }
 
     .quote-box{
       margin-top:12px;
-      padding:12px;
+      padding:12px 14px;
       background:#fff0d6;
       color:#8a5200;
       border-radius:14px;
       font-weight:bold;
-      line-height:1.5;
+      line-height:1.6;
+      text-align:left;
+      font-size:15px;
     }
 
     .action-btn{
@@ -260,8 +265,7 @@ function buildOrderCard(data, lineUserId){
   if(quoteStatus === "PENDING"){
     quoteHtml = `
       <div class="quote-box">
-        ร้านกำลังตรวจสอบราคาเพิ่มเติมค่ะ<br>
-        กรุณารอสรุปราคาจากร้าน
+        ⏳ รอสรุปราคาจากร้านค่ะ
       </div>
     `;
   }
@@ -330,7 +334,7 @@ function buildOrderCard(data, lineUserId){
       <span>${data.order_no || "-"}</span>
     </div>
 
-    <div style="margin-top:10px;line-height:1.6;">
+    <div style="margin-top:10px;line-height:1.6;text-align:left;">
       ${amountHtml}
     </div>
 
