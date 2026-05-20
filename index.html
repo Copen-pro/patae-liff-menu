@@ -8,6 +8,13 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 
+  
+<body>
+<header class="header">
+<h1>☕ PaTae Cafe</h1>
+<p>Fresh Coffee Everyday</p>
+</header>
+
 <div id="success-modal" class="modal hidden">
   <div class="success-content">
     <div class="success-icon">✅</div>
@@ -21,22 +28,23 @@
       Order No: <span id="success-order-no">-</span>
     </p>
 
+    <div
+      id="success-message"
+      style="margin-top:12px;color:#5b3a2e;font-weight:bold;line-height:1.5;"
+    >
+      สั่งซื้อสำเร็จค่ะ กรุณาดูสถานะได้ที่ My Queue
+    </div>
+
     <p class="success-note">
-      กรุณารอเรียกคิวที่ร้านนะคะ ☕
+      ขอบคุณที่อุดหนุน PaTae Cafe ☕
     </p>
 
     <button id="success-close-btn" class="checkout-btn">
       กลับไปหน้าเมนู
     </button>
   </div>
-</div>
+</div>  
   
-<body>
-<header class="header">
-<h1>☕ PaTae Cafe</h1>
-<p>Fresh Coffee Everyday</p>
-</header>
-
 <div id="category-tabs" class="tabs"></div>
 <main id="products" class="products"></main>
 
