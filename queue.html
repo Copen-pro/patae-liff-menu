@@ -207,7 +207,23 @@ function buildOrderCard(data, lineUserId){
   const grandTotal =
     Number(data.grand_total || 0) ||
     totalAmount + customPrice + deliveryFee;
+  
+  const displayItemsSummary =
+  String(data.items_summary || "")
+    .split("\n")
+    .filter(line => {
+      const text = String(line || "").trim();
 
+      if(!text) return false;
+
+      const isCustomZero =
+        text.includes("สั่งพิเศษ") &&
+        text.includes("= 0 บาท");
+
+      return !isCustomZero;
+    })
+    .join("\n");
+  
   let amountHtml = `
     <div><strong>ยอดสินค้า:</strong> ${totalAmount} บาท</div>
   `;
@@ -319,7 +335,7 @@ function buildOrderCard(data, lineUserId){
     </div>
 
     <div class="items">
-      ${data.items_summary || "-"}
+      ${displayItemsSummary || "-"}
     </div>
 
     ${customHtml}
