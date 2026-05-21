@@ -376,17 +376,25 @@ if(!isOpen){
   return;
 }
   
+const hasCustom =
+  items.some(i => i.order_type === "CUSTOM");
+
+const hasNormal =
+  items.some(i => i.order_type !== "CUSTOM");
+
+const orderType =
+  hasCustom && hasNormal
+    ? "MIXED"
+    : hasCustom
+      ? "CUSTOM"
+      : "NORMAL";
   
 const payload = {
   order_channel: "LINE",
 
-  order_type:
-    items.every(i => i.order_type === "CUSTOM")
-      ? "CUSTOM"
-      : "NORMAL",
+  order_type: orderType,
 
-  has_custom:
-    items.some(i => i.order_type === "CUSTOM"),
+  has_custom: hasCustom,
 
   custom_request:
     items
