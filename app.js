@@ -450,14 +450,7 @@ if(data.success && data.order_created){
     customRequestInput.value = "";
   }
 
-  if(data.line_push_warning){
-    alert(
-      data.message ||
-      "สั่งซื้อสำเร็จค่ะ แต่ระบบไม่สามารถส่ง LINE แจ้งเตือนได้ กรุณาดูสถานะได้ที่ My Queue"
-    );
-  }
-
-  return;
+   return;
 }
 
 if(data.success){
