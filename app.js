@@ -245,27 +245,34 @@ function renderCartItems(){
       item.order_type === "CUSTOM" ||
       item.product_id === "CUSTOM";
 
-    const customDetail =
-      isCustom && item.custom_request
-        ? `
-          <div style="
-            margin-top:8px;
-            padding:10px;
-            background:#fff0d6;
-            border-radius:12px;
-            color:#5b3a2e;
-            font-size:14px;
-            line-height:1.5;
-            white-space:pre-wrap;
-          ">
-            <strong>รายละเอียด:</strong><br>
-            ${item.custom_request}
-          </div>
-        `
-        : "";
+const customDetail =
+  isCustom && item.custom_request
+    ? `
+      <div style="
+        margin-top:8px;
+        padding:8px 10px;
+        background:#fff0d6;
+        border-radius:10px;
+        color:#5b3a2e;
+        font-size:14px;
+        line-height:1.5;
+        white-space:pre-wrap;
+        text-align:left;
+        width:100%;
+        box-sizing:border-box;
+      ">
+        <div style="font-weight:bold;margin-bottom:4px;">
+          รายละเอียด:
+        </div>
+        <div>
+          ${item.custom_request}
+        </div>
+      </div>
+    `
+    : "";
 
     div.innerHTML = `
-      <div style="flex:1;">
+        <div style="flex:1;text-align:left;">
         <div class="cart-item-name">
           ${item.product_name}
         </div>
@@ -281,7 +288,7 @@ function renderCartItems(){
         ${customDetail}
       </div>
 
-      <div class="cart-item-total">
+      <div class="cart-item-total" style="margin-left:10px;white-space:nowrap;">
         ${
           isCustom
             ? "รอราคา"
