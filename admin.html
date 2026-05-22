@@ -315,6 +315,23 @@ let knownOrderNos = new Set();
 let firstLoad = true; 
 let currentOrders = [];  
 let currentView = "orders";
+
+function cleanItemsSummary(summary){
+  return String(summary || "")
+    .split("\n")
+    .filter(line => {
+      const text = String(line || "").trim();
+
+      if(!text) return false;
+
+      const isCustomZero =
+        text.includes("สั่งพิเศษ") &&
+        text.includes("= 0 บาท");
+
+      return !isCustomZero;
+    })
+    .join("\n");
+}
   
 function toggleSound(){
   soundEnabled = !soundEnabled;
@@ -433,6 +450,35 @@ firstLoad = false;
       const div = document.createElement("div");
       div.className = "order-card";
 
+const displayItemsSummary =
+  cleanItemsSummary(order.items_summary);
+
+const customPrice =
+  Number(order.custom_price || 0);
+
+const deliveryFee =
+  Number(order.delivery_fee || 0);
+
+const totalAmount =
+  Number(order.total_amount || 0);
+
+const grandTotal =
+  Number(order.grand_total || 0) ||
+  totalAmount + customPrice + deliveryFee;
+
+const hasCustom =
+  order.has_custom === true ||
+  String(order.has_custom || "").toUpperCase() === "TRUE" ||
+  String(order.order_type || "").toUpperCase() === "CUSTOM" ||
+  String(order.order_type || "").toUpperCase() === "MIXED" ||
+  !!order.custom_request;
+
+const isDelivery =
+  String(order.fulfillment_type || "").toLowerCase() === "delivery";
+
+const shouldShowBreakdown =
+  isDelivery || hasCustom || customPrice > 0 || deliveryFee > 0;     
+     
 
 let paidButton = "";
 
@@ -599,19 +645,41 @@ minute:"2-digit"
           : ""
         }
 
-        <div class="items">${order.items_summary || ""}</div>
-
+        <div class="items">${displayItemsSummary || "-"}</div>
+${
+order.custom_request
+? `
+<div style="background:#fff0d6;padding:10px;border-radius:12px;margin:10px 0;">
+  <strong>📝 รายการพิเศษ:</strong><br>
+  ${order.custom_request}
+</div>
+`
+: ""
+}  
         ${
-order.fulfillment_type === "delivery"
+${
+shouldShowBreakdown
 
 ? `
-<div><strong>ยอดสินค้า:</strong> ${order.total_amount || 0} บาท</div>
-<div><strong>ค่าส่ง:</strong> ${order.delivery_fee || 0} บาท</div>
-<div><strong>รวมทั้งหมด:</strong> ${order.grand_total || order.total_amount || 0} บาท</div>
+<div><strong>ยอดสินค้า:</strong> ${totalAmount} บาท</div>
+
+${
+  hasCustom
+    ? `<div><strong>ค่าสั่งพิเศษ:</strong> ${customPrice} บาท</div>`
+    : ""
+}
+
+${
+  isDelivery
+    ? `<div><strong>ค่าส่ง:</strong> ${deliveryFee} บาท</div>`
+    : ""
+}
+
+<div><strong>รวมทั้งหมด:</strong> ${grandTotal} บาท</div>
 `
 
 : `
-<div><strong>Total:</strong> ${order.total_amount || 0} บาท</div>
+<div><strong>Total:</strong> ${totalAmount} บาท</div>
 `
 }
 
@@ -625,10 +693,6 @@ order.quote_status === "WAIT_CUSTOMER_CONFIRM"
   ${
     order.custom_request
     ? `
-    <div style="background:#fff0d6;padding:10px;border-radius:12px;margin-bottom:10px;">
-      <strong>📝 รายการพิเศษ:</strong><br>
-      ${order.custom_request}
-    </div>
 
     <div><strong>Custom Price:</strong></div>
     <input
