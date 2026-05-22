@@ -379,9 +379,22 @@ if(currentView === "orders"){
 
       const payment =
         String(o.payment_status || "UNPAID")
-        .toUpperCase();
+          .trim()
+          .toUpperCase();
 
-      return payment !== "PAID";
+      const quoteStatus =
+        String(o.quote_status || "NOT_REQUIRED")
+          .trim()
+          .toUpperCase();
+
+      const waitingQuote =
+        quoteStatus === "PENDING" ||
+        quoteStatus === "WAIT_CUSTOMER_CONFIRM";
+
+      return (
+        payment !== "PAID" &&
+        !waitingQuote
+      );
 
     });
 
