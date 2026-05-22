@@ -241,16 +241,52 @@ function renderCartItems(){
     const div = document.createElement("div");
     div.className = "cart-item";
 
+    const isCustom =
+      item.order_type === "CUSTOM" ||
+      item.product_id === "CUSTOM";
+
+    const customDetail =
+      isCustom && item.custom_request
+        ? `
+          <div style="
+            margin-top:8px;
+            padding:10px;
+            background:#fff0d6;
+            border-radius:12px;
+            color:#5b3a2e;
+            font-size:14px;
+            line-height:1.5;
+            white-space:pre-wrap;
+          ">
+            <strong>รายละเอียด:</strong><br>
+            ${item.custom_request}
+          </div>
+        `
+        : "";
+
     div.innerHTML = `
-      <div>
-        <div class="cart-item-name">${item.product_name}</div>
-        <div class="cart-item-detail">
-          ${item.qty} x ${item.price} บาท
+      <div style="flex:1;">
+        <div class="cart-item-name">
+          ${item.product_name}
         </div>
+
+        <div class="cart-item-detail">
+          ${
+            isCustom
+              ? "ร้านจะตรวจสอบและแจ้งราคากลับไปให้ยืนยัน"
+              : `${item.qty} x ${item.price} บาท`
+          }
+        </div>
+
+        ${customDetail}
       </div>
 
       <div class="cart-item-total">
-        ${item.qty * item.price} บาท
+        ${
+          isCustom
+            ? "รอราคา"
+            : `${item.qty * item.price} บาท`
+        }
       </div>
     `;
 
