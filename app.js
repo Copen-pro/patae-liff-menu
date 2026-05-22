@@ -115,15 +115,23 @@ function buildTabs(){
       btn.classList.add("active");
     }
 
-    btn.onclick = () => {
-      currentCategory = cat;
+btn.onclick = () => {
+  currentCategory = cat;
 
-      document.querySelectorAll(".tabs button")
-        .forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tabs button")
+    .forEach(b => b.classList.remove("active"));
 
-      btn.classList.add("active");
-      renderProducts();
-    };
+  btn.classList.add("active");
+  renderProducts();
+
+  setTimeout(() => {
+    document.getElementById("category-tabs")
+      .scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+  }, 50);
+};
 
     tabs.appendChild(btn);
   });
@@ -249,43 +257,47 @@ const customDetail =
   isCustom && item.custom_request
     ? `
       <div style="
-        margin-top:4px;
+        margin-top:8px;
+        padding:10px;
+        background:#fff0d6;
+        border-radius:12px;
         color:#5b3a2e;
-        font-size:13px;
-        line-height:1.45;
+        font-size:14px;
+        line-height:1.5;
         white-space:pre-wrap;
         text-align:left;
+        max-width:100%;
+        box-sizing:border-box;
       ">
-        <strong>รายละเอียด:</strong> ${item.custom_request}
+        <strong>รายละเอียด:</strong><br>
+        ${item.custom_request}
       </div>
     `
     : "";
 
-    div.innerHTML = `
-        <div style="flex:1;text-align:left;">
-        <div class="cart-item-name">
-          ${item.product_name}
-        </div>
+   div.innerHTML = `
+  <div style="flex:1;text-align:left;">
+    <div class="cart-item-name">${item.product_name}</div>
 
-        <div class="cart-item-detail">
-          ${
-            isCustom
-              ? "ร้านจะตรวจสอบและแจ้งราคากลับไปให้ยืนยัน"
-              : `${item.qty} x ${item.price} บาท`
-          }
-        </div>
+    <div class="cart-item-detail">
+      ${
+        isCustom
+          ? "ร้านจะตรวจสอบและแจ้งราคากลับไปให้ยืนยัน"
+          : `${item.qty} x ${item.price} บาท`
+      }
+    </div>
 
-        ${customDetail}
-      </div>
+    ${customDetail}
+  </div>
 
-      <div class="cart-item-total" style="margin-left:10px;white-space:nowrap;">
-        ${
-          isCustom
-            ? "รอราคา"
-            : `${item.qty * item.price} บาท`
-        }
-      </div>
-    `;
+  <div class="cart-item-total" style="margin-left:10px;white-space:nowrap;">
+    ${
+      isCustom
+        ? "รอราคา"
+        : `${item.qty * item.price} บาท`
+    }
+  </div>
+`;
 
     container.appendChild(div);
   });
