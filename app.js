@@ -249,24 +249,14 @@ const customDetail =
   isCustom && item.custom_request
     ? `
       <div style="
-        margin-top:8px;
-        padding:8px 10px;
-        background:#fff0d6;
-        border-radius:10px;
+        margin-top:4px;
         color:#5b3a2e;
-        font-size:14px;
-        line-height:1.5;
+        font-size:13px;
+        line-height:1.45;
         white-space:pre-wrap;
         text-align:left;
-        width:100%;
-        box-sizing:border-box;
       ">
-        <div style="font-weight:bold;margin-bottom:4px;">
-          รายละเอียด:
-        </div>
-        <div>
-          ${item.custom_request}
-        </div>
+        <strong>รายละเอียด:</strong> ${item.custom_request}
       </div>
     `
     : "";
