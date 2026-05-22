@@ -113,18 +113,33 @@
       font-size:15px;
     }
 
-    .action-btn{
-      width:100%;
-      margin-top:12px;
-      border:none;
-      border-radius:14px;
-      padding:14px;
-      font-size:16px;
-      font-weight:bold;
-      background:#233b2a;
-      color:white;
-      cursor:pointer;
-    }
+.action-btn{
+  width:100%;
+  margin-top:14px;
+  border:none;
+  border-radius:16px;
+  padding:15px 16px;
+  font-size:16px;
+  font-weight:bold;
+  background:linear-gradient(180deg,#2f5138,#1f3527);
+  color:white;
+  cursor:pointer;
+  box-shadow:0 6px 0 #14251a, 0 10px 18px rgba(0,0,0,0.18);
+  transition:all 0.12s ease;
+}
+
+.action-btn:active{
+  transform:translateY(4px);
+  box-shadow:0 2px 0 #14251a, 0 5px 10px rgba(0,0,0,0.15);
+}
+
+.action-btn:disabled{
+  background:#9aa39c;
+  color:#eee;
+  cursor:not-allowed;
+  box-shadow:none;
+  transform:none;
+}
 
     .secondary-btn{
       width:100%;
@@ -163,11 +178,58 @@ const API_URL = "https://copen.app.n8n.cloud/webhook/patae/my-queue";
 const CONFIRM_URL =
   "https://copen.app.n8n.cloud/webhook/patae/delivery/confirm";
 
-function openConfirmOrder(orderNo, lineUserId){
+async function confirmOrderFromQueue(orderNo, lineUserId, button){
+
+  if(button.disabled){
+    return;
+  }
+
+  if(!confirm("ยืนยันออเดอร์นี้ใช่ไหมคะ?")){
+    return;
+  }
+
+  const originalText = button.innerText;
+
+  button.disabled = true;
+  button.innerText = "⏳ กำลังยืนยัน...";
+
   const url =
     `${CONFIRM_URL}?action=CUSTOMER_CONFIRM&order_no=${encodeURIComponent(orderNo)}&line_user_id=${encodeURIComponent(lineUserId)}`;
 
-  window.location.href = url;
+  try{
+
+    const res = await fetch(url, {
+      method: "GET"
+    });
+
+    const text = await res.text();
+
+    if(!res.ok){
+      console.error("Confirm error:", res.status, text);
+
+      button.disabled = false;
+      button.innerText = originalText;
+
+      alert("ยืนยันออเดอร์ไม่สำเร็จค่ะ กรุณาลองใหม่");
+      return;
+    }
+
+    button.innerText = "✅ ยืนยันแล้ว";
+
+    alert("ยืนยันออเดอร์เรียบร้อยค่ะ");
+
+    await start();
+
+  }catch(err){
+
+    console.error("Confirm fetch error:", err);
+
+    button.disabled = false;
+    button.innerText = originalText;
+
+    alert("ยืนยันออเดอร์ไม่สำเร็จค่ะ กรุณาลองใหม่");
+
+  }
 }
 
 function buildOrderCard(data, lineUserId){
@@ -277,11 +339,11 @@ function buildOrderCard(data, lineUserId){
              กรุณาตรวจสอบยอดรวมและยืนยันออเดอร์ค่ะ
       </div>
 
-      <button
-        class="action-btn"
-        onclick="openConfirmOrder('${data.order_no}', '${lineUserId}')">
-        ✅ ยืนยันออเดอร์
-      </button>
+<button
+  class="action-btn"
+  onclick="confirmOrderFromQueue('${data.order_no}', '${lineUserId}', this)">
+  ✅ ยืนยันออเดอร์
+</button>
     `;
   }
 
