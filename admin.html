@@ -172,6 +172,100 @@
   font-weight:bold;
   text-align:center;
 }
+
+  .walkin-panel{
+  background:white;
+  border-radius:18px;
+  padding:14px;
+  margin-top:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+.walkin-tabs{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  margin:10px 0;
+  padding-bottom:4px;
+}
+
+.walkin-tabs button{
+  background:#eee;
+  white-space:nowrap;
+}
+
+.walkin-tabs button.active{
+  background:#233b2a;
+  color:white;
+}
+
+.walkin-products{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:10px;
+  margin-top:12px;
+}
+
+.walkin-product-card{
+  background:#f8f5f1;
+  border-radius:14px;
+  padding:10px;
+  text-align:center;
+  border:1px solid #eee;
+}
+
+.walkin-product-name{
+  font-weight:bold;
+  font-size:14px;
+  line-height:1.3;
+  min-height:36px;
+}
+
+.walkin-product-price{
+  color:#5b3a2e;
+  font-weight:bold;
+  margin:6px 0;
+}
+
+.walkin-qty-row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  margin-top:8px;
+}
+
+.walkin-qty-row button{
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  padding:0;
+  background:#233b2a;
+  color:white;
+}
+
+.walkin-cart-box{
+  background:#f3f3f3;
+  border-radius:14px;
+  padding:12px;
+  margin-top:14px;
+}
+
+.walkin-cart-item{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  border-bottom:1px solid #ddd;
+  padding:8px 0;
+  font-size:14px;
+}
+
+.walkin-total{
+  margin-top:10px;
+  font-weight:bold;
+  font-size:18px;
+  text-align:right;
+}
     
   </style>
 </head>
@@ -286,6 +380,14 @@ onclick="showOrderTab('unpaid')">
 
 💸 Unpaid
 
+<button
+id="walkin-tab"
+onclick="showOrderTab('walkin')">
+
+🛒 Walk-in
+
+</button>
+  
 </button>
 
 </div>
@@ -309,6 +411,17 @@ const STORE_SETTINGS_API =
 
 const STORE_STATUS_API =
 "https://copen.app.n8n.cloud/webhook/patae/store/status";
+
+const PRODUCTS_API =
+"https://copen.app.n8n.cloud/webhook/patae/products";
+
+const WALKIN_CREATE_ORDER_API =
+"https://copen.app.n8n.cloud/webhook/patae/admin/walkin/create-order";
+
+let walkinProducts = [];
+let walkinCart = {};
+let walkinCategory = null;
+  
   
 let soundEnabled = true;
 let knownOrderNos = new Set();
@@ -1032,16 +1145,269 @@ function showOrderTab(view){
 
   document.getElementById("orders-tab").classList.remove("active");
   document.getElementById("unpaid-tab").classList.remove("active");
+  document.getElementById("walkin-tab").classList.remove("active");
 
   document.getElementById(view + "-tab").classList.add("active");
 
   document.getElementById("view-title").innerText =
     view === "orders"
       ? "☕ Orders"
-      : "💸 Unpaid Orders";
+      : view === "unpaid"
+        ? "💸 Unpaid Orders"
+        : "🛒 Walk-in Order";
+
+  if(view === "walkin"){
+    renderWalkinPanel();
+    return;
+  }
 
   loadOrders();
 }
+
+async function loadWalkinProducts(){
+
+  if(walkinProducts.length > 0){
+    return;
+  }
+
+  const res = await fetch(PRODUCTS_API);
+  const data = await res.json();
+
+  walkinProducts = data.products || [];
+
+  if(!walkinCategory && walkinProducts.length > 0){
+    walkinCategory = walkinProducts[0].category;
+  }
+}
+
+async function renderWalkinPanel(){
+
+  const box = document.getElementById("orders");
+
+  box.innerHTML = `
+    <div class="walkin-panel">
+      <h3>🛒 Walk-in Order</h3>
+      <div class="loading">กำลังโหลดเมนู...</div>
+    </div>
+  `;
+
+  try{
+
+    await loadWalkinProducts();
+
+    const categories = [
+      ...new Set(
+        walkinProducts
+          .map(p => p.category)
+          .filter(Boolean)
+      )
+    ];
+
+    box.innerHTML = `
+      <div class="walkin-panel">
+
+        <h3>🛒 Walk-in Order</h3>
+
+        <div id="walkin-category-tabs" class="walkin-tabs"></div>
+
+        <div id="walkin-products" class="walkin-products"></div>
+
+        <div class="walkin-cart-box">
+          <h4>รายการที่เลือก</h4>
+          <div id="walkin-cart-items"></div>
+          <div class="walkin-total">
+            รวม: <span id="walkin-total">0</span> บาท
+          </div>
+        </div>
+
+      </div>
+    `;
+
+    const tabs = document.getElementById("walkin-category-tabs");
+
+    categories.forEach(cat => {
+      const btn = document.createElement("button");
+      btn.innerText = cat;
+
+      if(cat === walkinCategory){
+        btn.classList.add("active");
+      }
+
+      btn.onclick = () => {
+        walkinCategory = cat;
+
+        document
+          .querySelectorAll(".walkin-tabs button")
+          .forEach(b => b.classList.remove("active"));
+
+        btn.classList.add("active");
+
+        renderWalkinProducts();
+      };
+
+      tabs.appendChild(btn);
+    });
+
+    renderWalkinProducts();
+    renderWalkinCart();
+
+  }catch(err){
+
+    console.error(err);
+
+    box.innerHTML = `
+      <div class="empty">
+        โหลดเมนู Walk-in ไม่สำเร็จค่ะ
+      </div>
+    `;
+  }
+}
+
+function renderWalkinProducts(){
+
+  const box =
+    document.getElementById("walkin-products");
+
+  if(!box){
+    return;
+  }
+
+  const products =
+    walkinProducts.filter(
+      p => p.category === walkinCategory
+    );
+
+  box.innerHTML = "";
+
+  products.forEach(product => {
+
+    const qty =
+      walkinCart[product.product_id]?.qty || 0;
+
+    const div = document.createElement("div");
+    div.className = "walkin-product-card";
+
+    div.innerHTML = `
+      <div class="walkin-product-name">
+        ${product.product_name}
+      </div>
+
+      <div class="walkin-product-price">
+        ${product.price} บาท
+      </div>
+
+      <div class="walkin-qty-row">
+        <button onclick="decreaseWalkinQty('${product.product_id}')">
+          -
+        </button>
+
+        <strong>${qty}</strong>
+
+        <button onclick="increaseWalkinQty('${product.product_id}')">
+          +
+        </button>
+      </div>
+    `;
+
+    box.appendChild(div);
+  });
+}
+
+function increaseWalkinQty(productId){
+
+  const product =
+    walkinProducts.find(
+      p => p.product_id === productId
+    );
+
+  if(!product){
+    return;
+  }
+
+  if(!walkinCart[productId]){
+    walkinCart[productId] = {
+      ...product,
+      qty: 0
+    };
+  }
+
+  walkinCart[productId].qty++;
+
+  renderWalkinProducts();
+  renderWalkinCart();
+}
+
+function decreaseWalkinQty(productId){
+
+  if(!walkinCart[productId]){
+    return;
+  }
+
+  walkinCart[productId].qty--;
+
+  if(walkinCart[productId].qty <= 0){
+    delete walkinCart[productId];
+  }
+
+  renderWalkinProducts();
+  renderWalkinCart();
+}
+
+function renderWalkinCart(){
+
+  const cartBox =
+    document.getElementById("walkin-cart-items");
+
+  const totalBox =
+    document.getElementById("walkin-total");
+
+  if(!cartBox || !totalBox){
+    return;
+  }
+
+  const items = Object.values(walkinCart);
+
+  if(items.length === 0){
+    cartBox.innerHTML = `
+      <div style="color:#777;text-align:center;padding:10px;">
+        ยังไม่มีรายการค่ะ
+      </div>
+    `;
+    totalBox.innerText = "0";
+    return;
+  }
+
+  let total = 0;
+
+  cartBox.innerHTML = "";
+
+  items.forEach(item => {
+    const lineTotal =
+      Number(item.price || 0) * Number(item.qty || 0);
+
+    total += lineTotal;
+
+    const div = document.createElement("div");
+    div.className = "walkin-cart-item";
+
+    div.innerHTML = `
+      <div>
+        ${item.product_name}
+        <br>
+        <span style="color:#777;">
+          ${item.qty} x ${item.price} บาท
+        </span>
+      </div>
+
+      <strong>${lineTotal} บาท</strong>
+    `;
+
+    cartBox.appendChild(div);
+  });
+
+  totalBox.innerText = total;
+}
+
 document.getElementById("orders-tab").classList.add("active");
 
 loadStoreStatus();
