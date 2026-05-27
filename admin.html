@@ -266,6 +266,30 @@
   font-size:18px;
   text-align:right;
 }
+
+  .walkin-product-img{
+  width:100%;
+  aspect-ratio:1 / 1;
+  object-fit:contain;
+  background:#fff;
+  border-radius:12px;
+  margin-bottom:8px;
+}
+
+.walkin-cart-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.walkin-clear-btn{
+  background:#ddd;
+  color:#333;
+  padding:8px 12px;
+  border-radius:10px;
+  font-size:13px;
+}
     
   </style>
 </head>
@@ -380,7 +404,9 @@ onclick="showOrderTab('unpaid')">
 
 💸 Unpaid
 
-<button
+</button>
+
+<button  
 id="walkin-tab"
 onclick="showOrderTab('walkin')">
 
@@ -388,7 +414,6 @@ onclick="showOrderTab('walkin')">
 
 </button>
   
-</button>
 
 </div>
 
@@ -1263,6 +1288,16 @@ async function renderWalkinPanel(){
   }
 }
 
+function optimizeAdminImage(url){
+  if(!url) return "";
+  if(!url.includes("/upload/")) return url;
+
+  return url.replace(
+    "/upload/",
+    "/upload/f_auto,q_auto,w_300/"
+  );
+}
+  
 function renderWalkinProducts(){
 
   const box =
@@ -1287,28 +1322,41 @@ function renderWalkinProducts(){
     const div = document.createElement("div");
     div.className = "walkin-product-card";
 
-    div.innerHTML = `
-      <div class="walkin-product-name">
-        ${product.product_name}
-      </div>
+div.innerHTML = `
+  ${
+    product.image_url
+      ? `<img
+          class="walkin-product-img"
+          src="${optimizeAdminImage(product.image_url)}"
+          loading="lazy"
+        >`
+      : `<div
+          class="walkin-product-img"
+          style="display:flex;align-items:center;justify-content:center;color:#999;font-size:13px;">
+          No Image
+        </div>`
+  }
 
-      <div class="walkin-product-price">
-        ${product.price} บาท
-      </div>
+  <div class="walkin-product-name">
+    ${product.product_name}
+  </div>
 
-      <div class="walkin-qty-row">
-        <button onclick="decreaseWalkinQty('${product.product_id}')">
-          -
-        </button>
+  <div class="walkin-product-price">
+    ${product.price} บาท
+  </div>
 
-        <strong>${qty}</strong>
+  <div class="walkin-qty-row">
+    <button onclick="decreaseWalkinQty('${product.product_id}')">
+      -
+    </button>
 
-        <button onclick="increaseWalkinQty('${product.product_id}')">
-          +
-        </button>
-      </div>
-    `;
+    <strong>${qty}</strong>
 
+    <button onclick="increaseWalkinQty('${product.product_id}')">
+      +
+    </button>
+  </div>
+`;
     box.appendChild(div);
   });
 }
