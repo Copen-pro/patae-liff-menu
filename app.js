@@ -164,7 +164,6 @@ function buildTabs(){
 
     tabs.appendChild(btn);
   });
-});
 }
 
 function renderProducts(){
