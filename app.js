@@ -122,7 +122,30 @@ btn.onclick = () => {
     .forEach(b => b.classList.remove("active"));
 
   btn.classList.add("active");
+
   renderProducts();
+
+  // หลังเปลี่ยนหมวด ให้เลื่อนกลับไปที่สินค้าแรกของหมวดนั้น
+  requestAnimationFrame(() => {
+    const productsEl = document.getElementById("products");
+
+    if(productsEl){
+      const tabsHeight =
+        document.getElementById("category-tabs")?.offsetHeight || 0;
+
+      const top =
+        productsEl.getBoundingClientRect().top +
+        window.pageYOffset -
+        tabsHeight -
+        8;
+
+      window.scrollTo({
+        top,
+        behavior: "smooth"
+      });
+    }
+  });
+};
 
   setTimeout(() => {
     document.getElementById("category-tabs")
