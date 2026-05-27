@@ -290,6 +290,67 @@
   border-radius:10px;
   font-size:13px;
 }
+
+  .walkin-form{
+  background:#fff;
+  border-radius:14px;
+  padding:12px;
+  margin-top:14px;
+  border:1px solid #eee;
+}
+
+.walkin-form label{
+  display:block;
+  font-weight:bold;
+  margin-top:10px;
+  margin-bottom:5px;
+  font-size:14px;
+}
+
+.walkin-form input,
+.walkin-form select,
+.walkin-form textarea{
+  width:100%;
+  box-sizing:border-box;
+  padding:10px;
+  border:1px solid #ddd;
+  border-radius:10px;
+  font-size:14px;
+}
+
+.walkin-form textarea{
+  min-height:70px;
+  resize:vertical;
+}
+
+.walkin-custom-box,
+.walkin-delivery-box{
+  background:#fff0d6;
+  border-radius:12px;
+  padding:10px;
+  margin-top:10px;
+}
+
+.walkin-grand-total{
+  margin-top:12px;
+  padding:12px;
+  background:#233b2a;
+  color:white;
+  border-radius:14px;
+  font-size:18px;
+  font-weight:bold;
+  text-align:right;
+}
+
+.walkin-create-btn{
+  width:100%;
+  margin-top:12px;
+  background:#233b2a;
+  color:white;
+  border-radius:14px;
+  padding:14px;
+  font-size:16px;
+}
     
   </style>
 </head>
@@ -1252,8 +1313,68 @@ async function renderWalkinPanel(){
   <div id="walkin-cart-items"></div>
 
   <div class="walkin-total">
-    รวม: <span id="walkin-total">0</span> บาท
+    ยอดสินค้า: <span id="walkin-total">0</span> บาท
   </div>
+
+</div>
+
+<div class="walkin-form">
+
+  <h4>ข้อมูลออเดอร์</h4>
+
+  <label>ชื่อลูกค้า</label>
+  <input id="walkin-customer-name" type="text" placeholder="Walk-in">
+
+  <label>เบอร์โทร</label>
+  <input id="walkin-customer-phone" type="tel" placeholder="ไม่บังคับ">
+
+  <label>ประเภทการรับสินค้า</label>
+  <select id="walkin-fulfillment-type" onchange="toggleWalkinDelivery()">
+    <option value="walk_in">รับหน้าร้าน / Walk-in</option>
+    <option value="delivery">จัดส่ง / Delivery</option>
+  </select>
+
+  <div id="walkin-delivery-box" class="walkin-delivery-box" style="display:none;">
+    <label>ที่อยู่จัดส่ง</label>
+    <textarea id="walkin-delivery-address" placeholder="ระบุที่อยู่ / จุดสังเกต"></textarea>
+
+    <label>ค่าส่ง</label>
+    <input
+      id="walkin-delivery-fee"
+      type="number"
+      value="0"
+      min="0"
+      oninput="renderWalkinCart()"
+    >
+  </div>
+
+  <div class="walkin-custom-box">
+    <label>รายการสั่งพิเศษ</label>
+    <textarea id="walkin-custom-request" placeholder="เช่น โกโก้ปั่น เพิ่มวิป ไม่หวาน"></textarea>
+
+    <label>ราคาสั่งพิเศษ</label>
+    <input
+      id="walkin-custom-price"
+      type="number"
+      value="0"
+      min="0"
+      oninput="renderWalkinCart()"
+    >
+  </div>
+
+  <label>สถานะชำระเงิน</label>
+  <select id="walkin-payment-status">
+    <option value="PAID">PAID / ชำระแล้ว</option>
+    <option value="UNPAID">UNPAID / ยังไม่ชำระ</option>
+  </select>
+
+  <div class="walkin-grand-total">
+    รวมทั้งหมด: <span id="walkin-grand-total">0</span> บาท
+  </div>
+
+  <button class="walkin-create-btn" onclick="previewWalkinOrder()">
+    ตรวจสอบออเดอร์
+  </button>
 
 </div>
 
@@ -1466,8 +1587,93 @@ function renderWalkinCart(){
   });
 
   totalBox.innerText = total;
+
+const customPriceInput =
+  document.getElementById("walkin-custom-price");
+
+const deliveryFeeInput =
+  document.getElementById("walkin-delivery-fee");
+
+const grandTotalBox =
+  document.getElementById("walkin-grand-total");
+
+const customPrice =
+  Number(customPriceInput?.value || 0);
+
+const deliveryFee =
+  Number(deliveryFeeInput?.value || 0);
+
+const grandTotal =
+  total + customPrice + deliveryFee;
+
+if(grandTotalBox){
+  grandTotalBox.innerText = grandTotal;
+}
 }
 
+function previewWalkinOrder(){
+
+  const items =
+    Object.values(walkinCart);
+
+  const customRequest =
+    document.getElementById("walkin-custom-request").value.trim();
+
+  const customPrice =
+    Number(document.getElementById("walkin-custom-price").value || 0);
+
+  const fulfillmentType =
+    document.getElementById("walkin-fulfillment-type").value;
+
+  const deliveryAddress =
+    document.getElementById("walkin-delivery-address").value.trim();
+
+  const deliveryFee =
+    Number(document.getElementById("walkin-delivery-fee").value || 0);
+
+  const paymentStatus =
+    document.getElementById("walkin-payment-status").value;
+
+  if(items.length === 0 && !customRequest){
+    alert("กรุณาเลือกสินค้า หรือระบุรายการสั่งพิเศษค่ะ");
+    return;
+  }
+
+  if(customRequest && customPrice <= 0){
+    alert("กรุณาระบุราคาสั่งพิเศษค่ะ");
+    return;
+  }
+
+  if(fulfillmentType === "delivery"){
+    if(!deliveryAddress){
+      alert("กรุณาระบุที่อยู่จัดส่งค่ะ");
+      return;
+    }
+
+    if(deliveryFee <= 0){
+      alert("กรุณาระบุค่าส่งค่ะ");
+      return;
+    }
+  }
+
+  const normalTotal =
+    items.reduce((sum, item) => {
+      return sum + Number(item.price || 0) * Number(item.qty || 0);
+    }, 0);
+
+  const grandTotal =
+    normalTotal + customPrice + deliveryFee;
+
+  alert(
+    `ตรวจสอบออเดอร์\n\n` +
+    `ยอดสินค้า: ${normalTotal} บาท\n` +
+    `ค่าสั่งพิเศษ: ${customPrice} บาท\n` +
+    `ค่าส่ง: ${deliveryFee} บาท\n` +
+    `รวมทั้งหมด: ${grandTotal} บาท\n\n` +
+    `Payment: ${paymentStatus}`
+  );
+}
+  
 function clearWalkinCart(){
 
   const hasItems =
@@ -1498,6 +1704,25 @@ setInterval(() => {
   }
 }, 600000); // 10 นาที
 
+function toggleWalkinDelivery(){
+
+  const type =
+    document.getElementById("walkin-fulfillment-type").value;
+
+  const box =
+    document.getElementById("walkin-delivery-box");
+
+  if(type === "delivery"){
+    box.style.display = "block";
+  }else{
+    box.style.display = "none";
+
+    document.getElementById("walkin-delivery-address").value = "";
+    document.getElementById("walkin-delivery-fee").value = 0;
+  }
+
+  renderWalkinCart();
+}
   
 async function quickSetStoreStatus(status){
 
