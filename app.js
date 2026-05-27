@@ -104,7 +104,19 @@ function buildTabs(){
   const tabs = document.getElementById("category-tabs");
   tabs.innerHTML = "";
 
-  const categories = [...new Set(allProducts.map(p => p.category))];
+  const categories = [
+    ...new Set(
+      allProducts
+        .map(p => p.category)
+        .filter(Boolean)
+    )
+  ];
+
+  if(categories.length === 0){
+    document.getElementById("products").innerHTML =
+      "<div class='loading'>ไม่พบรายการเมนูค่ะ</div>";
+    return;
+  }
 
   categories.forEach(cat => {
     const btn = document.createElement("button");
@@ -115,49 +127,44 @@ function buildTabs(){
       btn.classList.add("active");
     }
 
-btn.onclick = () => {
-  currentCategory = cat;
+    btn.onclick = () => {
+      currentCategory = cat;
 
-  document.querySelectorAll(".tabs button")
-    .forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".tabs button")
+        .forEach(b => b.classList.remove("active"));
 
-  btn.classList.add("active");
+      btn.classList.add("active");
 
-  renderProducts();
+      renderProducts();
 
-  // หลังเปลี่ยนหมวด ให้เลื่อนกลับไปที่สินค้าแรกของหมวดนั้น
-  requestAnimationFrame(() => {
-    const productsEl = document.getElementById("products");
+      setTimeout(() => {
+        const productsEl =
+          document.getElementById("products");
 
-    if(productsEl){
-      const tabsHeight =
-        document.getElementById("category-tabs")?.offsetHeight || 0;
+        const tabsEl =
+          document.getElementById("category-tabs");
 
-      const top =
-        productsEl.getBoundingClientRect().top +
-        window.pageYOffset -
-        tabsHeight -
-        8;
+        if(productsEl){
+          const tabsHeight =
+            tabsEl?.offsetHeight || 0;
 
-      window.scrollTo({
-        top,
-        behavior: "smooth"
-      });
-    }
-  });
-};
+          const top =
+            productsEl.getBoundingClientRect().top +
+            window.pageYOffset -
+            tabsHeight -
+            8;
 
-  setTimeout(() => {
-    document.getElementById("category-tabs")
-      .scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-  }, 50);
-};
+          window.scrollTo({
+            top,
+            behavior: "smooth"
+          });
+        }
+      }, 50);
+    };
 
     tabs.appendChild(btn);
   });
+});
 }
 
 function renderProducts(){
