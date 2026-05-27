@@ -1237,13 +1237,25 @@ async function renderWalkinPanel(){
 
         <div id="walkin-products" class="walkin-products"></div>
 
-        <div class="walkin-cart-box">
-          <h4>รายการที่เลือก</h4>
-          <div id="walkin-cart-items"></div>
-          <div class="walkin-total">
-            รวม: <span id="walkin-total">0</span> บาท
-          </div>
-        </div>
+<div class="walkin-cart-box">
+
+  <div class="walkin-cart-header">
+    <h4>รายการที่เลือก</h4>
+
+    <button
+      class="walkin-clear-btn"
+      onclick="clearWalkinCart()">
+      ล้างรายการ
+    </button>
+  </div>
+
+  <div id="walkin-cart-items"></div>
+
+  <div class="walkin-total">
+    รวม: <span id="walkin-total">0</span> บาท
+  </div>
+
+</div>
 
       </div>
     `;
@@ -1456,6 +1468,25 @@ function renderWalkinCart(){
   totalBox.innerText = total;
 }
 
+function clearWalkinCart(){
+
+  const hasItems =
+    Object.keys(walkinCart).length > 0;
+
+  if(!hasItems){
+    return;
+  }
+
+  if(!confirm("ต้องการล้างรายการ Walk-in ทั้งหมดใช่ไหมคะ?")){
+    return;
+  }
+
+  walkinCart = {};
+
+  renderWalkinProducts();
+  renderWalkinCart();
+}
+  
 document.getElementById("orders-tab").classList.add("active");
 
 loadStoreStatus();
