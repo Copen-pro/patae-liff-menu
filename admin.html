@@ -1821,28 +1821,36 @@ async function createWalkinOrder(mode){
     const data = await res.json();
 
     if(data.success){
-      alert(
-        `สร้าง Walk-in Order สำเร็จค่ะ\n\n` +
-        `Queue: ${data.queue_no || "-"}\n` +
-        `Order No: ${data.order_no || "-"}`
-      );
+  alert(
+    `สร้าง Walk-in Order สำเร็จค่ะ\n\n` +
+    `Queue: ${data.queue_no || "-"}\n` +
+    `Order No: ${data.order_no || "-"}`
+  );
 
-      walkinCart = {};
+  walkinCart = {};
 
-      document.getElementById("walkin-customer-name").value = "";
-      document.getElementById("walkin-customer-phone").value = "";
-      document.getElementById("walkin-custom-request").value = "";
-      document.getElementById("walkin-custom-price").value = 0;
-      document.getElementById("walkin-delivery-address").value = "";
-      document.getElementById("walkin-delivery-fee").value = 0;
-      document.getElementById("walkin-fulfillment-type").value = "walk_in";
-      document.getElementById("walkin-delivery-box").style.display = "none";
+  document.getElementById("walkin-customer-name").value = "";
+  document.getElementById("walkin-customer-phone").value = "";
+  document.getElementById("walkin-custom-request").value = "";
+  document.getElementById("walkin-custom-price").value = 0;
+  document.getElementById("walkin-delivery-address").value = "";
+  document.getElementById("walkin-delivery-fee").value = 0;
+  document.getElementById("walkin-fulfillment-type").value = "walk_in";
+  document.getElementById("walkin-delivery-box").style.display = "none";
 
-      renderWalkinProducts();
-      renderWalkinCart();
+  // หลังสร้าง Walk-in สำเร็จ ให้กลับไปหน้า Orders อัตโนมัติ
+  showOrderTab("orders");
 
-      return;
-    }
+  // เลื่อนกลับขึ้นด้านบน
+  setTimeout(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  }, 100);
+
+  return;
+}
 
     alert(data.message || "สร้าง Walk-in Order ไม่สำเร็จค่ะ");
 
