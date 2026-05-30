@@ -1362,19 +1362,32 @@ async function renderWalkinPanel(){
     >
   </div>
 
-  <label>สถานะชำระเงิน</label>
-  <select id="walkin-payment-status">
-    <option value="PAID">PAID / ชำระแล้ว</option>
-    <option value="UNPAID">UNPAID / ยังไม่ชำระ</option>
-  </select>
-
   <div class="walkin-grand-total">
-    รวมทั้งหมด: <span id="walkin-grand-total">0</span> บาท
-  </div>
+  รวมทั้งหมด: <span id="walkin-grand-total">0</span> บาท
+</div>
 
-  <button class="walkin-create-btn" onclick="previewWalkinOrder()">
-    ตรวจสอบออเดอร์
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
+
+  <button
+    class="walkin-create-btn"
+    onclick="createWalkinOrder('UNPAID_NEW')">
+    🧾 สร้าง Order
   </button>
+
+  <button
+    class="walkin-create-btn"
+    onclick="createWalkinOrder('PAID_NEW')">
+    💰 รับเงิน + สร้าง Order
+  </button>
+
+  <button
+    class="walkin-create-btn"
+    style="background:#5E7C5A;"
+    onclick="createWalkinOrder('PAID_DONE')">
+    ✅ รับเงิน + Done
+  </button>
+
+</div>
 
 </div>
 
@@ -1672,6 +1685,173 @@ function previewWalkinOrder(){
     `รวมทั้งหมด: ${grandTotal} บาท\n\n` +
     `Payment: ${paymentStatus}`
   );
+}
+
+async function createWalkinOrder(mode){
+
+  const normalItems =
+    Object.values(walkinCart);
+
+  const customerName =
+    document.getElementById("walkin-customer-name").value.trim() || "Walk-in";
+
+  const customerPhone =
+    document.getElementById("walkin-customer-phone").value.trim();
+
+  const fulfillmentType =
+    document.getElementById("walkin-fulfillment-type").value;
+
+  const deliveryAddress =
+    document.getElementById("walkin-delivery-address").value.trim();
+
+  const deliveryFee =
+    Number(document.getElementById("walkin-delivery-fee").value || 0);
+
+  const customRequest =
+    document.getElementById("walkin-custom-request").value.trim();
+
+  const customPrice =
+    Number(document.getElementById("walkin-custom-price").value || 0);
+
+  if(normalItems.length === 0 && !customRequest){
+    alert("กรุณาเลือกสินค้า หรือระบุรายการสั่งพิเศษค่ะ");
+    return;
+  }
+
+  if(customRequest && customPrice <= 0){
+    alert("กรุณาระบุราคาสั่งพิเศษค่ะ");
+    return;
+  }
+
+  if(fulfillmentType === "delivery"){
+
+    if(!deliveryAddress){
+      alert("กรุณาระบุที่อยู่จัดส่งค่ะ");
+      return;
+    }
+
+    if(deliveryFee <= 0){
+      alert("กรุณาระบุค่าส่งค่ะ");
+      return;
+    }
+  }
+
+  let paymentStatus = "UNPAID";
+  let orderStatus = "NEW";
+
+  if(mode === "PAID_NEW"){
+    paymentStatus = "PAID";
+    orderStatus = "NEW";
+  }
+
+  if(mode === "PAID_DONE"){
+    paymentStatus = "PAID";
+    orderStatus = "DONE";
+  }
+
+  const items = normalItems.map(item => ({
+    product_id: item.product_id,
+    product_name: item.product_name,
+    price: Number(item.price || 0),
+    qty: Number(item.qty || 0)
+  }));
+
+  if(customRequest){
+    items.push({
+      product_id: "CUSTOM",
+      product_name: "Custom Order",
+      price: 0,
+      qty: 1,
+      order_type: "CUSTOM",
+      custom_request: customRequest
+    });
+  }
+
+  const normalTotal =
+    normalItems.reduce((sum, item) => {
+      return sum + Number(item.price || 0) * Number(item.qty || 0);
+    }, 0);
+
+  const grandTotal =
+    normalTotal + customPrice + deliveryFee;
+
+  const confirmText =
+    mode === "UNPAID_NEW"
+      ? "สร้าง Order แบบยังไม่ชำระเงิน?"
+      : mode === "PAID_NEW"
+        ? "รับเงินแล้ว และสร้าง Order?"
+        : "รับเงินแล้ว และปิดรายการเป็น Done?";
+
+  if(!confirm(
+    `${confirmText}\n\n` +
+    `ยอดสินค้า: ${normalTotal} บาท\n` +
+    `ค่าสั่งพิเศษ: ${customPrice} บาท\n` +
+    `ค่าส่ง: ${deliveryFee} บาท\n` +
+    `รวมทั้งหมด: ${grandTotal} บาท`
+  )){
+    return;
+  }
+
+  const payload = {
+    customer_name: customerName,
+    customer_phone: customerPhone,
+    fulfillment_type: fulfillmentType,
+    delivery_address: deliveryAddress,
+    delivery_fee: deliveryFee,
+
+    payment_status: paymentStatus,
+    order_status: orderStatus,
+
+    custom_price: customPrice,
+    custom_request: customRequest,
+
+    items
+  };
+
+  try{
+
+    const res = await fetch(WALKIN_CREATE_ORDER_API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if(data.success){
+      alert(
+        `สร้าง Walk-in Order สำเร็จค่ะ\n\n` +
+        `Queue: ${data.queue_no || "-"}\n` +
+        `Order No: ${data.order_no || "-"}`
+      );
+
+      walkinCart = {};
+
+      document.getElementById("walkin-customer-name").value = "";
+      document.getElementById("walkin-customer-phone").value = "";
+      document.getElementById("walkin-custom-request").value = "";
+      document.getElementById("walkin-custom-price").value = 0;
+      document.getElementById("walkin-delivery-address").value = "";
+      document.getElementById("walkin-delivery-fee").value = 0;
+      document.getElementById("walkin-fulfillment-type").value = "walk_in";
+      document.getElementById("walkin-delivery-box").style.display = "none";
+
+      renderWalkinProducts();
+      renderWalkinCart();
+
+      return;
+    }
+
+    alert(data.message || "สร้าง Walk-in Order ไม่สำเร็จค่ะ");
+
+  }catch(err){
+
+    console.error(err);
+    alert("ระบบขัดข้องค่ะ");
+
+  }
 }
   
 function clearWalkinCart(){
