@@ -2116,14 +2116,17 @@ async function renderSalesSummary(){
     const getAmount = (o) =>
       Number(o.grand_total || o.total_amount || 0);
 
-    const paidSales =
-      paidOrders.reduce((sum, o) => sum + getAmount(o), 0);
+const totalSales =
+  selectedOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
-    const unpaidSales =
-      unpaidOrders.reduce((sum, o) => sum + getAmount(o), 0);
+const paidSales =
+  paidOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
-    const totalOrders =
-      selectedOrders.length;
+const unpaidSales =
+  unpaidOrders.reduce((sum, o) => sum + getAmount(o), 0);
+
+const totalOrders =
+  selectedOrders.length;
 
     const lineOrders =
       selectedOrders.filter(o =>
@@ -2233,7 +2236,7 @@ async function renderSalesSummary(){
           <div class="sales-kpi-card">
             <div class="sales-kpi-icon">💰</div>
             <div class="sales-kpi-label">ยอดขายรวม<br>Total Sales</div>
-            <div class="sales-kpi-value">${paidSales.toLocaleString("th-TH")}</div>
+            <div class="sales-kpi-value">${totalSales.toLocaleString("th-TH")}</div>
             <div class="sales-kpi-unit">บาท</div>
           </div>
 
