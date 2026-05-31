@@ -72,7 +72,26 @@ const QUEUE_CACHE_TTL=45*1000;
 let currentProfile=null;
 let isLoadingQueue=false;
 
-function goMenu(){window.location.href="index.html";}
+let isGoingMenu = false;
+
+function goMenu(){
+
+  if(isGoingMenu){
+    return;
+  }
+
+  isGoingMenu = true;
+
+  const btns =
+    document.querySelectorAll("button");
+
+  btns.forEach(btn => {
+    btn.disabled = true;
+  });
+
+  window.location.replace("index.html?from=queue");
+}
+  
 function getStatusText(status){return {NEW:"รับออเดอร์แล้ว",PREPARING:"กำลังทำ",READY:"พร้อมรับแล้ว",DONE:"เสร็จแล้ว"}[status]||status;}
 function getQueueNumber(queueNo){const match=String(queueNo||"").match(/\d+/);return match?Number(match[0]):999999;}
 function getQueueDate(order){
