@@ -191,8 +191,13 @@
 </div>
 
 <div class="actions">
-  <button class="back-btn" onclick="history.back()">กลับ</button>
-  <button class="print-btn" onclick="window.print()">🖨 Print</button>
+  <button class="back-btn" onclick="goBackToAdmin()">
+    กลับ Admin
+  </button>
+
+  <button class="print-btn" onclick="printReceipt()">
+    🖨 Print
+  </button>
 </div>
 
 <script>
@@ -355,6 +360,33 @@ async function start(){
   }
 }
 
+function goBackToAdmin(){
+
+  // ถ้าเปิดจากหน้า Admin เป็น tab/window ใหม่ ให้พยายามปิดก่อน
+  if(window.opener){
+    window.close();
+    return;
+  }
+
+  // ถ้าปิดไม่ได้ ให้กลับไปหน้า Admin โดยตรง
+  window.location.href = "admin.html";
+}
+
+function printReceipt(){
+
+  try{
+    window.focus();
+    window.print();
+  }catch(err){
+    console.error(err);
+
+    alert(
+      "อุปกรณ์นี้อาจไม่รองรับการพิมพ์จากหน้านี้ค่ะ\n" +
+      "กรุณาเปิดใน Browser แล้วกด Print อีกครั้ง"
+    );
+  }
+}
+  
 start();
 </script>
 
