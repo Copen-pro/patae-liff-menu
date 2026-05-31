@@ -405,6 +405,50 @@
 .sales-row strong{
   color:#233b2a;
 }
+
+.history-filter{
+  background:white;
+  border-radius:16px;
+  padding:12px;
+  margin:10px 0 14px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.06);
+}
+
+.history-filter-title{
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.history-filter-buttons{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+
+.history-filter-buttons button{
+  flex:1;
+  background:#eee;
+}
+
+.history-filter-buttons button.active{
+  background:#233b2a;
+  color:white;
+}
+
+.history-date-row{
+  display:flex;
+  gap:8px;
+  margin-top:8px;
+}
+
+.history-date-row input{
+  flex:1;
+  padding:10px;
+  border:1px solid #ddd;
+  border-radius:10px;
+  font-size:14px;
+}
     
   </style>
 </head>
@@ -593,7 +637,11 @@ let knownOrderNos = new Set();
 let firstLoad = true; 
 let currentOrders = [];  
 let currentView = "orders";
+let receiptHistoryMode = "today";
+let receiptHistoryStartDate = "";
+let receiptHistoryEndDate = "";
 
+  
 function cleanItemsSummary(summary){
   return String(summary || "")
     .split("\n")
@@ -609,6 +657,201 @@ function cleanItemsSummary(summary){
       return !isCustomZero;
     })
     .join("\n");
+}
+
+function getTodayString(){
+  return new Date().toLocaleDateString("sv-SE", {
+    timeZone: "Asia/Bangkok"
+  });
+}
+
+function getBangkokDateString(value){
+
+  if(!value){
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if(isNaN(date.getTime())){
+    return "";
+  }
+
+  return date.toLocaleDateString("sv-SE", {
+    timeZone: "Asia/Bangkok"
+  });
+}
+
+function getReceiptDate(order){
+
+  const paidDate =
+    getBangkokDateString(order.paid_at);
+
+  const orderDate =
+    getBangkokDateString(order.order_datetime);
+
+  return paidDate || orderDate;
+}
+
+function isReceiptInSelectedHistory(order){
+
+  const payment =
+    String(order.payment_status || "")
+      .trim()
+      .toUpperCase();
+
+  if(payment !== "PAID"){
+    return false;
+  }
+
+  if(receiptHistoryMode === "all"){
+    return true;
+  }
+
+  const receiptDate =
+    getReceiptDate(order);
+
+  if(!receiptDate){
+    return false;
+  }
+
+  if(receiptHistoryMode === "today"){
+    return receiptDate === getTodayString();
+  }
+
+  if(receiptHistoryMode === "range"){
+
+    if(!receiptHistoryStartDate || !receiptHistoryEndDate){
+      return receiptDate === getTodayString();
+    }
+
+    return (
+      receiptDate >= receiptHistoryStartDate &&
+      receiptDate <= receiptHistoryEndDate
+    );
+  }
+
+  return false;
+}  
+
+function renderReceiptHistoryFilter(){
+
+  const today =
+    getTodayString();
+
+  const startValue =
+    receiptHistoryStartDate || today;
+
+  const endValue =
+    receiptHistoryEndDate || today;
+
+  return `
+    <div class="history-filter">
+
+      <div class="history-filter-title">
+        🧾 Receipt History
+      </div>
+
+      <div class="history-filter-buttons">
+
+        <button
+          class="${receiptHistoryMode === "today" ? "active" : ""}"
+          onclick="setReceiptHistoryMode('today')">
+          วันนี้
+        </button>
+
+        <button
+          class="${receiptHistoryMode === "range" ? "active" : ""}"
+          onclick="setReceiptHistoryMode('range')">
+          ช่วงวันที่
+        </button>
+
+        <button
+          class="${receiptHistoryMode === "all" ? "active" : ""}"
+          onclick="setReceiptHistoryMode('all')">
+          ทั้งหมด
+        </button>
+
+      </div>
+
+      ${
+        receiptHistoryMode === "range"
+          ? `
+            <div class="history-date-row">
+              <input
+                id="receipt-start-date"
+                type="date"
+                value="${startValue}"
+              >
+
+              <input
+                id="receipt-end-date"
+                type="date"
+                value="${endValue}"
+              >
+            </div>
+
+            <button
+              class="refresh"
+              style="margin-top:10px;"
+              onclick="applyReceiptHistoryRange()">
+              🔎 ดูรายงาน
+            </button>
+          `
+          : ""
+      }
+
+    </div>
+  `;
+}
+
+function setReceiptHistoryMode(mode){
+
+  receiptHistoryMode = mode;
+
+  if(mode === "today"){
+    receiptHistoryStartDate = "";
+    receiptHistoryEndDate = "";
+  }
+
+  if(mode === "range"){
+    const today = getTodayString();
+
+    if(!receiptHistoryStartDate){
+      receiptHistoryStartDate = today;
+    }
+
+    if(!receiptHistoryEndDate){
+      receiptHistoryEndDate = today;
+    }
+  }
+
+  loadOrders();
+}
+
+function applyReceiptHistoryRange(){
+
+  const start =
+    document.getElementById("receipt-start-date")?.value || "";
+
+  const end =
+    document.getElementById("receipt-end-date")?.value || "";
+
+  if(!start || !end){
+    alert("กรุณาเลือกวันที่เริ่มต้นและวันที่สิ้นสุดค่ะ");
+    return;
+  }
+
+  if(start > end){
+    alert("วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุดค่ะ");
+    return;
+  }
+
+  receiptHistoryStartDate = start;
+  receiptHistoryEndDate = end;
+  receiptHistoryMode = "range";
+
+  loadOrders();
 }
   
 function toggleSound(){
@@ -697,16 +940,7 @@ if(currentView === "orders"){
 }else if(currentView === "receipts"){
 
   orders =
-    currentOrders.filter(o => {
-
-      const payment =
-        String(o.payment_status || "")
-          .trim()
-          .toUpperCase();
-
-      return payment === "PAID";
-
-    });
+    currentOrders.filter(isReceiptInSelectedHistory);
 
 }else{
 
@@ -723,19 +957,28 @@ orders.sort((a, b) => {
     
 if(!orders.length){
 
-  box.innerHTML =
+  const emptyHtml =
     currentView === "orders"
       ? `<div class="empty">ยังไม่มีข้อมูลออเดอร์ค่ะ ☕</div>`
       : currentView === "unpaid"
         ? `<div class="empty">ยังไม่มีรายการค้างชำระค่ะ 💸</div>`
         : currentView === "receipts"
-          ? `<div class="empty">ยังไม่มีใบเสร็จค่ะ 🧾</div>`
+          ? `<div class="empty">ยังไม่มีใบเสร็จตามเงื่อนไขนี้ค่ะ 🧾</div>`
           : `<div class="empty">ยังไม่มีข้อมูลค่ะ</div>`;
+
+  box.innerHTML =
+    currentView === "receipts"
+      ? renderReceiptHistoryFilter() + emptyHtml
+      : emptyHtml;
 
   return;
 }
 
-    box.innerHTML = "";
+  if(currentView === "receipts"){
+  box.innerHTML = renderReceiptHistoryFilter();
+}else{
+  box.innerHTML = "";
+}
 
 const currentOrderNos = new Set(
   currentOrders.map(order => order.order_no)
