@@ -1349,62 +1349,74 @@ if(currentView === "orders"){
 
 }
 
+function getQueueNumber(queueNo){
+
+  const text =
+    String(queueNo || "").trim();
+
+  const match =
+    text.match(/\d+/);
+
+  if(!match){
+    return 999999;
+  }
+
+  return Number(match[0]);
+}
+
+function getOrderTime(order){
+
+  const time =
+    new Date(order.order_datetime || 0).getTime();
+
+  return Number.isFinite(time)
+    ? time
+    : 0;
+}
+
+function getPaidTime(order){
+
+  const time =
+    new Date(order.paid_at || order.order_datetime || 0).getTime();
+
+  return Number.isFinite(time)
+    ? time
+    : 0;
+}
+
 orders.sort((a, b) => {
 
   if(currentView === "orders"){
 
-    // Orders tab: ทำตามคิว ออเดอร์ที่เข้ามาก่อนอยู่บนสุด
+    // Orders tab: เรียงตามคิว A001, A002, A003...
     const queueA =
-      Number(a.queue_no || 0);
+      getQueueNumber(a.queue_no);
 
     const queueB =
-      Number(b.queue_no || 0);
+      getQueueNumber(b.queue_no);
 
     if(queueA !== queueB){
       return queueA - queueB;
     }
 
-    const dateA =
-      new Date(a.order_datetime || 0);
-
-    const dateB =
-      new Date(b.order_datetime || 0);
-
-    return dateA - dateB;
+    // ถ้า queue เท่ากัน ให้ใช้เวลาที่เข้ามาก่อน
+    return getOrderTime(a) - getOrderTime(b);
   }
 
   if(currentView === "receipts"){
 
     // Receipts: จ่ายล่าสุดอยู่บนสุด
-    const dateA =
-      new Date(a.paid_at || a.order_datetime || 0);
-
-    const dateB =
-      new Date(b.paid_at || b.order_datetime || 0);
-
-    return dateB - dateA;
+    return getPaidTime(b) - getPaidTime(a);
   }
 
   if(currentView === "unpaid"){
 
     // Unpaid: ค้างชำระล่าสุดอยู่บนสุด
-    const dateA =
-      new Date(a.order_datetime || 0);
-
-    const dateB =
-      new Date(b.order_datetime || 0);
-
-    return dateB - dateA;
+    return getOrderTime(b) - getOrderTime(a);
   }
 
   // default: ล่าสุดอยู่บนสุด
-  const dateA =
-    new Date(a.order_datetime || 0);
-
-  const dateB =
-    new Date(b.order_datetime || 0);
-
-  return dateB - dateA;
+  return getOrderTime(b) - getOrderTime(a);
 });
     
 if(!orders.length){
