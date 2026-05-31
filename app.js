@@ -12,7 +12,7 @@ let lineProfile = null;
 let appStarted = false;
 
 const PRODUCTS_CACHE_KEY = "patae_products_cache_v2";
-const PRODUCTS_CACHE_TTL = 5 * 60 * 1000; // 5 นาที
+const PRODUCTS_CACHE_TTL = 1 * 60 * 1000; // 1 นาที
 
 function isFromQueuePage(){
 
@@ -108,25 +108,16 @@ async function loadProducts(){
       const isFresh =
         Date.now() - Number(parsed.saved_at || 0) < PRODUCTS_CACHE_TTL;
 
-      if(isFresh && Array.isArray(parsed.products)){
-        allProducts = parsed.products;
-      
-        currentCategory = null;
-        buildTabs();
-        renderProducts();
-      
-        // ถ้ากลับมาจากหน้า Queue ให้ใช้ cache ก่อน
-        // ไม่ refresh background ทันที เพื่อกันอาการโหลด/กระพริบ 2 รอบ
-        if(isFromQueuePage()){
-          clearFromQueueParam();
-          return;
-        }
-      
-        // เปิดหน้าเมนูปกติ ค่อย refresh เบื้องหลัง
-        refreshProductsInBackground();
-      
-        return;
-      }
+if(isFresh && Array.isArray(parsed.products)){
+  allProducts = parsed.products;
+
+  currentCategory = null;
+  buildTabs();
+  renderProducts();
+
+  // ใช้ cache อย่างเดียวก่อน เพื่อไม่ให้หน้าเมนู render ซ้ำ
+  return;
+}
     }catch(err){
       console.log("Products cache parse failed", err);
     }
