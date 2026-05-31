@@ -546,6 +546,146 @@
 .sales-row strong{
   color:#233b2a;
 }
+
+  .sales-dashboard{
+  background:#fffaf2;
+  border-radius:24px;
+  padding:16px;
+  margin-top:12px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.08);
+  border:1px solid #eadfce;
+}
+
+.sales-dashboard-header{
+  text-align:center;
+  padding:12px 8px 16px;
+  border-bottom:1px dashed #d8c8b3;
+  margin-bottom:14px;
+}
+
+.sales-dashboard-brand{
+  font-size:26px;
+  font-weight:bold;
+  color:#233b2a;
+}
+
+.sales-dashboard-title{
+  font-size:18px;
+  color:#5b3a2e;
+  margin-top:4px;
+}
+
+.sales-dashboard-date{
+  display:inline-block;
+  margin-top:10px;
+  background:#233b2a;
+  color:white;
+  padding:8px 14px;
+  border-radius:999px;
+  font-size:13px;
+}
+
+.sales-kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:10px;
+}
+
+.sales-kpi-card{
+  background:white;
+  border-radius:18px;
+  padding:14px;
+  text-align:center;
+  border:1px solid #eee3d4;
+  box-shadow:0 2px 8px rgba(0,0,0,0.04);
+}
+
+.sales-kpi-icon{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  background:#233b2a;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 8px;
+  font-size:20px;
+}
+
+.sales-kpi-label{
+  font-size:13px;
+  color:#555;
+  line-height:1.4;
+}
+
+.sales-kpi-value{
+  font-size:25px;
+  font-weight:bold;
+  color:#233b2a;
+  margin-top:8px;
+}
+
+.sales-kpi-unit{
+  font-size:13px;
+  color:#777;
+}
+
+.sales-dashboard-section{
+  background:white;
+  border-radius:18px;
+  padding:14px;
+  margin-top:14px;
+  border:1px solid #eee3d4;
+}
+
+.sales-dashboard-section-title{
+  background:#233b2a;
+  color:white;
+  border-radius:14px;
+  padding:10px 12px;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.sales-dashboard-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:10px 0;
+  border-bottom:1px dashed #ddd;
+}
+
+.sales-dashboard-row:last-child{
+  border-bottom:none;
+}
+
+.sales-dashboard-row span{
+  color:#333;
+}
+
+.sales-dashboard-row strong{
+  color:#233b2a;
+  font-size:17px;
+  text-align:right;
+}
+
+.sales-pill{
+  background:#eef3e8;
+  color:#233b2a;
+  padding:6px 12px;
+  border-radius:999px;
+  font-weight:bold;
+}
+
+.sales-dashboard-note{
+  text-align:center;
+  color:#777;
+  font-size:13px;
+  margin-top:14px;
+  line-height:1.5;
+}
     
   </style>
 </head>
@@ -1936,9 +2076,12 @@ async function renderSalesSummary(){
 
   box.innerHTML = `
     ${renderSalesReportFilter()}
-    <div class="sales-panel">
-      <h3>📊 Sales Report</h3>
-      <div class="loading">กำลังโหลดสรุปยอดขาย...</div>
+    <div class="sales-dashboard">
+      <div class="sales-dashboard-header">
+        <div class="sales-dashboard-brand">PaTae Cafe</div>
+        <div class="sales-dashboard-title">Daily Sales Summary</div>
+        <div class="sales-dashboard-date">กำลังโหลดข้อมูล...</div>
+      </div>
     </div>
   `;
 
@@ -1973,20 +2116,37 @@ async function renderSalesSummary(){
     const getAmount = (o) =>
       Number(o.grand_total || o.total_amount || 0);
 
-    const totalSales =
+    const paidSales =
       paidOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
-    const unpaidTotal =
+    const unpaidSales =
       unpaidOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
+    const totalOrders =
+      selectedOrders.length;
+
     const lineOrders =
+      selectedOrders.filter(o =>
+        String(o.order_channel || "")
+          .trim()
+          .toUpperCase() === "LINE"
+      );
+
+    const walkinChannelOrders =
+      selectedOrders.filter(o =>
+        String(o.order_channel || "")
+          .trim()
+          .toUpperCase() === "WALK_IN"
+      );
+
+    const linePaidOrders =
       paidOrders.filter(o =>
         String(o.order_channel || "")
           .trim()
           .toUpperCase() === "LINE"
       );
 
-    const walkinOrders =
+    const walkinPaidOrders =
       paidOrders.filter(o =>
         String(o.order_channel || "")
           .trim()
@@ -1994,26 +2154,47 @@ async function renderSalesSummary(){
       );
 
     const lineSales =
-      lineOrders.reduce((sum, o) => sum + getAmount(o), 0);
+      linePaidOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
     const walkinSales =
-      walkinOrders.reduce((sum, o) => sum + getAmount(o), 0);
+      walkinPaidOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
     const pickupOrders =
-      paidOrders.filter(o =>
+      selectedOrders.filter(o =>
         String(o.fulfillment_type || "")
           .trim()
           .toLowerCase() === "pickup"
       );
 
     const deliveryOrders =
-      paidOrders.filter(o =>
+      selectedOrders.filter(o =>
         String(o.fulfillment_type || "")
           .trim()
           .toLowerCase() === "delivery"
       );
 
     const walkinFulfillmentOrders =
+      selectedOrders.filter(o =>
+        String(o.fulfillment_type || "")
+          .trim()
+          .toLowerCase() === "walk_in"
+      );
+
+    const pickupPaidOrders =
+      paidOrders.filter(o =>
+        String(o.fulfillment_type || "")
+          .trim()
+          .toLowerCase() === "pickup"
+      );
+
+    const deliveryPaidOrders =
+      paidOrders.filter(o =>
+        String(o.fulfillment_type || "")
+          .trim()
+          .toLowerCase() === "delivery"
+      );
+
+    const walkinFulfillmentPaidOrders =
       paidOrders.filter(o =>
         String(o.fulfillment_type || "")
           .trim()
@@ -2021,76 +2202,129 @@ async function renderSalesSummary(){
       );
 
     const pickupSales =
-      pickupOrders.reduce((sum, o) => sum + getAmount(o), 0);
+      pickupPaidOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
     const deliverySales =
-      deliveryOrders.reduce((sum, o) => sum + getAmount(o), 0);
+      deliveryPaidOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
     const walkinFulfillmentSales =
-      walkinFulfillmentOrders.reduce((sum, o) => sum + getAmount(o), 0);
+      walkinFulfillmentPaidOrders.reduce((sum, o) => sum + getAmount(o), 0);
+
+    const reportDateText =
+      salesReportMode === "today"
+        ? `ประจำวันที่ ${getTodayString()}`
+        : salesReportMode === "range"
+          ? `ช่วงวันที่ ${salesReportStartDate || "-"} ถึง ${salesReportEndDate || "-"}`
+          : "รายงานทั้งหมด";
 
     box.innerHTML = `
       ${renderSalesReportFilter()}
 
-      <div class="sales-panel">
+      <div class="sales-dashboard" id="sales-report-card">
 
-        <h3>📊 Sales Report</h3>
+        <div class="sales-dashboard-header">
+          <div class="sales-dashboard-brand">PaTae Cafe</div>
+          <div class="sales-dashboard-title">Daily Sales Summary</div>
+          <div class="sales-dashboard-date">📅 ${reportDateText}</div>
+        </div>
 
-        <div class="sales-grid">
+        <div class="sales-kpi-grid">
 
-          <div class="sales-card">
-            <div class="sales-card-title">ยอดขาย</div>
-            <div class="sales-card-value">${totalSales.toLocaleString("th-TH")} บาท</div>
+          <div class="sales-kpi-card">
+            <div class="sales-kpi-icon">💰</div>
+            <div class="sales-kpi-label">ยอดขายรวม<br>Total Sales</div>
+            <div class="sales-kpi-value">${paidSales.toLocaleString("th-TH")}</div>
+            <div class="sales-kpi-unit">บาท</div>
           </div>
 
-          <div class="sales-card">
-            <div class="sales-card-title">บิลที่ชำระแล้ว</div>
-            <div class="sales-card-value">${paidOrders.length}</div>
+          <div class="sales-kpi-card">
+            <div class="sales-kpi-icon">✅</div>
+            <div class="sales-kpi-label">ยอดชำระแล้ว<br>Paid</div>
+            <div class="sales-kpi-value">${paidSales.toLocaleString("th-TH")}</div>
+            <div class="sales-kpi-unit">บาท</div>
           </div>
 
-          <div class="sales-card">
-            <div class="sales-card-title">ยอดค้างชำระ</div>
-            <div class="sales-card-value">${unpaidTotal.toLocaleString("th-TH")} บาท</div>
+          <div class="sales-kpi-card">
+            <div class="sales-kpi-icon" style="background:#a15c00;">⏳</div>
+            <div class="sales-kpi-label">ยอดค้างชำระ<br>Unpaid</div>
+            <div class="sales-kpi-value" style="color:#a15c00;">${unpaidSales.toLocaleString("th-TH")}</div>
+            <div class="sales-kpi-unit">บาท</div>
           </div>
 
-          <div class="sales-card">
-            <div class="sales-card-title">บิลค้างชำระ</div>
-            <div class="sales-card-value">${unpaidOrders.length}</div>
+          <div class="sales-kpi-card">
+            <div class="sales-kpi-icon" style="background:#7b5a35;">🧾</div>
+            <div class="sales-kpi-label">จำนวนออเดอร์<br>Total Orders</div>
+            <div class="sales-kpi-value">${totalOrders}</div>
+            <div class="sales-kpi-unit">ออเดอร์</div>
           </div>
 
         </div>
 
-        <div class="sales-section">
-          <h4>แยกตามช่องทาง</h4>
-
-          <div class="sales-row">
-            <span>LINE</span>
-            <strong>${lineSales.toLocaleString("th-TH")} บาท / ${lineOrders.length} บิล</strong>
+        <div class="sales-dashboard-section">
+          <div class="sales-dashboard-section-title">
+            🏪 ช่องทางการขาย / Sales Channels
           </div>
 
-          <div class="sales-row">
-            <span>Walk-in</span>
-            <strong>${walkinSales.toLocaleString("th-TH")} บาท / ${walkinOrders.length} บิล</strong>
+          <div class="sales-dashboard-row">
+            <span>LINE Orders</span>
+            <strong>${lineOrders.length} ออเดอร์</strong>
+          </div>
+
+          <div class="sales-dashboard-row">
+            <span>ยอดขาย LINE</span>
+            <strong>${lineSales.toLocaleString("th-TH")} บาท</strong>
+          </div>
+
+          <div class="sales-dashboard-row">
+            <span>Walk-in Orders</span>
+            <strong>${walkinChannelOrders.length} ออเดอร์</strong>
+          </div>
+
+          <div class="sales-dashboard-row">
+            <span>ยอดขาย Walk-in</span>
+            <strong>${walkinSales.toLocaleString("th-TH")} บาท</strong>
           </div>
         </div>
 
-        <div class="sales-section">
-          <h4>แยกตามประเภทรับสินค้า</h4>
+        <div class="sales-dashboard-section">
+          <div class="sales-dashboard-section-title">
+            🛵 ช่องทางการรับ / จัดส่ง
+          </div>
 
-          <div class="sales-row">
+          <div class="sales-dashboard-row">
             <span>Pickup</span>
-            <strong>${pickupSales.toLocaleString("th-TH")} บาท / ${pickupOrders.length} บิล</strong>
+            <span class="sales-pill">${pickupOrders.length} ออเดอร์</span>
           </div>
 
-          <div class="sales-row">
+          <div class="sales-dashboard-row">
+            <span>ยอด Pickup</span>
+            <strong>${pickupSales.toLocaleString("th-TH")} บาท</strong>
+          </div>
+
+          <div class="sales-dashboard-row">
             <span>Delivery</span>
-            <strong>${deliverySales.toLocaleString("th-TH")} บาท / ${deliveryOrders.length} บิล</strong>
+            <span class="sales-pill">${deliveryOrders.length} ออเดอร์</span>
           </div>
 
-          <div class="sales-row">
-            <span>Walk-in</span>
-            <strong>${walkinFulfillmentSales.toLocaleString("th-TH")} บาท / ${walkinFulfillmentOrders.length} บิล</strong>
+          <div class="sales-dashboard-row">
+            <span>ยอด Delivery</span>
+            <strong>${deliverySales.toLocaleString("th-TH")} บาท</strong>
           </div>
+
+          <div class="sales-dashboard-row">
+            <span>Walk-in</span>
+            <span class="sales-pill">${walkinFulfillmentOrders.length} ออเดอร์</span>
+          </div>
+
+          <div class="sales-dashboard-row">
+            <span>ยอด Walk-in</span>
+            <strong>${walkinFulfillmentSales.toLocaleString("th-TH")} บาท</strong>
+          </div>
+        </div>
+
+        <div class="sales-dashboard-note">
+          รายงานนี้สร้างจากข้อมูลออเดอร์ในช่วงวันที่ที่เลือก<br>
+          Auto-generated Sales Report
         </div>
 
       </div>
