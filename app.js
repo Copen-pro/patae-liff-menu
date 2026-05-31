@@ -16,25 +16,15 @@ const PRODUCTS_CACHE_TTL = 1 * 60 * 1000; // 1 นาที
 
 function isFromQueuePage(){
 
-  const params =
-    new URLSearchParams(window.location.search);
+  return sessionStorage.getItem("patae_from_queue") === "YES";
 
-  return params.get("from") === "queue";
 }
 
-function clearFromQueueParam(){
+function clearFromQueueFlag(){
 
-  if(!isFromQueuePage()){
-    return;
-  }
+  sessionStorage.removeItem("patae_from_queue");
 
-  window.history.replaceState(
-    {},
-    document.title,
-    window.location.pathname
-  );
 }
-
 
 function optimizeImage(url){
   if(!url) return "";
