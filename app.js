@@ -625,6 +625,12 @@ async function start(){
   bindEvents();
   await initLiff();
 
+  const isOpen = await checkStoreStatus();
+
+  if(!isOpen){
+    return;
+  }
+
   await loadProducts();
 }
 
