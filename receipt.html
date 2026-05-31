@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PaTae Cafe Receipt</title>
+
+  <style>
+    :root{
+      --primary:#233b2a;
+      --muted:#777;
+      --bg:#f6f2ed;
+      --paper:#fff;
+      --border:#e7e1d8;
+    }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      font-family:Arial, sans-serif;
+      color:#222;
+      padding:16px;
+    }
+
+    .receipt-wrap{
+      max-width:420px;
+      margin:0 auto;
+    }
+
+    .receipt{
+      background:var(--paper);
+      border-radius:18px;
+      padding:22px;
+      box-shadow:0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    .shop{
+      text-align:center;
+      border-bottom:1px dashed #ccc;
+      padding-bottom:14px;
+      margin-bottom:14px;
+    }
+
+    .shop h1{
+      margin:0;
+      font-size:24px;
+      color:var(--primary);
+    }
+
+    .shop p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .receipt-title{
+      text-align:center;
+      font-size:18px;
+      font-weight:bold;
+      margin:12px 0;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      margin:7px 0;
+      font-size:14px;
+    }
+
+    .row span:first-child{
+      color:#555;
+    }
+
+    .row strong{
+      text-align:right;
+    }
+
+    .section{
+      margin-top:14px;
+      padding-top:14px;
+      border-top:1px dashed #ccc;
+    }
+
+    .items{
+      white-space:pre-wrap;
+      line-height:1.6;
+      font-size:14px;
+      background:#f8f5f1;
+      border-radius:12px;
+      padding:12px;
+      margin-top:8px;
+    }
+
+    .custom-box{
+      white-space:pre-wrap;
+      line-height:1.6;
+      font-size:14px;
+      background:#fff0d6;
+      border-radius:12px;
+      padding:12px;
+      margin-top:8px;
+      color:#5b3a2e;
+    }
+
+    .total-row{
+      font-size:18px;
+      font-weight:bold;
+      color:var(--primary);
+      border-top:2px solid var(--border);
+      padding-top:12px;
+      margin-top:12px;
+    }
+
+    .footer{
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+      margin-top:18px;
+      line-height:1.5;
+    }
+
+    .actions{
+      max-width:420px;
+      margin:14px auto 0;
+      display:flex;
+      gap:10px;
+    }
+
+    button{
+      border:none;
+      border-radius:14px;
+      padding:13px 16px;
+      font-size:15px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    .print-btn{
+      flex:1;
+      background:var(--primary);
+      color:white;
+    }
+
+    .back-btn{
+      background:#ddd;
+      color:#333;
+    }
+
+    .loading,
+    .error{
+      background:white;
+      border-radius:18px;
+      padding:24px;
+      text-align:center;
+      box-shadow:0 4px 16px rgba(0,0,0,0.08);
+      max-width:420px;
+      margin:40px auto;
+      line-height:1.6;
+    }
+
+    @media print{
+      body{
+        background:white;
+        padding:0;
+      }
+
+      .actions{
+        display:none;
+      }
+
+      .receipt{
+        box-shadow:none;
+        border-radius:0;
+        max-width:100%;
+      }
+
+      .receipt-wrap{
+        max-width:100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="app">
+  <div class="loading">
+    กำลังโหลดใบเสร็จ...
+  </div>
+</div>
+
+<div class="actions">
+  <button class="back-btn" onclick="history.back()">กลับ</button>
+  <button class="print-btn" onclick="window.print()">🖨 Print</button>
+</div>
+
+<script>
+const RECEIPT_API =
+  "https://copen.app.n8n.cloud/webhook/patae/receipt";
+
+function getOrderNo(){
+  const params = new URLSearchParams(window.location.search);
+  return params.get("order_no") || "";
+}
+
+function money(value){
+  return Number(value || 0).toLocaleString("th-TH");
+}
+
+function safe(value){
+  return value || "-";
+}
+
+function renderError(message){
+  document.getElementById("app").innerHTML = `
+    <div class="error">
+      <h3>โหลดใบเสร็จไม่สำเร็จค่ะ</h3>
+      <p>${message || "กรุณาลองใหม่อีกครั้ง"}</p>
+    </div>
+  `;
+}
+
+function renderReceipt(data){
+
+  const itemsSummary =
+    data.items_summary || "-";
+
+  const customHtml =
+    data.custom_request
+      ? `
+        <div class="section">
+          <strong>รายการพิเศษ</strong>
+          <div class="custom-box">${data.custom_request}</div>
+        </div>
+      `
+      : "";
+
+  document.getElementById("app").innerHTML = `
+    <div class="receipt-wrap">
+      <div class="receipt">
+
+        <div class="shop">
+          <h1>☕ PaTae Cafe</h1>
+          <p>Fresh Coffee Everyday</p>
+        </div>
+
+        <div class="receipt-title">
+          ใบเสร็จรับเงิน / Receipt
+        </div>
+
+        <div class="section">
+          <div class="row">
+            <span>Receipt No</span>
+            <strong>${safe(data.receipt_no)}</strong>
+          </div>
+
+          <div class="row">
+            <span>Order No</span>
+            <strong>${safe(data.order_no)}</strong>
+          </div>
+
+          <div class="row">
+            <span>Queue</span>
+            <strong>${safe(data.queue_no)}</strong>
+          </div>
+
+          <div class="row">
+            <span>Paid At</span>
+            <strong>${safe(data.paid_at)}</strong>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="row">
+            <span>Customer</span>
+            <strong>${safe(data.customer_name)}</strong>
+          </div>
+
+          <div class="row">
+            <span>Channel</span>
+            <strong>${safe(data.order_channel)}</strong>
+          </div>
+
+          <div class="row">
+            <span>Type</span>
+            <strong>${safe(data.fulfillment_type)}</strong>
+          </div>
+        </div>
+
+        <div class="section">
+          <strong>รายการสินค้า</strong>
+          <div class="items">${itemsSummary}</div>
+        </div>
+
+        ${customHtml}
+
+        <div class="section">
+          <div class="row">
+            <span>ยอดสินค้า</span>
+            <strong>${money(data.total_amount)} บาท</strong>
+          </div>
+
+          <div class="row">
+            <span>ค่าสั่งพิเศษ</span>
+            <strong>${money(data.custom_price)} บาท</strong>
+          </div>
+
+          <div class="row">
+            <span>ค่าส่ง</span>
+            <strong>${money(data.delivery_fee)} บาท</strong>
+          </div>
+
+          <div class="row total-row">
+            <span>รวมทั้งหมด</span>
+            <strong>${money(data.grand_total)} บาท</strong>
+          </div>
+        </div>
+
+        <div class="footer">
+          ขอบคุณที่อุดหนุน PaTae Cafe ค่ะ<br>
+          สถานะชำระเงิน: ${safe(data.payment_status)}
+        </div>
+
+      </div>
+    </div>
+  `;
+}
+
+async function start(){
+  const orderNo = getOrderNo();
+
+  if(!orderNo){
+    renderError("ไม่พบ order_no ใน URL");
+    return;
+  }
+
+  try{
+    const res = await fetch(
+      `${RECEIPT_API}?order_no=${encodeURIComponent(orderNo)}`
+    );
+
+    const data = await res.json();
+
+    if(!data.success){
+      renderError(data.message || "ไม่สามารถออกใบเสร็จได้ค่ะ");
+      return;
+    }
+
+    renderReceipt(data);
+
+  }catch(err){
+    console.error(err);
+    renderError("ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง");
+  }
+}
+
+start();
+</script>
+
+</body>
+</html>
