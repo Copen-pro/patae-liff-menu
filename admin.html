@@ -483,7 +483,14 @@ onclick="showOrderTab('walkin')">
 
 </button>
   
+<button
+id="receipts-tab"
+onclick="showOrderTab('receipts')">
 
+🧾 Receipts
+
+</button>
+  
 </div>
 
 <div id="view-title" class="view-title">
@@ -585,20 +592,21 @@ async function loadOrders(){
 
 let orders = currentOrders;
 
-if(currentView === "orders"){
+if(currentView === "orders"){if(currentView === "orders"){
 
   orders =
     currentOrders.filter(o => {
 
       const status =
         String(o.order_status || "")
-        .toUpperCase();
+          .trim()
+          .toUpperCase();
 
       return status !== "DONE";
 
     });
 
-}else{
+}else if(currentView === "unpaid"){
 
   orders =
     currentOrders.filter(o => {
@@ -624,14 +632,43 @@ if(currentView === "orders"){
 
     });
 
+}else if(currentView === "receipts"){
+
+  orders =
+    currentOrders.filter(o => {
+
+      const payment =
+        String(o.payment_status || "")
+          .trim()
+          .toUpperCase();
+
+      return payment === "PAID";
+
+    });
+
+}else{
+
+  orders = currentOrders;
+
 }
+
+orders.sort((a, b) => {
+  const dateA = new Date(a.paid_at || a.order_datetime || 0);
+  const dateB = new Date(b.paid_at || b.order_datetime || 0);
+
+  return dateB - dateA;
+});
     
 if(!orders.length){
 
   box.innerHTML =
     currentView === "orders"
       ? `<div class="empty">ยังไม่มีข้อมูลออเดอร์ค่ะ ☕</div>`
-      : `<div class="empty">ยังไม่มีรายการค้างชำระค่ะ 💸</div>`;
+      : currentView === "unpaid"
+        ? `<div class="empty">ยังไม่มีรายการค้างชำระค่ะ 💸</div>`
+        : currentView === "receipts"
+          ? `<div class="empty">ยังไม่มีใบเสร็จค่ะ 🧾</div>`
+          : `<div class="empty">ยังไม่มีข้อมูลค่ะ</div>`;
 
   return;
 }
@@ -748,7 +785,17 @@ const quoteLocked =
 
 let actionButtons = "";
 
-if(currentView === "unpaid"){
+if(currentView === "receipts"){
+
+  actionButtons = `
+    <button
+      class="btn-done"
+      onclick="openReceipt('${order.order_no}')">
+      🧾 Receipt
+    </button>
+  `;
+
+}else if(currentView === "unpaid"){
 
   actionButtons = paidButton;
 
@@ -1271,15 +1318,18 @@ function showOrderTab(view){
   document.getElementById("orders-tab").classList.remove("active");
   document.getElementById("unpaid-tab").classList.remove("active");
   document.getElementById("walkin-tab").classList.remove("active");
-
+  document.getElementById("receipts-tab").classList.remove("active");
+  
   document.getElementById(view + "-tab").classList.add("active");
 
-  document.getElementById("view-title").innerText =
-    view === "orders"
-      ? "☕ Orders"
-      : view === "unpaid"
-        ? "💸 Unpaid Orders"
-        : "🛒 Walk-in Order";
+document.getElementById("view-title").innerText =
+  view === "orders"
+    ? "☕ Orders"
+    : view === "unpaid"
+      ? "💸 Unpaid Orders"
+      : view === "walkin"
+        ? "🛒 Walk-in Order"
+        : "🧾 Receipt History";
 
   if(view === "walkin"){
     renderWalkinPanel();
