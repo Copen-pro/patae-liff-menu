@@ -561,7 +561,10 @@
     <button id="sound-toggle" class="refresh" onclick="toggleSound()">
   🔔 Sound: ON
 </button>
-
+<button class="refresh" onclick="showOrderTab('sales')">
+  📊 Sales Report
+</button>
+    
 <div class="store-status-bar" id="store-status-bar">
 🏪 Store Status: Loading...
 </div>
@@ -686,14 +689,7 @@ onclick="showOrderTab('receipts')">
 
 </button>
 
-<button
-id="sales-tab"
-onclick="showOrderTab('sales')">
-
-📊 Sales
-
-</button>
-  
+ 
 </div>
 
 <div id="view-title" class="view-title">
@@ -1886,9 +1882,13 @@ function showOrderTab(view){
   document.getElementById("unpaid-tab").classList.remove("active");
   document.getElementById("walkin-tab").classList.remove("active");
   document.getElementById("receipts-tab").classList.remove("active");
-  document.getElementById("sales-tab").classList.remove("active");
   
-  document.getElementById(view + "-tab").classList.add("active");
+const activeTab =
+  document.getElementById(view + "-tab");
+
+if(activeTab){
+  activeTab.classList.add("active");
+}
 
 document.getElementById("view-title").innerText =
   view === "orders"
