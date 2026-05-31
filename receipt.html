@@ -276,10 +276,31 @@ function renderError(message){
   `;
 }
 
+function amountRow(label, value){
+  const amount = Number(value || 0);
+
+  if(amount <= 0){
+    return "";
+  }
+
+  return `
+    <div class="row">
+      <span>${label}</span>
+      <strong>${money(amount)} บาท</strong>
+    </div>
+  `;
+}
+
 function renderReceipt(data){
 
   const itemsSummary =
     data.items_summary || "-";
+
+  const customPrice =
+    Number(data.custom_price || 0);
+
+  const deliveryFee =
+    Number(data.delivery_fee || 0);
 
   const customHtml =
     data.custom_request
@@ -290,6 +311,17 @@ function renderReceipt(data){
         </div>
       `
       : "";
+
+  const amountHtml = `
+    ${amountRow("ยอดสินค้า", data.total_amount)}
+    ${amountRow("ค่าสั่งพิเศษ", customPrice)}
+    ${amountRow("ค่าส่ง", deliveryFee)}
+
+    <div class="row total-row">
+      <span>รวมทั้งหมด</span>
+      <strong>${money(data.grand_total)} บาท</strong>
+    </div>
+  `;
 
   document.getElementById("app").innerHTML = `
     <div class="receipt-wrap">
@@ -351,25 +383,7 @@ function renderReceipt(data){
         ${customHtml}
 
         <div class="section">
-          <div class="row">
-            <span>ยอดสินค้า</span>
-            <strong>${money(data.total_amount)} บาท</strong>
-          </div>
-
-          <div class="row">
-            <span>ค่าสั่งพิเศษ</span>
-            <strong>${money(data.custom_price)} บาท</strong>
-          </div>
-
-          <div class="row">
-            <span>ค่าส่ง</span>
-            <strong>${money(data.delivery_fee)} บาท</strong>
-          </div>
-
-          <div class="row total-row">
-            <span>รวมทั้งหมด</span>
-            <strong>${money(data.grand_total)} บาท</strong>
-          </div>
+          ${amountHtml}
         </div>
 
         <div class="footer">
