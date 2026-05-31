@@ -9,6 +9,9 @@ let cart = {};
 let isSubmitting = false;
 let lineProfile = null;
 
+const PRODUCTS_CACHE_KEY = "patae_products_cache_v2";
+const PRODUCTS_CACHE_TTL = 5 * 60 * 1000; // 5 นาที
+
 function optimizeImage(url){
   if(!url) return "";
   if(!url.includes("/upload/")) return url;
@@ -70,33 +73,105 @@ async function loadProducts(){
   productsBox.innerHTML =
     "<div class='loading'>กำลังโหลดเมนู...</div>";
 
+  // 1) ใช้ cache ก่อน เพื่อให้เมนูขึ้นเร็ว
+  const cached =
+    localStorage.getItem(PRODUCTS_CACHE_KEY);
+
+  if(cached){
+    try{
+      const parsed = JSON.parse(cached);
+
+      const isFresh =
+        Date.now() - Number(parsed.saved_at || 0) < PRODUCTS_CACHE_TTL;
+
+      if(isFresh && Array.isArray(parsed.products)){
+        allProducts = parsed.products;
+
+        currentCategory = null;
+        buildTabs();
+        renderProducts();
+
+        // โหลดใหม่เบื้องหลัง เผื่อร้านแก้เมนู
+        refreshProductsInBackground();
+
+        return;
+      }
+    }catch(err){
+      console.log("Products cache parse failed", err);
+    }
+  }
+
+  // 2) ถ้าไม่มี cache ค่อยโหลดจาก API
   try{
     const res = await fetch(PRODUCTS_API);
     const data = await res.json();
 
     if(data.is_open === false){
-  document.body.innerHTML = `
-    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f6f2ed;padding:20px;font-family:Arial,sans-serif;text-align:center;">
-      <div style="background:white;padding:28px;border-radius:22px;box-shadow:0 4px 14px rgba(0,0,0,.08);max-width:360px;">
-        <h2>☕ PaTae Cafe</h2>
-        <h3>ร้านปิดรับออเดอร์ค่ะ</h3>
-        <p>${data.message || "กรุณากลับมาสั่งใหม่ในเวลาทำการค่ะ"}</p>
-      </div>
-    </div>
-  `;
-  return;
-}
-    
-allProducts = data.products || [];
+      document.body.innerHTML = `
+        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f6f2ed;padding:20px;font-family:Arial,sans-serif;text-align:center;">
+          <div style="background:white;padding:28px;border-radius:22px;box-shadow:0 4px 14px rgba(0,0,0,.08);max-width:360px;">
+            <h2>☕ PaTae Cafe</h2>
+            <h3>ร้านปิดรับออเดอร์ค่ะ</h3>
+            <p>${data.message || "กรุณากลับมาสั่งใหม่ในเวลาทำการค่ะ"}</p>
+          </div>
+        </div>
+      `;
+      return;
+    }
 
-currentCategory = null;
-buildTabs();
-renderProducts();
+    allProducts = data.products || [];
+
+    localStorage.setItem(
+      PRODUCTS_CACHE_KEY,
+      JSON.stringify({
+        saved_at: Date.now(),
+        products: allProducts
+      })
+    );
+
+    currentCategory = null;
+    buildTabs();
+    renderProducts();
 
   }catch(err){
     console.error("Load products error:", err);
     productsBox.innerHTML =
       "<div class='loading'>โหลดเมนูไม่สำเร็จ กรุณาลองใหม่ค่ะ</div>";
+  }
+}
+
+async function refreshProductsInBackground(){
+
+  try{
+    const res = await fetch(PRODUCTS_API);
+    const data = await res.json();
+
+    if(data.is_open === false){
+      return;
+    }
+
+    const freshProducts =
+      data.products || [];
+
+    if(!freshProducts.length){
+      return;
+    }
+
+    allProducts = freshProducts;
+
+    localStorage.setItem(
+      PRODUCTS_CACHE_KEY,
+      JSON.stringify({
+        saved_at: Date.now(),
+        products: allProducts
+      })
+    );
+
+    buildTabs();
+    renderProducts();
+
+  }catch(err){
+    console.log("Background products refresh failed", err);
   }
 }
 
@@ -181,10 +256,12 @@ function renderProducts(){
     card.className = "card";
 
     card.innerHTML = `
-      <img 
-        loading="lazy"
-        src="${optimizeImage(product.image_url)}"
-      >
+     <img 
+      loading="lazy"
+      decoding="async"
+      src="${optimizeImage(product.image_url)}"
+      alt="${product.product_name || "PaTae product"}"
+    >
       <div class="card-content">
         <h3>${product.product_name}</h3>
         <div class="price">${product.price} บาท</div>
@@ -623,15 +700,19 @@ function bindEvents(){
 
 async function start(){
   bindEvents();
-  await initLiff();
 
-  const isOpen = await checkStoreStatus();
+  // โหลดเมนูก่อน ให้ลูกค้าเห็นเร็วที่สุด
+  loadProducts();
 
-  if(!isOpen){
-    return;
-  }
+  // เช็กสถานะร้านคู่ขนาน ไม่ให้ block หน้าเมนู
+  checkStoreStatus().then(isOpen => {
+    if(!isOpen){
+      return;
+    }
+  });
 
-  await loadProducts();
+  // LIFF profile โหลดทีหลัง ไม่ให้ block menu
+  initLiff();
 }
 
   document.getElementById("success-close-btn").onclick = () => {
