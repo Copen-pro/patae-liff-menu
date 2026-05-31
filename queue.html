@@ -4,507 +4,241 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Queue</title>
-
+  <link rel="preconnect" href="https://static.line-scdn.net">
+  <link rel="preconnect" href="https://copen.app.n8n.cloud">
   <link rel="stylesheet" href="style.css">
-
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
   <style>
-    body{
-      background:#f7f4ef;
-      padding:20px;
-      font-family:sans-serif;
-    }
-
-    .page-card{
-      background:white;
-      border-radius:24px;
-      padding:24px;
-      max-width:460px;
-      margin:30px auto;
-      text-align:center;
-      box-shadow:0 4px 18px rgba(0,0,0,0.08);
-    }
-
-    .order-mini-card{
-      background:white;
-      border-radius:20px;
-      padding:18px;
-      margin:16px 0;
-      text-align:center;
-      box-shadow:0 3px 12px rgba(0,0,0,0.06);
-      border:1px solid #eee;
-    }
-
-    .queue-no{
-      font-size:42px;
-      font-weight:bold;
-      margin:20px 0;
-      color:#5c3b2e;
-    }
-
-    .status{
-      font-size:18px;
-      margin-bottom:14px;
-    }
-
-    .status-badge{
-      display:inline-block;
-      padding:6px 14px;
-      border-radius:999px;
-      font-weight:bold;
-      color:white;
-    }
-
-    .status-new{
-      background:#8e8e93;
-    }
-
-    .status-preparing{
-      background:#f5a623;
-    }
-
-    .status-ready{
-      background:#34c759;
-    }
-
-    .status-done{
-      background:#5ac8fa;
-    }
-
-    .payment-badge{
-      display:inline-block;
-      padding:6px 12px;
-      border-radius:999px;
-      font-weight:bold;
-      color:white;
-    }
-
-    .payment-paid{
-      background:#34c759;
-    }
-
-    .payment-unpaid{
-      background:#f5a623;
-    }
-
-    .items{
-      text-align:left !important;
-      background:#f5f5f5;
-      padding:14px 16px;
-      border-radius:12px;
-      white-space:pre-wrap;
-      margin-top:18px;
-      line-height:1.7;
-      font-size:15px;
-      color:#333;
-      word-break:break-word;
-    }
-
-    .quote-box{
-      margin-top:12px;
-      padding:12px 14px;
-      background:#fff0d6;
-      color:#8a5200;
-      border-radius:14px;
-      font-weight:bold;
-      line-height:1.6;
-      text-align:left;
-      font-size:15px;
-    }
-
-.action-btn{
-  width:100%;
-  margin-top:14px;
-  border:none;
-  border-radius:16px;
-  padding:15px 16px;
-  font-size:16px;
-  font-weight:bold;
-  background:linear-gradient(180deg,#2f5138,#1f3527);
-  color:white;
-  cursor:pointer;
-  box-shadow:0 6px 0 #14251a, 0 10px 18px rgba(0,0,0,0.18);
-  transition:all 0.12s ease;
-}
-
-.action-btn:active{
-  transform:translateY(4px);
-  box-shadow:0 2px 0 #14251a, 0 5px 10px rgba(0,0,0,0.15);
-}
-
-.action-btn:disabled{
-  background:#9aa39c;
-  color:#eee;
-  cursor:not-allowed;
-  box-shadow:none;
-  transform:none;
-}
-
-    .secondary-btn{
-      width:100%;
-      margin-top:10px;
-      border:none;
-      border-radius:14px;
-      padding:12px;
-      font-size:15px;
-      font-weight:bold;
-      background:#eee;
-      color:#333;
-      cursor:pointer;
-    }
+    :root{--primary:#233b2a;--brown:#5c3b2e;--bg:#f7f4ef;--border:#eadfce;--muted:#777;--orange:#f5a623;--green:#34c759;--blue:#5ac8fa;--gray:#8e8e93;}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);padding:14px;font-family:Arial,sans-serif;color:#222}
+    .page-card{max-width:480px;margin:0 auto;padding-bottom:22px}
+    .hero{background:linear-gradient(180deg,#2f5138,#1f3527);color:white;border-radius:26px;padding:22px 18px;box-shadow:0 8px 22px rgba(0,0,0,.16);text-align:center;margin-bottom:14px}
+    .hero h2{margin:0;font-size:26px;letter-spacing:.5px}
+    .hero p{margin:8px 0 0;opacity:.9;font-size:14px}
+    .top-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+    button{border:none;border-radius:16px;padding:13px 14px;font-size:15px;font-weight:bold;cursor:pointer}
+    button:disabled{opacity:.65;cursor:not-allowed}
+    .primary-btn{background:linear-gradient(180deg,#2f5138,#1f3527);color:white;box-shadow:0 5px 0 #14251a,0 8px 14px rgba(0,0,0,.15)}
+    .primary-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #14251a,0 5px 10px rgba(0,0,0,.12)}
+    .secondary-btn{background:#eee;color:#333}
+    .loading-card,.empty-card,.error-card{background:white;border-radius:22px;padding:22px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.07);border:1px solid #eee;line-height:1.6}
+    .skeleton{background:white;border-radius:22px;padding:18px;margin:12px 0;box-shadow:0 4px 14px rgba(0,0,0,.07);border:1px solid #eee}
+    .sk-line{height:14px;border-radius:999px;background:linear-gradient(90deg,#eee,#f8f8f8,#eee);background-size:200% 100%;animation:shimmer 1.2s infinite;margin:10px 0}
+    .sk-big{width:120px;height:44px;margin:8px auto 16px}.sk-short{width:55%}.sk-mid{width:75%}.sk-full{width:100%}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    .order-card{background:white;border-radius:24px;padding:18px;margin:14px 0;box-shadow:0 5px 16px rgba(0,0,0,.08);border:1px solid #eee3d4;overflow:hidden}
+    .order-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border-bottom:1px dashed #ddd;padding-bottom:14px;margin-bottom:14px}
+    .queue-label{font-size:13px;color:#777;font-weight:bold;text-transform:uppercase;letter-spacing:.5px}
+    .queue-no{font-size:46px;line-height:1;font-weight:bold;color:var(--brown);margin-top:4px}
+    .order-no{text-align:right;color:#777;font-size:12px;line-height:1.5;word-break:break-word}
+    .status-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0 12px}
+    .badge{display:inline-block;padding:7px 12px;border-radius:999px;font-weight:bold;font-size:13px;color:white}
+    .status-new{background:var(--gray)}.status-preparing{background:var(--orange)}.status-ready{background:var(--green)}.status-done{background:var(--blue)}
+    .payment-paid{background:var(--green)}.payment-unpaid{background:var(--orange)}
+    .info-grid{background:#f8f5f1;border-radius:16px;padding:12px;margin-top:12px;text-align:left;line-height:1.7;font-size:14px}
+    .info-row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px dashed #ddd;padding:6px 0}
+    .info-row:last-child{border-bottom:none}.info-row span{color:#666}.info-row strong{text-align:right;color:#233b2a}
+    .items{text-align:left;background:#f5f5f5;padding:14px 16px;border-radius:16px;white-space:pre-wrap;margin-top:14px;line-height:1.7;font-size:15px;color:#333;word-break:break-word}
+    .custom-box,.quote-box{margin-top:12px;padding:13px 14px;background:#fff0d6;color:#8a5200;border-radius:16px;font-weight:bold;line-height:1.6;text-align:left;font-size:15px}
+    .success-box,.ready-box{background:#d9f7df;color:#167c34}
+    .action-btn{width:100%;margin-top:14px;border:none;border-radius:16px;padding:15px 16px;font-size:16px;font-weight:bold;background:linear-gradient(180deg,#2f5138,#1f3527);color:white;box-shadow:0 6px 0 #14251a,0 10px 18px rgba(0,0,0,.18)}
+    .action-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #14251a,0 5px 10px rgba(0,0,0,.15)}
+    .action-btn:disabled{background:#9aa39c;color:#eee;cursor:not-allowed;box-shadow:none;transform:none}
+    .last-updated{text-align:center;color:#777;font-size:12px;margin:8px 0 4px}
   </style>
 </head>
-
 <body>
-
 <div class="page-card">
-
-  <h2>🧾 MY QUEUE</h2>
-
-  <div id="loading">
-    Loading...
+  <div class="hero"><h2>🧾 My Queue</h2><p>ติดตามสถานะออเดอร์ของคุณ</p></div>
+  <div class="top-actions">
+    <button class="secondary-btn" onclick="goMenu()">☕ สั่งเพิ่ม</button>
+    <button class="primary-btn" onclick="refreshQueue(true)">🔄 Refresh</button>
   </div>
-
+  <div id="last-updated" class="last-updated"></div>
+  <div id="loading">
+    <div class="skeleton">
+      <div class="sk-line sk-big"></div><div class="sk-line sk-mid"></div><div class="sk-line sk-short"></div><div class="sk-line sk-full"></div><div class="sk-line sk-full"></div>
+    </div>
+  </div>
   <div id="orders-list" style="display:none;"></div>
-
 </div>
-
 <script>
+const LIFF_ID="2010088421-yQ9Cqk5p";
+const API_URL="https://copen.app.n8n.cloud/webhook/patae/my-queue";
+const CONFIRM_URL="https://copen.app.n8n.cloud/webhook/patae/delivery/confirm";
+const QUEUE_CACHE_PREFIX="patae_my_queue_cache_v2_";
+const QUEUE_CACHE_TTL=45*1000;
+let currentProfile=null;
+let isLoadingQueue=false;
 
-const LIFF_ID = "2010088421-yQ9Cqk5p";
-const API_URL = "https://copen.app.n8n.cloud/webhook/patae/my-queue";
-
-const CONFIRM_URL =
-  "https://copen.app.n8n.cloud/webhook/patae/delivery/confirm";
-
-async function confirmOrderFromQueue(orderNo, lineUserId, button){
-
-  if(button.disabled){
-    return;
-  }
-
-  if(!confirm("ยืนยันออเดอร์นี้ใช่ไหมคะ?")){
-    return;
-  }
-
-  const originalText = button.innerText;
-
-  button.disabled = true;
-  button.innerText = "⏳ กำลังยืนยัน...";
-
-  const url =
-    `${CONFIRM_URL}?action=CUSTOMER_CONFIRM&order_no=${encodeURIComponent(orderNo)}&line_user_id=${encodeURIComponent(lineUserId)}`;
-
+function goMenu(){window.location.href="index.html";}
+function getStatusText(status){return {NEW:"รับออเดอร์แล้ว",PREPARING:"กำลังทำ",READY:"พร้อมรับแล้ว",DONE:"เสร็จแล้ว"}[status]||status;}
+function getQueueNumber(queueNo){const match=String(queueNo||"").match(/\d+/);return match?Number(match[0]):999999;}
+function getQueueDate(order){
+  const queueDate=String(order.queue_date||"").trim();
+  if(queueDate)return queueDate;
+  const date=new Date(order.order_datetime||0);
+  if(isNaN(date.getTime()))return "9999-12-31";
+  return date.toLocaleDateString("sv-SE",{timeZone:"Asia/Bangkok"});
+}
+function sortQueueOrders(orders){
+  return [...orders].sort((a,b)=>{
+    const dateA=getQueueDate(a),dateB=getQueueDate(b);
+    if(dateA!==dateB)return dateB.localeCompare(dateA);
+    const queueA=getQueueNumber(a.queue_no),queueB=getQueueNumber(b.queue_no);
+    if(queueA!==queueB)return queueA-queueB;
+    return new Date(a.order_datetime||0)-new Date(b.order_datetime||0);
+  });
+}
+function cleanItemsSummary(summary){
+  return String(summary||"").split("\n").filter(line=>{
+    const text=String(line||"").trim();
+    if(!text)return false;
+    return !(text.includes("สั่งพิเศษ")&&text.includes("= 0 บาท"));
+  }).join("\n");
+}
+function showLoading(){document.getElementById("loading").style.display="block";document.getElementById("orders-list").style.display="none";}
+function hideLoading(){document.getElementById("loading").style.display="none";document.getElementById("orders-list").style.display="block";}
+function updateLastUpdated(fromCache=false){
+  const now=new Date().toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit",timeZone:"Asia/Bangkok"});
+  document.getElementById("last-updated").innerText=fromCache?`แสดงข้อมูลล่าสุดจากเครื่อง · ${now}`:`อัปเดตล่าสุด · ${now}`;
+}
+function getCacheKey(lineUserId){return QUEUE_CACHE_PREFIX+lineUserId;}
+function readQueueCache(lineUserId){
   try{
-
-    const res = await fetch(url, {
-      method: "GET"
-    });
-
-    const text = await res.text();
-
+    const raw=localStorage.getItem(getCacheKey(lineUserId));
+    if(!raw)return null;
+    const parsed=JSON.parse(raw);
+    if(Date.now()-Number(parsed.saved_at||0)>=QUEUE_CACHE_TTL)return null;
+    return parsed.data;
+  }catch(err){console.log("Queue cache read failed",err);return null;}
+}
+function saveQueueCache(lineUserId,data){
+  try{localStorage.setItem(getCacheKey(lineUserId),JSON.stringify({saved_at:Date.now(),data}));}
+  catch(err){console.log("Queue cache save failed",err);}
+}
+async function confirmOrderFromQueue(orderNo,lineUserId,button){
+  if(button.disabled)return;
+  if(!confirm("ยืนยันออเดอร์นี้ใช่ไหมคะ?"))return;
+  const originalText=button.innerText;
+  button.disabled=true;button.innerText="⏳ กำลังยืนยัน...";
+  const url=`${CONFIRM_URL}?action=CUSTOMER_CONFIRM&order_no=${encodeURIComponent(orderNo)}&line_user_id=${encodeURIComponent(lineUserId)}`;
+  try{
+    const res=await fetch(url,{method:"GET"});
+    const text=await res.text();
     if(!res.ok){
-      console.error("Confirm error:", res.status, text);
-
-      button.disabled = false;
-      button.innerText = originalText;
-
+      console.error("Confirm error:",res.status,text);
+      button.disabled=false;button.innerText=originalText;
       alert("ยืนยันออเดอร์ไม่สำเร็จค่ะ กรุณาลองใหม่");
       return;
     }
-
-    button.innerText = "✅ ยืนยันแล้ว";
-
+    button.innerText="✅ ยืนยันแล้ว";
     alert("ยืนยันออเดอร์เรียบร้อยค่ะ");
-
-    await start();
-
+    localStorage.removeItem(getCacheKey(lineUserId));
+    await refreshQueue(true);
   }catch(err){
-
-    console.error("Confirm fetch error:", err);
-
-    button.disabled = false;
-    button.innerText = originalText;
-
+    console.error("Confirm fetch error:",err);
+    button.disabled=false;button.innerText=originalText;
     alert("ยืนยันออเดอร์ไม่สำเร็จค่ะ กรุณาลองใหม่");
-
   }
 }
-
-function buildOrderCard(data, lineUserId){
-
-  const card = document.createElement("div");
-  card.className = "order-mini-card";
-
-  const statusMap = {
-    NEW: "รับออเดอร์แล้ว",
-    PREPARING: "กำลังทำ",
-    READY: "พร้อมรับแล้ว",
-    DONE: "เสร็จแล้ว"
-  };
-
-  const status =
-    String(data.order_status || "NEW")
-      .trim()
-      .toUpperCase();
-
-  const statusText =
-    statusMap[status] || status;
-
-  const paymentStatus =
-    String(data.payment_status || "UNPAID")
-      .trim()
-      .toUpperCase();
-
-  const quoteStatus =
-    String(data.quote_status || "NOT_REQUIRED")
-      .trim()
-      .toUpperCase();
-
-  const totalAmount =
-    Number(data.total_amount || 0);
-
-  const customPrice =
-    Number(data.custom_price || 0);
-
-  const deliveryFee =
-    Number(data.delivery_fee || 0);
-
-  const grandTotal =
-    Number(data.grand_total || 0) ||
-    totalAmount + customPrice + deliveryFee;
-  
-  const displayItemsSummary =
-  String(data.items_summary || "")
-    .split("\n")
-    .filter(line => {
-      const text = String(line || "").trim();
-
-      if(!text) return false;
-
-      const isCustomZero =
-        text.includes("สั่งพิเศษ") &&
-        text.includes("= 0 บาท");
-
-      return !isCustomZero;
-    })
-    .join("\n");
-  
-  let amountHtml = `
-    <div><strong>ยอดสินค้า:</strong> ${totalAmount} บาท</div>
-  `;
-
-  if(customPrice > 0){
-    amountHtml += `
-      <div><strong>ค่าสั่งพิเศษ:</strong> ${customPrice} บาท</div>
-    `;
+function buildOrderCard(data,lineUserId){
+  const card=document.createElement("div");
+  card.className="order-card";
+  const status=String(data.order_status||"NEW").trim().toUpperCase();
+  const statusText=getStatusText(status);
+  const paymentStatus=String(data.payment_status||"UNPAID").trim().toUpperCase();
+  const quoteStatus=String(data.quote_status||"NOT_REQUIRED").trim().toUpperCase();
+  const totalAmount=Number(data.total_amount||0);
+  const customPrice=Number(data.custom_price||0);
+  const deliveryFee=Number(data.delivery_fee||0);
+  const grandTotal=Number(data.grand_total||0)||totalAmount+customPrice+deliveryFee;
+  const fulfillmentType=String(data.fulfillment_type||"").toLowerCase();
+  const displayItemsSummary=cleanItemsSummary(data.items_summary);
+  let amountHtml=`<div class="info-row"><span>ยอดสินค้า</span><strong>${totalAmount} บาท</strong></div>`;
+  if(customPrice>0){amountHtml+=`<div class="info-row"><span>ค่าสั่งพิเศษ</span><strong>${customPrice} บาท</strong></div>`;}
+  if(fulfillmentType==="delivery"){amountHtml+=`<div class="info-row"><span>ค่าส่ง</span><strong>${deliveryFee} บาท</strong></div>`;}
+  amountHtml+=`<div class="info-row"><span>รวมทั้งหมด</span><strong>${grandTotal} บาท</strong></div>`;
+  const customHtml=data.custom_request?`<div class="custom-box"><strong>📝 รายการสั่งพิเศษ</strong><br>${data.custom_request}</div>`:"";
+  let quoteHtml="";
+  if(quoteStatus==="PENDING"){quoteHtml=`<div class="quote-box">⏳ รอสรุปราคาจากร้านค่ะ</div>`;}
+  if(quoteStatus==="WAIT_CUSTOMER_CONFIRM"){
+    quoteHtml=`<div class="quote-box">ร้านสรุปราคาเพิ่มเติมแล้ว<br>กรุณาตรวจสอบยอดรวมและยืนยันออเดอร์ค่ะ</div>
+    <button class="action-btn" onclick="confirmOrderFromQueue('${data.order_no}','${lineUserId}',this)">✅ ยืนยันออเดอร์</button>`;
   }
-
-  if(String(data.fulfillment_type || "").toLowerCase() === "delivery"){
-    amountHtml += `
-      <div><strong>ค่าส่ง:</strong> ${deliveryFee} บาท</div>
-    `;
-  }
-
-  amountHtml += `
-    <div><strong>รวมทั้งหมด:</strong> ${grandTotal} บาท</div>
-  `;
-
-  let customHtml = "";
-
-  if(data.custom_request){
-    customHtml = `
-      <div class="items" style="background:#fff0d6;">
-        <strong>📝 รายการสั่งพิเศษ</strong><br>
-        ${data.custom_request}
-      </div>
-    `;
-  }
-
-  let quoteHtml = "";
-
-  if(quoteStatus === "PENDING"){
-    quoteHtml = `
-      <div class="quote-box">
-        ⏳ รอสรุปราคาจากร้านค่ะ
-      </div>
-    `;
-  }
-
-  if(quoteStatus === "WAIT_CUSTOMER_CONFIRM"){
-    quoteHtml = `
-      <div class="quote-box">
-             ร้านสรุปราคาเพิ่มเติมแล้ว<br>
-             กรุณาตรวจสอบยอดรวมและยืนยันออเดอร์ค่ะ
-      </div>
-
-<button
-  class="action-btn"
-  onclick="confirmOrderFromQueue('${data.order_no}', '${lineUserId}', this)">
-  ✅ ยืนยันออเดอร์
-</button>
-    `;
-  }
-
-  if(quoteStatus === "CONFIRMED"){
-    quoteHtml = `
-      <div class="quote-box" style="background:#d9f7df;color:#167c34;">
-        ✅ ยืนยันออเดอร์แล้วค่ะ
-      </div>
-    `;
-  }
-
-  let readyHtml = "";
-
-  if(status === "READY"){
-    readyHtml = `
-      <div class="quote-box" style="background:#d9f7df;color:#167c34;">
-        ☕ ออเดอร์พร้อมรับแล้วค่ะ
-      </div>
-    `;
-  }
-
-  card.innerHTML = `
-    <div class="queue-no">
-      ${data.queue_no || "-"}
+  if(quoteStatus==="CONFIRMED"){quoteHtml=`<div class="quote-box success-box">✅ ยืนยันออเดอร์แล้วค่ะ</div>`;}
+  const readyHtml=status==="READY"?`<div class="quote-box ready-box">☕ ออเดอร์พร้อมรับแล้วค่ะ</div>`:"";
+  card.innerHTML=`
+    <div class="order-top">
+      <div><div class="queue-label">Queue</div><div class="queue-no">${data.queue_no||"-"}</div></div>
+      <div class="order-no"><strong>Order No</strong><br>${data.order_no||"-"}<br>${data.order_datetime?new Date(data.order_datetime).toLocaleString("th-TH",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",timeZone:"Asia/Bangkok"}):""}</div>
     </div>
-
-    <div class="status">
-      Status:
-      <span class="status-badge status-${status.toLowerCase()}">
-        ${statusText}
-      </span>
+    <div class="status-row">
+      <span class="badge status-${status.toLowerCase()}">${statusText}</span>
+      <span class="badge ${paymentStatus==="PAID"?"payment-paid":"payment-unpaid"}">${paymentStatus==="PAID"?"💰 PAID":"⏳ UNPAID"}</span>
     </div>
-
-    <div style="margin-top:10px;">
-      Payment:
-      <span class="payment-badge ${
-        paymentStatus === "PAID"
-          ? "payment-paid"
-          : "payment-unpaid"
-      }">
-        ${
-          paymentStatus === "PAID"
-            ? "💰 PAID"
-            : "⏳ UNPAID"
-        }
-      </span>
-    </div>
-
-    <div style="margin-top:16px;">
-      Order No:
-      <span>${data.order_no || "-"}</span>
-    </div>
-
-    <div style="margin-top:10px;line-height:1.6;text-align:left;">
-      ${amountHtml}
-    </div>
-
-    <div class="items">
-      ${displayItemsSummary || "-"}
-    </div>
-
-    ${customHtml}
-    ${quoteHtml}
-    ${readyHtml}
-  `;
-
+    <div class="info-grid"><div class="info-row"><span>ประเภท</span><strong>${data.fulfillment_type||"-"}</strong></div>${amountHtml}</div>
+    <div class="items">${displayItemsSummary||"-"}</div>
+    ${customHtml}${quoteHtml}${readyHtml}`;
   return card;
 }
-
-async function start(){
-
-  const loading =
-    document.getElementById("loading");
-
-  const ordersList =
-    document.getElementById("orders-list");
-
-  loading.style.display = "block";
-  ordersList.style.display = "none";
-  ordersList.innerHTML = "";
-
-  try{
-
-    await liff.init({
-      liffId: LIFF_ID
-    });
-
-    if(!liff.isLoggedIn()){
-      liff.login();
-      return;
-    }
-
-    const profile = await liff.getProfile();
-
-    const res = await fetch(API_URL,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        line_user_id: profile.userId
-      })
-    });
-
-    const data = await res.json();
-
-    loading.style.display = "none";
-    ordersList.style.display = "block";
-    ordersList.innerHTML = "";
-
-    if(!data.found || !data.orders || data.orders.length === 0){
-
-      ordersList.innerHTML = `
-        <h3>ยังไม่พบออเดอร์ที่กำลังดำเนินการค่ะ ☕</h3>
-        <p style="color:#777;line-height:1.5;">
-          หากเพิ่งสั่งซื้อ กรุณากด Refresh อีกครั้ง
-        </p>
-        <button class="secondary-btn" onclick="start()">
-          🔄 Refresh
-        </button>
-      `;
-
-      return;
-    }
-
-    data.orders.forEach(order => {
-      ordersList.appendChild(
-        buildOrderCard(order, profile.userId)
-      );
-    });
-
-    const refreshBtn = document.createElement("button");
-    refreshBtn.className = "secondary-btn";
-    refreshBtn.innerText = "🔄 Refresh";
-    refreshBtn.onclick = start;
-
-    ordersList.appendChild(refreshBtn);
-
-  }catch(err){
-
-    console.error(err);
-
-    loading.style.display = "none";
-    ordersList.style.display = "block";
-
-    ordersList.innerHTML = `
-      <h3>โหลดข้อมูลไม่สำเร็จค่ะ</h3>
-        <p style="color:#777;line-height:1.5;">
-          กรุณาลองใหม่อีกครั้ง
-        </p>
-      <button class="secondary-btn" onclick="start()">
-        🔄 Refresh
-      </button>
-    `;
-    
+function renderOrders(data,lineUserId,fromCache=false){
+  const ordersList=document.getElementById("orders-list");
+  hideLoading();
+  ordersList.innerHTML="";
+  const orders=sortQueueOrders(data.orders||[]);
+  updateLastUpdated(fromCache);
+  if(!data.found||!orders.length){
+    ordersList.innerHTML=`<div class="empty-card"><h3>ยังไม่พบออเดอร์ที่กำลังดำเนินการค่ะ ☕</h3><p style="color:#777;line-height:1.5;">หากเพิ่งสั่งซื้อ กรุณากด Refresh อีกครั้ง</p><button class="secondary-btn" onclick="refreshQueue(true)">🔄 Refresh</button></div>`;
+    return;
+  }
+  orders.slice(0,5).forEach(order=>ordersList.appendChild(buildOrderCard(order,lineUserId)));
+  if(orders.length>5){
+    const note=document.createElement("div");
+    note.className="empty-card";note.style.padding="14px";
+    note.innerHTML=`แสดง 5 รายการล่าสุดจากทั้งหมด ${orders.length} รายการ`;
+    ordersList.appendChild(note);
   }
 }
-
+async function fetchQueue(lineUserId){
+  const res=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({line_user_id:lineUserId})});
+  if(!res.ok)throw new Error(`HTTP ${res.status}`);
+  return await res.json();
+}
+async function refreshQueue(force=false){
+  if(isLoadingQueue)return;
+  if(!currentProfile?.userId){await start();return;}
+  isLoadingQueue=true;
+  if(force)showLoading();
+  try{
+    const data=await fetchQueue(currentProfile.userId);
+    saveQueueCache(currentProfile.userId,data);
+    renderOrders(data,currentProfile.userId,false);
+  }catch(err){
+    console.error(err);hideLoading();
+    document.getElementById("orders-list").innerHTML=`<div class="error-card"><h3>โหลดข้อมูลไม่สำเร็จค่ะ</h3><p style="color:#777;line-height:1.5;">กรุณาลองใหม่อีกครั้ง</p><button class="secondary-btn" onclick="refreshQueue(true)">🔄 Refresh</button></div>`;
+  }finally{isLoadingQueue=false;}
+}
+async function start(){
+  showLoading();
+  try{
+    await liff.init({liffId:LIFF_ID});
+    if(!liff.isLoggedIn()){liff.login();return;}
+    currentProfile=await liff.getProfile();
+    const cached=readQueueCache(currentProfile.userId);
+    if(cached){
+      renderOrders(cached,currentProfile.userId,true);
+      refreshQueue(false);
+      return;
+    }
+    await refreshQueue(true);
+  }catch(err){
+    console.error(err);hideLoading();
+    document.getElementById("orders-list").innerHTML=`<div class="error-card"><h3>โหลดข้อมูลไม่สำเร็จค่ะ</h3><p style="color:#777;line-height:1.5;">กรุณาลองใหม่อีกครั้ง</p><button class="secondary-btn" onclick="start()">🔄 Refresh</button></div>`;
+  }
+}
 start();
-
 </script>
-
 </body>
 </html>
