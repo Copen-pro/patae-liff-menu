@@ -1194,7 +1194,7 @@ function openReceipt(orderNo){
   const url =
     `${RECEIPT_PAGE_URL}?order_no=${encodeURIComponent(orderNo)}`;
 
-  window.open(url, "_blank");
+  window.location.href = url;
 }
   
 async function markPaid(orderNo){
