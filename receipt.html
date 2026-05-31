@@ -180,6 +180,10 @@
       }
     }
   </style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
 </head>
 
 <body>
@@ -195,9 +199,13 @@
     กลับ Admin
   </button>
 
-<button id="print-btn" class="print-btn" onclick="printReceipt()">
-  🖨 Print
-</button>
+  <button id="download-image-btn" class="print-btn" onclick="downloadReceiptImage()">
+    🖼 Download Image
+  </button>
+
+  <button id="download-pdf-btn" class="print-btn" onclick="downloadReceiptPdf()">
+    📄 Download PDF
+  </button>
 </div>
 
 <script>
@@ -242,8 +250,8 @@ function renderReceipt(data){
       : "";
 
   document.getElementById("app").innerHTML = `
-    <div class="receipt-wrap">
-      <div class="receipt">
+  <div class="receipt-wrap">
+  <div class="receipt" id="receipt-card">
 
         <div class="shop">
           <h1>☕ PaTae Cafe</h1>
@@ -372,47 +380,108 @@ function goBackToAdmin(){
   window.location.href = "admin.html";
 }
 
-function printReceipt(){
+;
 
-  const btn = document.getElementById("print-btn");
-
-  if(btn){
-    btn.innerText = "กำลังเปิดหน้าพิมพ์...";
-    btn.disabled = true;
-  }
-
-  setTimeout(() => {
-    try{
-      window.focus();
-      window.print();
-    }catch(err){
-      console.error("Print error:", err);
-
-      alert(
-        "อุปกรณ์นี้อาจไม่รองรับการพิมพ์จากหน้านี้ค่ะ\n" +
-        "กรุณาเปิดหน้านี้ใน Chrome / Edge แล้วลอง Print อีกครั้ง"
-      );
-    }
-
-    setTimeout(() => {
-      if(btn){
-        btn.innerText = "🖨 Print";
-        btn.disabled = false;
-      }
-    }, 1000);
-
-  }, 300);
+function getReceiptFileName(ext = "png"){
+  const orderNo = getOrderNo() || "receipt";
+  return `receipt-${orderNo}.${ext}`;
 }
 
-window.onafterprint = () => {
-  const btn = document.getElementById("print-btn");
+function setDownloadButtonState(buttonId, loadingText, isLoading){
+  const btn = document.getElementById(buttonId);
+  if(!btn) return;
 
-  if(btn){
-    btn.innerText = "🖨 Print";
+  if(isLoading){
+    btn.dataset.originalText = btn.innerText;
+    btn.innerText = loadingText;
+    btn.disabled = true;
+  }else{
+    btn.innerText = btn.dataset.originalText || btn.innerText;
     btn.disabled = false;
   }
-};
-  
+}
+
+async function captureReceiptCanvas(){
+  const receiptEl = document.getElementById("receipt-card");
+
+  if(!receiptEl){
+    throw new Error("ไม่พบ receipt-card");
+  }
+
+  return await html2canvas(receiptEl, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#ffffff"
+  });
+}
+
+async function downloadReceiptImage(){
+  try{
+    setDownloadButtonState("download-image-btn", "กำลังสร้างรูป...", true);
+
+    const canvas = await captureReceiptCanvas();
+    const imageUrl = canvas.toDataURL("image/png");
+
+    const link = document.createElement("a");
+    link.href = imageUrl;
+    link.download = getReceiptFileName("png");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+  }catch(err){
+    console.error(err);
+    alert("ดาวน์โหลดรูปภาพไม่สำเร็จค่ะ");
+  }finally{
+    setDownloadButtonState("download-image-btn", "", false);
+  }
+}
+
+async function downloadReceiptPdf(){
+  try{
+    setDownloadButtonState("download-pdf-btn", "กำลังสร้าง PDF...", true);
+
+    const canvas = await captureReceiptCanvas();
+    const imageData = canvas.toDataURL("image/png");
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const imgWidth = pageWidth - 20;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let y = 10;
+
+    if(imgHeight <= pageHeight - 20){
+      pdf.addImage(imageData, "PNG", 10, y, imgWidth, imgHeight);
+    }else{
+      // กรณีสูงเกิน 1 หน้า
+      let remainingHeight = imgHeight;
+      let position = 10;
+
+      pdf.addImage(imageData, "PNG", 10, position, imgWidth, imgHeight);
+      remainingHeight -= (pageHeight - 20);
+
+      while(remainingHeight > 0){
+        pdf.addPage();
+        position = 10 - (imgHeight - remainingHeight);
+        pdf.addImage(imageData, "PNG", 10, position, imgWidth, imgHeight);
+        remainingHeight -= (pageHeight - 20);
+      }
+    }
+
+    pdf.save(getReceiptFileName("pdf"));
+
+  }catch(err){
+    console.error(err);
+    alert("ดาวน์โหลด PDF ไม่สำเร็จค่ะ");
+  }finally{
+    setDownloadButtonState("download-pdf-btn", "", false);
+  }
+}  
 start();
 </script>
 
