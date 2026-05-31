@@ -12,6 +12,15 @@ let lineProfile = null;
 const PRODUCTS_CACHE_KEY = "patae_products_cache_v2";
 const PRODUCTS_CACHE_TTL = 5 * 60 * 1000; // 5 นาที
 
+let appStarted = false;
+
+function isFromQueuePage(){
+
+  const params =
+    new URLSearchParams(window.location.search);
+
+  return params.get("from") === "queue
+
 function optimizeImage(url){
   if(!url) return "";
   if(!url.includes("/upload/")) return url;
