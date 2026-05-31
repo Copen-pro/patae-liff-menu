@@ -1350,8 +1350,59 @@ if(currentView === "orders"){
 }
 
 orders.sort((a, b) => {
-  const dateA = new Date(a.paid_at || a.order_datetime || 0);
-  const dateB = new Date(b.paid_at || b.order_datetime || 0);
+
+  if(currentView === "orders"){
+
+    // Orders tab: ทำตามคิว ออเดอร์ที่เข้ามาก่อนอยู่บนสุด
+    const queueA =
+      Number(a.queue_no || 0);
+
+    const queueB =
+      Number(b.queue_no || 0);
+
+    if(queueA !== queueB){
+      return queueA - queueB;
+    }
+
+    const dateA =
+      new Date(a.order_datetime || 0);
+
+    const dateB =
+      new Date(b.order_datetime || 0);
+
+    return dateA - dateB;
+  }
+
+  if(currentView === "receipts"){
+
+    // Receipts: จ่ายล่าสุดอยู่บนสุด
+    const dateA =
+      new Date(a.paid_at || a.order_datetime || 0);
+
+    const dateB =
+      new Date(b.paid_at || b.order_datetime || 0);
+
+    return dateB - dateA;
+  }
+
+  if(currentView === "unpaid"){
+
+    // Unpaid: ค้างชำระล่าสุดอยู่บนสุด
+    const dateA =
+      new Date(a.order_datetime || 0);
+
+    const dateB =
+      new Date(b.order_datetime || 0);
+
+    return dateB - dateA;
+  }
+
+  // default: ล่าสุดอยู่บนสุด
+  const dateA =
+    new Date(a.order_datetime || 0);
+
+  const dateB =
+    new Date(b.order_datetime || 0);
 
   return dateB - dateA;
 });
