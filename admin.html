@@ -1663,68 +1663,7 @@ function renderWalkinCart(){
   }
 }
 
-function previewWalkinOrder(){
 
-  const items =
-    Object.values(walkinCart);
-
-  const customRequest =
-    document.getElementById("walkin-custom-request").value.trim();
-
-  const customPrice =
-    Number(document.getElementById("walkin-custom-price").value || 0);
-
-  const fulfillmentType =
-    document.getElementById("walkin-fulfillment-type").value;
-
-  const deliveryAddress =
-    document.getElementById("walkin-delivery-address").value.trim();
-
-  const deliveryFee =
-    Number(document.getElementById("walkin-delivery-fee").value || 0);
-
-  const paymentStatus =
-    document.getElementById("walkin-payment-status").value;
-
-  if(items.length === 0 && !customRequest){
-    alert("กรุณาเลือกสินค้า หรือระบุรายการสั่งพิเศษค่ะ");
-    return;
-  }
-
-  if(customRequest && customPrice <= 0){
-    alert("กรุณาระบุราคาสั่งพิเศษค่ะ");
-    return;
-  }
-
-  if(fulfillmentType === "delivery"){
-    if(!deliveryAddress){
-      alert("กรุณาระบุที่อยู่จัดส่งค่ะ");
-      return;
-    }
-
-    if(deliveryFee <= 0){
-      alert("กรุณาระบุค่าส่งค่ะ");
-      return;
-    }
-  }
-
-  const normalTotal =
-    items.reduce((sum, item) => {
-      return sum + Number(item.price || 0) * Number(item.qty || 0);
-    }, 0);
-
-  const grandTotal =
-    normalTotal + customPrice + deliveryFee;
-
-  alert(
-    `ตรวจสอบออเดอร์\n\n` +
-    `ยอดสินค้า: ${normalTotal} บาท\n` +
-    `ค่าสั่งพิเศษ: ${customPrice} บาท\n` +
-    `ค่าส่ง: ${deliveryFee} บาท\n` +
-    `รวมทั้งหมด: ${grandTotal} บาท\n\n` +
-    `Payment: ${paymentStatus}`
-  );
-}
 
 async function createWalkinOrder(mode){
 
