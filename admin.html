@@ -1565,7 +1565,7 @@ function decreaseWalkinQty(productId){
   renderWalkinCart();
 }
 
-function renderWalkinCart(){
+function renderWalkinCart(){function renderWalkinCart(){
 
   const cartBox =
     document.getElementById("walkin-cart-items");
@@ -1573,73 +1573,73 @@ function renderWalkinCart(){
   const totalBox =
     document.getElementById("walkin-total");
 
+  const grandTotalBox =
+    document.getElementById("walkin-grand-total");
+
   if(!cartBox || !totalBox){
     return;
   }
 
   const items = Object.values(walkinCart);
 
-  if(items.length === 0){
-    cartBox.innerHTML = `
-      <div style="color:#777;text-align:center;padding:10px;">
-        ยังไม่มีรายการค่ะ
-      </div>
-    `;
-    totalBox.innerText = "0";
-    return;
-  }
-
   let total = 0;
 
   cartBox.innerHTML = "";
 
-  items.forEach(item => {
-    const lineTotal =
-      Number(item.price || 0) * Number(item.qty || 0);
-
-    total += lineTotal;
-
-    const div = document.createElement("div");
-    div.className = "walkin-cart-item";
-
-    div.innerHTML = `
-      <div>
-        ${item.product_name}
-        <br>
-        <span style="color:#777;">
-          ${item.qty} x ${item.price} บาท
-        </span>
+  if(items.length === 0){
+    cartBox.innerHTML = `
+      <div style="color:#777;text-align:center;padding:10px;">
+        ยังไม่มีรายการสินค้าเมนูปกติค่ะ
       </div>
-
-      <strong>${lineTotal} บาท</strong>
     `;
+  }else{
 
-    cartBox.appendChild(div);
-  });
+    items.forEach(item => {
+      const lineTotal =
+        Number(item.price || 0) * Number(item.qty || 0);
+
+      total += lineTotal;
+
+      const div = document.createElement("div");
+      div.className = "walkin-cart-item";
+
+      div.innerHTML = `
+        <div>
+          ${item.product_name}
+          <br>
+          <span style="color:#777;">
+            ${item.qty} x ${item.price} บาท
+          </span>
+        </div>
+
+        <strong>${lineTotal} บาท</strong>
+      `;
+
+      cartBox.appendChild(div);
+    });
+
+  }
 
   totalBox.innerText = total;
 
-const customPriceInput =
-  document.getElementById("walkin-custom-price");
+  const customPriceInput =
+    document.getElementById("walkin-custom-price");
 
-const deliveryFeeInput =
-  document.getElementById("walkin-delivery-fee");
+  const deliveryFeeInput =
+    document.getElementById("walkin-delivery-fee");
 
-const grandTotalBox =
-  document.getElementById("walkin-grand-total");
+  const customPrice =
+    Number(customPriceInput?.value || 0);
 
-const customPrice =
-  Number(customPriceInput?.value || 0);
+  const deliveryFee =
+    Number(deliveryFeeInput?.value || 0);
 
-const deliveryFee =
-  Number(deliveryFeeInput?.value || 0);
+  const grandTotal =
+    total + customPrice + deliveryFee;
 
-const grandTotal =
-  total + customPrice + deliveryFee;
-
-if(grandTotalBox){
-  grandTotalBox.innerText = grandTotal;
-}
+  if(grandTotalBox){
+    grandTotalBox.innerText = grandTotal;
+  }
 }
 
 function previewWalkinOrder(){
