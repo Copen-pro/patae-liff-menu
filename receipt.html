@@ -195,9 +195,9 @@
     กลับ Admin
   </button>
 
-  <button class="print-btn" onclick="printReceipt()">
-    🖨 Print
-  </button>
+<button id="print-btn" class="print-btn" onclick="printReceipt()">
+  🖨 Print
+</button>
 </div>
 
 <script>
@@ -374,18 +374,44 @@ function goBackToAdmin(){
 
 function printReceipt(){
 
-  try{
-    window.focus();
-    window.print();
-  }catch(err){
-    console.error(err);
+  const btn = document.getElementById("print-btn");
 
-    alert(
-      "อุปกรณ์นี้อาจไม่รองรับการพิมพ์จากหน้านี้ค่ะ\n" +
-      "กรุณาเปิดใน Browser แล้วกด Print อีกครั้ง"
-    );
+  if(btn){
+    btn.innerText = "กำลังเปิดหน้าพิมพ์...";
+    btn.disabled = true;
   }
+
+  setTimeout(() => {
+    try{
+      window.focus();
+      window.print();
+    }catch(err){
+      console.error("Print error:", err);
+
+      alert(
+        "อุปกรณ์นี้อาจไม่รองรับการพิมพ์จากหน้านี้ค่ะ\n" +
+        "กรุณาเปิดหน้านี้ใน Chrome / Edge แล้วลอง Print อีกครั้ง"
+      );
+    }
+
+    setTimeout(() => {
+      if(btn){
+        btn.innerText = "🖨 Print";
+        btn.disabled = false;
+      }
+    }, 1000);
+
+  }, 300);
 }
+
+window.onafterprint = () => {
+  const btn = document.getElementById("print-btn");
+
+  if(btn){
+    btn.innerText = "🖨 Print";
+    btn.disabled = false;
+  }
+};
   
 start();
 </script>
