@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>PaTae Cafe Receipt</title>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <style>
     :root{
       --primary:#233b2a;
@@ -124,6 +127,12 @@
       max-width:420px;
       margin:14px auto 0;
       display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .action-row{
+      display:flex;
       gap:10px;
     }
 
@@ -136,9 +145,26 @@
       cursor:pointer;
     }
 
-    .print-btn{
+    button:disabled{
+      opacity:0.65;
+      cursor:not-allowed;
+    }
+
+    .main-btn{
       flex:1;
       background:var(--primary);
+      color:white;
+    }
+
+    .image-btn{
+      flex:1;
+      background:#5E7C5A;
+      color:white;
+    }
+
+    .pdf-btn{
+      flex:1;
+      background:#2f5138;
       color:white;
     }
 
@@ -180,10 +206,6 @@
       }
     }
   </style>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  
 </head>
 
 <body>
@@ -199,13 +221,21 @@
     กลับ Admin
   </button>
 
-  <button id="download-image-btn" class="print-btn" onclick="downloadReceiptImage()">
-    🖼 Download Image
-  </button>
+  <div class="action-row">
+    <button
+      id="download-image-btn"
+      class="image-btn"
+      onclick="downloadReceiptImage()">
+      🖼 Download Image
+    </button>
 
-  <button id="download-pdf-btn" class="print-btn" onclick="downloadReceiptPdf()">
-    📄 Download PDF
-  </button>
+    <button
+      id="download-pdf-btn"
+      class="pdf-btn"
+      onclick="downloadReceiptPdf()">
+      📄 Download PDF
+    </button>
+  </div>
 </div>
 
 <script>
@@ -250,8 +280,8 @@ function renderReceipt(data){
       : "";
 
   document.getElementById("app").innerHTML = `
-  <div class="receipt-wrap">
-  <div class="receipt" id="receipt-card">
+    <div class="receipt-wrap">
+      <div class="receipt" id="receipt-card">
 
         <div class="shop">
           <h1>☕ PaTae Cafe</h1>
@@ -340,6 +370,124 @@ function renderReceipt(data){
   `;
 }
 
+function goBackToAdmin(){
+
+  if(window.opener){
+    window.close();
+    return;
+  }
+
+  window.location.href = "admin.html";
+}
+
+function getReceiptFileName(ext = "png"){
+  const orderNo = getOrderNo() || "receipt";
+  return `receipt-${orderNo}.${ext}`;
+}
+
+function setDownloadButtonState(buttonId, loadingText, isLoading){
+  const btn = document.getElementById(buttonId);
+  if(!btn) return;
+
+  if(isLoading){
+    if(!btn.dataset.originalText){
+      btn.dataset.originalText = btn.innerText;
+    }
+    btn.innerText = loadingText;
+    btn.disabled = true;
+  }else{
+    btn.innerText = btn.dataset.originalText || btn.innerText;
+    btn.disabled = false;
+  }
+}
+
+async function captureReceiptCanvas(){
+  const receiptEl = document.getElementById("receipt-card");
+
+  if(!receiptEl){
+    throw new Error("ไม่พบ receipt-card");
+  }
+
+  return await html2canvas(receiptEl, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#ffffff"
+  });
+}
+
+async function downloadReceiptImage(){
+  try{
+    setDownloadButtonState(
+      "download-image-btn",
+      "กำลังสร้างรูป...",
+      true
+    );
+
+    const canvas = await captureReceiptCanvas();
+    const imageUrl = canvas.toDataURL("image/png");
+
+    const link = document.createElement("a");
+    link.href = imageUrl;
+    link.download = getReceiptFileName("png");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+  }catch(err){
+    console.error(err);
+    alert("ดาวน์โหลดรูปภาพไม่สำเร็จค่ะ");
+  }finally{
+    setDownloadButtonState("download-image-btn", "", false);
+  }
+}
+
+async function downloadReceiptPdf(){
+  try{
+    setDownloadButtonState(
+      "download-pdf-btn",
+      "กำลังสร้าง PDF...",
+      true
+    );
+
+    const canvas = await captureReceiptCanvas();
+    const imageData = canvas.toDataURL("image/png");
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const imgWidth = pageWidth - 20;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    if(imgHeight <= pageHeight - 20){
+      pdf.addImage(imageData, "PNG", 10, 10, imgWidth, imgHeight);
+    }else{
+      let remainingHeight = imgHeight;
+      let position = 10;
+
+      pdf.addImage(imageData, "PNG", 10, position, imgWidth, imgHeight);
+      remainingHeight -= (pageHeight - 20);
+
+      while(remainingHeight > 0){
+        pdf.addPage();
+        position = 10 - (imgHeight - remainingHeight);
+        pdf.addImage(imageData, "PNG", 10, position, imgWidth, imgHeight);
+        remainingHeight -= (pageHeight - 20);
+      }
+    }
+
+    pdf.save(getReceiptFileName("pdf"));
+
+  }catch(err){
+    console.error(err);
+    alert("ดาวน์โหลด PDF ไม่สำเร็จค่ะ");
+  }finally{
+    setDownloadButtonState("download-pdf-btn", "", false);
+  }
+}
+
 async function start(){
   const orderNo = getOrderNo();
 
@@ -368,120 +516,6 @@ async function start(){
   }
 }
 
-function goBackToAdmin(){
-
-  // ถ้าเปิดจากหน้า Admin เป็น tab/window ใหม่ ให้พยายามปิดก่อน
-  if(window.opener){
-    window.close();
-    return;
-  }
-
-  // ถ้าปิดไม่ได้ ให้กลับไปหน้า Admin โดยตรง
-  window.location.href = "admin.html";
-}
-
-;
-
-function getReceiptFileName(ext = "png"){
-  const orderNo = getOrderNo() || "receipt";
-  return `receipt-${orderNo}.${ext}`;
-}
-
-function setDownloadButtonState(buttonId, loadingText, isLoading){
-  const btn = document.getElementById(buttonId);
-  if(!btn) return;
-
-  if(isLoading){
-    btn.dataset.originalText = btn.innerText;
-    btn.innerText = loadingText;
-    btn.disabled = true;
-  }else{
-    btn.innerText = btn.dataset.originalText || btn.innerText;
-    btn.disabled = false;
-  }
-}
-
-async function captureReceiptCanvas(){
-  const receiptEl = document.getElementById("receipt-card");
-
-  if(!receiptEl){
-    throw new Error("ไม่พบ receipt-card");
-  }
-
-  return await html2canvas(receiptEl, {
-    scale: 2,
-    useCORS: true,
-    backgroundColor: "#ffffff"
-  });
-}
-
-async function downloadReceiptImage(){
-  try{
-    setDownloadButtonState("download-image-btn", "กำลังสร้างรูป...", true);
-
-    const canvas = await captureReceiptCanvas();
-    const imageUrl = canvas.toDataURL("image/png");
-
-    const link = document.createElement("a");
-    link.href = imageUrl;
-    link.download = getReceiptFileName("png");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-  }catch(err){
-    console.error(err);
-    alert("ดาวน์โหลดรูปภาพไม่สำเร็จค่ะ");
-  }finally{
-    setDownloadButtonState("download-image-btn", "", false);
-  }
-}
-
-async function downloadReceiptPdf(){
-  try{
-    setDownloadButtonState("download-pdf-btn", "กำลังสร้าง PDF...", true);
-
-    const canvas = await captureReceiptCanvas();
-    const imageData = canvas.toDataURL("image/png");
-
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p", "mm", "a4");
-
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-
-    const imgWidth = pageWidth - 20;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    let y = 10;
-
-    if(imgHeight <= pageHeight - 20){
-      pdf.addImage(imageData, "PNG", 10, y, imgWidth, imgHeight);
-    }else{
-      // กรณีสูงเกิน 1 หน้า
-      let remainingHeight = imgHeight;
-      let position = 10;
-
-      pdf.addImage(imageData, "PNG", 10, position, imgWidth, imgHeight);
-      remainingHeight -= (pageHeight - 20);
-
-      while(remainingHeight > 0){
-        pdf.addPage();
-        position = 10 - (imgHeight - remainingHeight);
-        pdf.addImage(imageData, "PNG", 10, position, imgWidth, imgHeight);
-        remainingHeight -= (pageHeight - 20);
-      }
-    }
-
-    pdf.save(getReceiptFileName("pdf"));
-
-  }catch(err){
-    console.error(err);
-    alert("ดาวน์โหลด PDF ไม่สำเร็จค่ะ");
-  }finally{
-    setDownloadButtonState("download-pdf-btn", "", false);
-  }
-}  
 start();
 </script>
 
