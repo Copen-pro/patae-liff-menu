@@ -6,15 +6,16 @@
   <title>PaTae Cafe Receipt</title>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
     :root{
       --primary:#233b2a;
+      --primary-soft:#5E7C5A;
       --muted:#777;
       --bg:#f6f2ed;
       --paper:#fff;
       --border:#e7e1d8;
+      --custom:#fff0d6;
     }
 
     body{
@@ -77,6 +78,7 @@
 
     .row strong{
       text-align:right;
+      word-break:break-word;
     }
 
     .section{
@@ -93,17 +95,19 @@
       border-radius:12px;
       padding:12px;
       margin-top:8px;
+      text-align:left;
     }
 
     .custom-box{
       white-space:pre-wrap;
       line-height:1.6;
       font-size:14px;
-      background:#fff0d6;
+      background:var(--custom);
       border-radius:12px;
       padding:12px;
       margin-top:8px;
       color:#5b3a2e;
+      text-align:left;
     }
 
     .total-row{
@@ -150,21 +154,9 @@
       cursor:not-allowed;
     }
 
-    .main-btn{
-      flex:1;
-      background:var(--primary);
-      color:white;
-    }
-
     .image-btn{
       flex:1;
-      background:#5E7C5A;
-      color:white;
-    }
-
-    .pdf-btn{
-      flex:1;
-      background:#2f5138;
+      background:var(--primary);
       color:white;
     }
 
@@ -185,13 +177,38 @@
       line-height:1.6;
     }
 
+    .preview-box{
+      margin-top:14px;
+      background:white;
+      border-radius:16px;
+      padding:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.08);
+      text-align:center;
+    }
+
+    .preview-note{
+      font-size:14px;
+      color:#555;
+      margin-bottom:10px;
+      line-height:1.5;
+    }
+
+    .preview-img{
+      width:100%;
+      max-width:420px;
+      border-radius:12px;
+      border:1px solid #eee;
+      background:white;
+    }
+
     @media print{
       body{
         background:white;
         padding:0;
       }
 
-      .actions{
+      .actions,
+      #receipt-image-preview{
         display:none;
       }
 
@@ -223,19 +240,14 @@
 
   <div class="action-row">
     <button
-      id="download-image-btn"
+      id="generate-image-btn"
       class="image-btn"
-      onclick="downloadReceiptImage()">
-      🖼 Download Image
-    </button>
-
-    <button
-      id="download-pdf-btn"
-      class="pdf-btn"
-      onclick="downloadReceiptPdf()">
-      📄 Download PDF
+      onclick="generateReceiptImage()">
+      🖼 สร้างรูปใบเสร็จ
     </button>
   </div>
+
+  <div id="receipt-image-preview"></div>
 </div>
 
 <script>
@@ -380,12 +392,7 @@ function goBackToAdmin(){
   window.location.href = "admin.html";
 }
 
-function getReceiptFileName(ext = "png"){
-  const orderNo = getOrderNo() || "receipt";
-  return `receipt-${orderNo}.${ext}`;
-}
-
-function setDownloadButtonState(buttonId, loadingText, isLoading){
+function setButtonState(buttonId, loadingText, isLoading){
   const btn = document.getElementById(buttonId);
   if(!btn) return;
 
@@ -415,10 +422,11 @@ async function captureReceiptCanvas(){
   });
 }
 
-async function downloadReceiptImage(){
+async function generateReceiptImage(){
+
   try{
-    setDownloadButtonState(
-      "download-image-btn",
+    setButtonState(
+      "generate-image-btn",
       "กำลังสร้างรูป...",
       true
     );
@@ -426,65 +434,37 @@ async function downloadReceiptImage(){
     const canvas = await captureReceiptCanvas();
     const imageUrl = canvas.toDataURL("image/png");
 
-    const link = document.createElement("a");
-    link.href = imageUrl;
-    link.download = getReceiptFileName("png");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const preview =
+      document.getElementById("receipt-image-preview");
+
+    preview.innerHTML = `
+      <div class="preview-box">
+        <div class="preview-note">
+          กดค้างที่รูปเพื่อบันทึก หรือแชร์ใบเสร็จค่ะ
+        </div>
+
+        <img
+          src="${imageUrl}"
+          alt="Receipt Image"
+          class="preview-img"
+        >
+      </div>
+    `;
+
+    preview.scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
 
   }catch(err){
     console.error(err);
-    alert("ดาวน์โหลดรูปภาพไม่สำเร็จค่ะ");
+    alert("สร้างรูปใบเสร็จไม่สำเร็จค่ะ");
   }finally{
-    setDownloadButtonState("download-image-btn", "", false);
-  }
-}
-
-async function downloadReceiptPdf(){
-  try{
-    setDownloadButtonState(
-      "download-pdf-btn",
-      "กำลังสร้าง PDF...",
-      true
+    setButtonState(
+      "generate-image-btn",
+      "",
+      false
     );
-
-    const canvas = await captureReceiptCanvas();
-    const imageData = canvas.toDataURL("image/png");
-
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p", "mm", "a4");
-
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-
-    const imgWidth = pageWidth - 20;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    if(imgHeight <= pageHeight - 20){
-      pdf.addImage(imageData, "PNG", 10, 10, imgWidth, imgHeight);
-    }else{
-      let remainingHeight = imgHeight;
-      let position = 10;
-
-      pdf.addImage(imageData, "PNG", 10, position, imgWidth, imgHeight);
-      remainingHeight -= (pageHeight - 20);
-
-      while(remainingHeight > 0){
-        pdf.addPage();
-        position = 10 - (imgHeight - remainingHeight);
-        pdf.addImage(imageData, "PNG", 10, position, imgWidth, imgHeight);
-        remainingHeight -= (pageHeight - 20);
-      }
-    }
-
-    pdf.save(getReceiptFileName("pdf"));
-
-  }catch(err){
-    console.error(err);
-    alert("ดาวน์โหลด PDF ไม่สำเร็จค่ะ");
-  }finally{
-    setDownloadButtonState("download-pdf-btn", "", false);
   }
 }
 
