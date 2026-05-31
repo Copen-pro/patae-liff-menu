@@ -449,6 +449,103 @@
   border-radius:10px;
   font-size:14px;
 }
+  .sales-filter{
+  background:white;
+  border-radius:16px;
+  padding:12px;
+  margin:10px 0 14px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.06);
+}
+
+.sales-filter-title{
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.sales-filter-buttons{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+
+.sales-filter-buttons button{
+  flex:1;
+  background:#eee;
+}
+
+.sales-filter-buttons button.active{
+  background:#233b2a;
+  color:white;
+}
+
+.sales-date-row{
+  display:flex;
+  gap:8px;
+  margin-top:8px;
+}
+
+.sales-date-row input{
+  flex:1;
+  padding:10px;
+  border:1px solid #ddd;
+  border-radius:10px;
+  font-size:14px;
+}
+
+.sales-panel{
+  background:white;
+  border-radius:18px;
+  padding:16px;
+  margin-top:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+.sales-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:10px;
+  margin-top:12px;
+}
+
+.sales-card{
+  background:#f8f5f1;
+  border-radius:14px;
+  padding:14px;
+  text-align:center;
+  border:1px solid #eee;
+}
+
+.sales-card-title{
+  font-size:13px;
+  color:#666;
+  margin-bottom:6px;
+}
+
+.sales-card-value{
+  font-size:22px;
+  font-weight:bold;
+  color:#233b2a;
+}
+
+.sales-section{
+  margin-top:16px;
+  padding-top:12px;
+  border-top:1px dashed #ccc;
+}
+
+.sales-row{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:8px 0;
+  border-bottom:1px solid #eee;
+  font-size:14px;
+}
+
+.sales-row strong{
+  color:#233b2a;
+}
     
   </style>
 </head>
@@ -640,7 +737,9 @@ let currentView = "orders";
 let receiptHistoryMode = "today";
 let receiptHistoryStartDate = "";
 let receiptHistoryEndDate = "";
-
+let salesReportMode = "today";
+let salesReportStartDate = "";
+let salesReportEndDate = "";
   
 function cleanItemsSummary(summary){
   return String(summary || "")
@@ -852,6 +951,169 @@ function applyReceiptHistoryRange(){
   receiptHistoryMode = "range";
 
   loadOrders();
+}
+
+function getSalesDate(order){
+
+  const paidDate =
+    getBangkokDateString(order.paid_at);
+
+  const orderDate =
+    getBangkokDateString(order.order_datetime);
+
+  return paidDate || orderDate;
+}
+
+function isOrderInSelectedSalesReport(order){
+
+  const salesDate =
+    getSalesDate(order);
+
+  if(!salesDate){
+    return false;
+  }
+
+  if(salesReportMode === "all"){
+    return true;
+  }
+
+  if(salesReportMode === "today"){
+    return salesDate === getTodayString();
+  }
+
+  if(salesReportMode === "range"){
+
+    if(!salesReportStartDate || !salesReportEndDate){
+      return salesDate === getTodayString();
+    }
+
+    return (
+      salesDate >= salesReportStartDate &&
+      salesDate <= salesReportEndDate
+    );
+  }
+
+  return false;
+}
+
+function renderSalesReportFilter(){
+
+  const today =
+    getTodayString();
+
+  const startValue =
+    salesReportStartDate || today;
+
+  const endValue =
+    salesReportEndDate || today;
+
+  return `
+    <div class="sales-filter">
+
+      <div class="sales-filter-title">
+        📊 Sales Report
+      </div>
+
+      <div class="sales-filter-buttons">
+
+        <button
+          class="${salesReportMode === "today" ? "active" : ""}"
+          onclick="setSalesReportMode('today')">
+          วันนี้
+        </button>
+
+        <button
+          class="${salesReportMode === "range" ? "active" : ""}"
+          onclick="setSalesReportMode('range')">
+          ช่วงวันที่
+        </button>
+
+        <button
+          class="${salesReportMode === "all" ? "active" : ""}"
+          onclick="setSalesReportMode('all')">
+          ทั้งหมด
+        </button>
+
+      </div>
+
+      ${
+        salesReportMode === "range"
+          ? `
+            <div class="sales-date-row">
+              <input
+                id="sales-start-date"
+                type="date"
+                value="${startValue}"
+              >
+
+              <input
+                id="sales-end-date"
+                type="date"
+                value="${endValue}"
+              >
+            </div>
+
+            <button
+              class="refresh"
+              style="margin-top:10px;"
+              onclick="applySalesReportRange()">
+              🔎 ดูรายงาน
+            </button>
+          `
+          : ""
+      }
+
+    </div>
+  `;
+}
+
+function setSalesReportMode(mode){
+
+  salesReportMode = mode;
+
+  if(mode === "today"){
+    salesReportStartDate = "";
+    salesReportEndDate = "";
+  }
+
+  if(mode === "range"){
+    const today = getTodayString();
+
+    if(!salesReportStartDate){
+      salesReportStartDate = today;
+    }
+
+    if(!salesReportEndDate){
+      salesReportEndDate = today;
+    }
+  }
+
+  renderSalesSummary();
+}
+
+function applySalesReportRange(){
+
+  const start =
+    document.getElementById("sales-start-date")?.value || "";
+
+  const end =
+    document.getElementById("sales-end-date")?.value || "";
+
+  if(!start || !end){
+    alert("กรุณาเลือกวันที่เริ่มต้นและวันที่สิ้นสุดค่ะ");
+    return;
+  }
+
+  if(start > end){
+    alert("วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุดค่ะ");
+    return;
+  }
+
+  salesReportStartDate = start;
+  salesReportEndDate = end;
+  salesReportMode = "range";
+
+  renderSalesSummary();
 }
   
 function toggleSound(){
@@ -1637,8 +1899,8 @@ document.getElementById("view-title").innerText =
         ? "🛒 Walk-in Order"
         : view === "receipts"
           ? "🧾 Receipt History"
-          : "📊 Daily Sales Summary";
-
+          : "📊 Sales Report";
+  
   if(view === "walkin"){
     renderWalkinPanel();
     return;
