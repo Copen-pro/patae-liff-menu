@@ -1349,6 +1349,27 @@ if(currentView === "orders"){
 
 }
 
+function getQueueDate(order){
+
+  const queueDate =
+    String(order.queue_date || "").trim();
+
+  if(queueDate){
+    return queueDate;
+  }
+
+  const date =
+    new Date(order.order_datetime || 0);
+
+  if(isNaN(date.getTime())){
+    return "9999-12-31";
+  }
+
+  return date.toLocaleDateString("sv-SE", {
+    timeZone: "Asia/Bangkok"
+  });
+}
+
 function getQueueNumber(queueNo){
 
   const text =
@@ -1388,7 +1409,18 @@ orders.sort((a, b) => {
 
   if(currentView === "orders"){
 
-    // Orders tab: เรียงตามคิว A001, A002, A003...
+    // 1) เรียงตามวันที่คิว / วันที่ออเดอร์ ก่อน
+    const dateA =
+      getQueueDate(a);
+
+    const dateB =
+      getQueueDate(b);
+
+    if(dateA !== dateB){
+      return dateB.localeCompare(dateA);
+    }
+
+    // 2) ถ้าวันเดียวกัน ค่อยเรียงตาม queue_no
     const queueA =
       getQueueNumber(a.queue_no);
 
@@ -1399,7 +1431,7 @@ orders.sort((a, b) => {
       return queueA - queueB;
     }
 
-    // ถ้า queue เท่ากัน ให้ใช้เวลาที่เข้ามาก่อน
+    // 3) ถ้า queue เท่ากัน ใช้เวลาที่เข้ามาก่อน
     return getOrderTime(a) - getOrderTime(b);
   }
 
@@ -1411,7 +1443,7 @@ orders.sort((a, b) => {
 
   if(currentView === "unpaid"){
 
-    // Unpaid: ค้างชำระล่าสุดอยู่บนสุด
+    // Unpaid: รายการค้างชำระล่าสุดอยู่บนสุด
     return getOrderTime(b) - getOrderTime(a);
   }
 
