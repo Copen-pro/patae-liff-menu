@@ -72,21 +72,7 @@ const QUEUE_CACHE_TTL=45*1000;
 let currentProfile=null;
 let isLoadingQueue=false;
 
-let isGoingMenu = false;
-
-function goMenu(){
-
-  if(isGoingMenu){
-    return;
-  }
-
-  isGoingMenu = true;
-
-  sessionStorage.setItem("patae_from_queue", "YES");
-
-   window.location.replace("index.html");
-}
-  
+function goMenu(){window.location.href="index.html";}
 function getStatusText(status){return {NEW:"รับออเดอร์แล้ว",PREPARING:"กำลังทำ",READY:"พร้อมรับแล้ว",DONE:"เสร็จแล้ว"}[status]||status;}
 function getQueueNumber(queueNo){const match=String(queueNo||"").match(/\d+/);return match?Number(match[0]):999999;}
 function getQueueDate(order){
@@ -235,43 +221,24 @@ async function refreshQueue(force=false){
   }finally{isLoadingQueue=false;}
 }
 async function start(){
-
-  if(appStarted){
-    return;
+  showLoading();
+  try{
+    await liff.init({liffId:LIFF_ID});
+    if(!liff.isLoggedIn()){liff.login();return;}
+    currentProfile=await liff.getProfile();
+    const cached=readQueueCache(currentProfile.userId);
+    if(cached){
+      renderOrders(cached,currentProfile.userId,true);
+      refreshQueue(false);
+      return;
+    }
+    await refreshQueue(true);
+  }catch(err){
+    console.error(err);hideLoading();
+    document.getElementById("orders-list").innerHTML=`<div class="error-card"><h3>โหลดข้อมูลไม่สำเร็จค่ะ</h3><p style="color:#777;line-height:1.5;">กรุณาลองใหม่อีกครั้ง</p><button class="secondary-btn" onclick="start()">🔄 Refresh</button></div>`;
   }
-
-  appStarted = true;
-
-  const fromQueue =
-    isFromQueuePage();
-
-  if(fromQueue){
-    clearFromQueueFlag();
-  }
-
-  bindEvents();
-
-  // โหลดเมนูก่อน ให้ลูกค้าเห็นเร็วที่สุด
-  loadProducts();
-
-  // ถ้ากลับมาจาก Queue ไม่ต้องเช็ก status ทันที
-  // กันหน้าเหมือนโหลด/กระพริบซ้ำ
-  if(!fromQueue){
-    checkStoreStatus().then(isOpen => {
-      if(!isOpen){
-        return;
-      }
-    });
-  }
-
-  // LIFF profile โหลดทีหลัง ไม่ block menu
-  setTimeout(() => {
-    initLiff();
-  }, 300);
 }
-window.addEventListener("load", () => {
-  start();
-});
+start();
 </script>
 </body>
 </html>
