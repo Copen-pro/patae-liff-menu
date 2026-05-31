@@ -407,6 +407,14 @@ onclick="quickSetStoreStatus('CLOSED')">
 
 </button>
 
+<button
+style="background:#f5a623;color:white;"
+onclick="quickSetStoreStatus('MAINTENANCE')">
+
+🛠 ปิดปรับปรุงระบบ
+
+</button>
+  
 </div>
 
 </div>
@@ -1200,10 +1208,20 @@ const timeText =
     ? ` (${openTime}-${closeTime})`
     : "";
 
-bar.innerText =
-  data.is_open
-  ? `🏪 Store Status: 🟢 OPEN${timeText}`
-  : `🏪 Store Status: 🔴 CLOSED${timeText}`;
+const storeStatus =
+  String(data.store_status || "")
+    .trim()
+    .toUpperCase();
+
+if(storeStatus === "MAINTENANCE"){
+  bar.innerText =
+    `🏪 Store Status: 🛠 MAINTENANCE - ปิดปรับปรุงระบบ${timeText}`;
+}else{
+  bar.innerText =
+    data.is_open
+    ? `🏪 Store Status: 🟢 OPEN${timeText}`
+    : `🏪 Store Status: 🔴 CLOSED${timeText}`;
+}
 
     if(data.store_open){
       document.getElementById(
@@ -1914,11 +1932,13 @@ function toggleWalkinDelivery(){
   
 async function quickSetStoreStatus(status){
 
-  const confirmText =
-    status === "OPEN"
-      ? "ต้องการเปิดร้านใช่ไหม?"
+const confirmText =
+  status === "OPEN"
+    ? "ต้องการเปิดร้านใช่ไหม?"
+    : status === "MAINTENANCE"
+      ? "ต้องการปิดปรับปรุงระบบใช่ไหม?"
       : "ต้องการปิดร้านใช่ไหม?";
-
+  
   if(!confirm(confirmText)){
     return;
   }
