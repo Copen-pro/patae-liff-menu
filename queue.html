@@ -82,14 +82,9 @@ function goMenu(){
 
   isGoingMenu = true;
 
-  const btns =
-    document.querySelectorAll("button");
+  sessionStorage.setItem("patae_from_queue", "YES");
 
-  btns.forEach(btn => {
-    btn.disabled = true;
-  });
-
-  window.location.replace("index.html?from=queue");
+  window.location.replace("index.html?v=queue");
 }
   
 function getStatusText(status){return {NEW:"รับออเดอร์แล้ว",PREPARING:"กำลังทำ",READY:"พร้อมรับแล้ว",DONE:"เสร็จแล้ว"}[status]||status;}
