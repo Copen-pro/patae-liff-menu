@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PaTae Cafe Product Sales Report</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    :root{
+      --primary:#233b2a;
+      --brown:#5b3a2e;
+      --warning:#a15c00;
+      --bg:#f6f2ed;
+      --paper:#fffaf2;
+      --border:#eadfce;
+      --muted:#777;
+      --surface:#ffffff;
+    }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      font-family:Arial, sans-serif;
+      color:#222;
+      padding:16px;
+    }
+
+    .page-wrap,
+    .top-actions{
+      max-width:460px;
+      margin:0 auto;
+    }
+
+    .top-actions{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    button{
+      border:none;
+      border-radius:14px;
+      padding:13px 16px;
+      font-size:15px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    button:disabled{
+      opacity:.65;
+      cursor:not-allowed;
+    }
+
+    .back-btn{
+      background:#ddd;
+      color:#333;
+    }
+
+    .main-btn{
+      background:var(--primary);
+      color:white;
+    }
+
+    .filter{
+      background:white;
+      border-radius:16px;
+      padding:12px;
+      margin-bottom:12px;
+      box-shadow:0 3px 10px rgba(0,0,0,.06);
+    }
+
+    .filter-title{
+      font-weight:bold;
+      margin-bottom:10px;
+    }
+
+    .filter-buttons{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+
+    .filter-buttons button{
+      flex:1;
+      background:#eee;
+      color:#333;
+    }
+
+    .filter-buttons button.active{
+      background:var(--primary);
+      color:white;
+    }
+
+    .quick-buttons{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .quick-buttons button{
+      background:#eef3e8;
+      color:#233b2a;
+      padding:11px 10px;
+      font-size:14px;
+    }
+
+    .date-row{
+      display:flex;
+      gap:8px;
+      margin-top:8px;
+    }
+
+    .date-field{
+      flex:1;
+    }
+
+    .date-field label{
+      display:block;
+      font-size:13px;
+      color:#555;
+      margin-bottom:4px;
+      font-weight:bold;
+    }
+
+    .date-field input{
+      width:100%;
+      padding:12px;
+      border:1px solid #ddd;
+      border-radius:10px;
+      font-size:16px;
+      box-sizing:border-box;
+      background:white;
+    }
+
+    .small-note{
+      font-size:13px;
+      color:#777;
+      line-height:1.5;
+      margin-top:8px;
+    }
+
+    .report{
+      background:var(--paper);
+      border-radius:24px;
+      padding:16px;
+      box-shadow:0 4px 14px rgba(0,0,0,.08);
+      border:1px solid var(--border);
+    }
+
+    .report-header{
+      text-align:center;
+      padding:12px 8px 16px;
+      border-bottom:1px dashed #d8c8b3;
+      margin-bottom:14px;
+    }
+
+    .brand{
+      font-size:27px;
+      font-weight:bold;
+      color:var(--primary);
+    }
+
+    .title{
+      font-size:18px;
+      color:var(--brown);
+      margin-top:4px;
+    }
+
+    .date-pill{
+      display:inline-block;
+      margin-top:10px;
+      background:var(--primary);
+      color:white;
+      padding:8px 14px;
+      border-radius:999px;
+      font-size:13px;
+    }
+
+    .kpi-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+    }
+
+    .kpi-card{
+      background:white;
+      border-radius:18px;
+      padding:14px;
+      text-align:center;
+      border:1px solid #eee3d4;
+      box-shadow:0 2px 8px rgba(0,0,0,.04);
+    }
+
+    .kpi-icon{
+      width:42px;
+      height:42px;
+      border-radius:50%;
+      background:var(--primary);
+      color:white;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:0 auto 8px;
+      font-size:20px;
+    }
+
+    .kpi-label{
+      font-size:13px;
+      color:#555;
+      line-height:1.4;
+    }
+
+    .kpi-value{
+      font-size:25px;
+      font-weight:bold;
+      color:var(--primary);
+      margin-top:8px;
+    }
+
+    .kpi-unit{
+      font-size:13px;
+      color:#777;
+    }
+
+    .section{
+      background:white;
+      border-radius:18px;
+      padding:14px;
+      margin-top:14px;
+      border:1px solid #eee3d4;
+    }
+
+    .section-title{
+      background:var(--primary);
+      color:white;
+      border-radius:14px;
+      padding:10px 12px;
+      font-weight:bold;
+      margin-bottom:10px;
+    }
+
+    .product-row{
+      display:grid;
+      grid-template-columns:34px 1fr auto;
+      gap:10px;
+      align-items:center;
+      padding:11px 0;
+      border-bottom:1px dashed #ddd;
+    }
+
+    .product-row:last-child{
+      border-bottom:none;
+    }
+
+    .rank{
+      width:30px;
+      height:30px;
+      border-radius:50%;
+      background:#eef3e8;
+      color:var(--primary);
+      font-weight:bold;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .rank.top{
+      background:var(--primary);
+      color:white;
+    }
+
+    .product-name{
+      font-weight:bold;
+      color:#222;
+      line-height:1.4;
+    }
+
+    .product-meta{
+      font-size:13px;
+      color:#777;
+      margin-top:2px;
+      line-height:1.4;
+    }
+
+    .product-num{
+      text-align:right;
+      color:var(--primary);
+      font-weight:bold;
+      line-height:1.4;
+      white-space:nowrap;
+    }
+
+    .product-num small{
+      display:block;
+      font-size:12px;
+      color:#777;
+      font-weight:normal;
+      margin-top:2px;
+    }
+
+    .tag{
+      display:inline-block;
+      font-size:12px;
+      padding:3px 8px;
+      border-radius:999px;
+      background:#eef3e8;
+      color:var(--primary);
+      margin-left:4px;
+    }
+
+    .tag.custom{
+      background:#fff0d6;
+      color:#a15c00;
+    }
+
+    .empty{
+      text-align:center;
+      color:#666;
+      padding:28px 10px;
+      line-height:1.6;
+    }
+
+    .footer-note{
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+      margin-top:14px;
+      line-height:1.5;
+    }
+
+    .loading,
+    .error{
+      background:white;
+      border-radius:18px;
+      padding:24px;
+      text-align:center;
+      box-shadow:0 4px 16px rgba(0,0,0,.08);
+      line-height:1.6;
+    }
+
+    .preview-box{
+      margin-top:14px;
+      background:white;
+      border-radius:16px;
+      padding:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,.08);
+      text-align:center;
+    }
+
+    .preview-note{
+      font-size:14px;
+      color:#555;
+      margin-bottom:10px;
+      line-height:1.5;
+    }
+
+    .preview-img{
+      width:100%;
+      max-width:460px;
+      border-radius:12px;
+      border:1px solid #eee;
+      background:white;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="top-actions">
+  <button class="back-btn" onclick="goBackToAdmin()">
+    กลับ Admin
+  </button>
+</div>
+
+<div class="page-wrap">
+
+  <div id="filter-box"></div>
+
+  <div id="app">
+    <div class="loading">
+      กำลังโหลด Product Sales Report...
+    </div>
+  </div>
+
+  <div class="top-actions" style="margin-top:12px;">
+    <button
+      id="generate-product-image-btn"
+      class="main-btn"
+      onclick="generateProductReportImage()">
+      🖼 สร้างรูป Product Sales Report
+    </button>
+  </div>
+
+  <div id="product-image-preview"></div>
+
+</div>
+
+<script>
+const PRODUCT_SALES_API =
+  "https://copen.app.n8n.cloud/webhook/patae/product-sales";
+
+let reportMode = "today";
+let reportStartDate = "";
+let reportEndDate = "";
+
+function getTodayString(){
+  return new Date().toLocaleDateString("sv-SE", {
+    timeZone: "Asia/Bangkok"
+  });
+}
+
+function addDays(dateText, days){
+  const d = new Date(dateText + "T00:00:00");
+  d.setDate(d.getDate() + days);
+  return d.toLocaleDateString("sv-SE", {
+    timeZone: "Asia/Bangkok"
+  });
+}
+
+function money(value){
+  return Number(value || 0).toLocaleString("th-TH");
+}
+
+function isValidDateText(value){
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function getReportDateText(){
+
+  if(reportMode === "today"){
+    return `ประจำวันที่ ${getTodayString()}`;
+  }
+
+  if(reportMode === "range"){
+    return `ช่วงวันที่ ${reportStartDate || "-"} ถึง ${reportEndDate || "-"}`;
+  }
+
+  return "รายงานทั้งหมด";
+}
+
+function getApiUrl(){
+
+  const params =
+    new URLSearchParams();
+
+  params.set("mode", reportMode);
+
+  if(reportMode === "range"){
+    params.set("start", reportStartDate || getTodayString());
+    params.set("end", reportEndDate || getTodayString());
+  }
+
+  return `${PRODUCT_SALES_API}?${params.toString()}`;
+}
+
+function renderFilter(){
+
+  const today =
+    getTodayString();
+
+  const startValue =
+    reportStartDate || today;
+
+  const endValue =
+    reportEndDate || today;
+
+  document.getElementById("filter-box").innerHTML = `
+    <div class="filter">
+
+      <div class="filter-title">
+        🏆 Product Sales Report
+      </div>
+
+      <div class="filter-buttons">
+
+        <button
+          class="${reportMode === "today" ? "active" : ""}"
+          onclick="setReportMode('today')">
+          วันนี้
+        </button>
+
+        <button
+          class="${reportMode === "range" ? "active" : ""}"
+          onclick="setReportMode('range')">
+          ช่วงวันที่
+        </button>
+
+        <button
+          class="${reportMode === "all" ? "active" : ""}"
+          onclick="setReportMode('all')">
+          ทั้งหมด
+        </button>
+
+      </div>
+
+      ${
+        reportMode === "range"
+          ? `
+            <div class="quick-buttons">
+              <button onclick="setQuickRange('today')">วันนี้</button>
+              <button onclick="setQuickRange('yesterday')">เมื่อวาน</button>
+              <button onclick="setQuickRange('last7')">7 วันล่าสุด</button>
+              <button onclick="setQuickRange('thisMonth')">เดือนนี้</button>
+            </div>
+
+            <div class="date-row">
+
+              <div class="date-field">
+                <label>วันที่เริ่มต้น</label>
+                <input
+                  id="report-start-date"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="YYYY-MM-DD"
+                  value="${startValue}"
+                >
+              </div>
+
+              <div class="date-field">
+                <label>วันที่สิ้นสุด</label>
+                <input
+                  id="report-end-date"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="YYYY-MM-DD"
+                  value="${endValue}"
+                >
+              </div>
+
+            </div>
+
+            <button
+              class="main-btn"
+              style="width:100%;margin-top:10px;"
+              onclick="applyReportRange()">
+              🔎 ดูรายงาน
+            </button>
+          `
+          : ""
+      }
+
+      <div class="small-note">
+        รายงานนี้นับเฉพาะรายการจากออเดอร์ที่ชำระเงินแล้ว<br>
+        รูปแบบวันที่: YYYY-MM-DD เช่น 2026-05-31
+      </div>
+
+    </div>
+  `;
+}
+
+function setReportMode(mode){
+
+  reportMode = mode;
+
+  if(mode === "today"){
+    reportStartDate = "";
+    reportEndDate = "";
+  }
+
+  if(mode === "range"){
+
+    const today =
+      getTodayString();
+
+    if(!reportStartDate){
+      reportStartDate = today;
+    }
+
+    if(!reportEndDate){
+      reportEndDate = today;
+    }
+  }
+
+  renderProductReport();
+}
+
+function setQuickRange(type){
+
+  const today =
+    getTodayString();
+
+  if(type === "today"){
+    reportStartDate = today;
+    reportEndDate = today;
+  }
+
+  if(type === "yesterday"){
+    const yesterday =
+      addDays(today, -1);
+
+    reportStartDate = yesterday;
+    reportEndDate = yesterday;
+  }
+
+  if(type === "last7"){
+    reportStartDate =
+      addDays(today, -6);
+
+    reportEndDate = today;
+  }
+
+  if(type === "thisMonth"){
+    reportStartDate =
+      today.slice(0, 8) + "01";
+
+    reportEndDate = today;
+  }
+
+  reportMode = "range";
+
+  renderProductReport();
+}
+
+function applyReportRange(){
+
+  const start =
+    document.getElementById("report-start-date")?.value.trim() || "";
+
+  const end =
+    document.getElementById("report-end-date")?.value.trim() || "";
+
+  if(!start || !end){
+    alert("กรุณาระบุวันที่เริ่มต้นและวันที่สิ้นสุดค่ะ");
+    return;
+  }
+
+  if(!isValidDateText(start) || !isValidDateText(end)){
+    alert("กรุณากรอกวันที่รูปแบบ YYYY-MM-DD เช่น 2026-05-31 ค่ะ");
+    return;
+  }
+
+  if(start > end){
+    alert("วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุดค่ะ");
+    return;
+  }
+
+  reportStartDate = start;
+  reportEndDate = end;
+  reportMode = "range";
+
+  renderProductReport();
+}
+
+function productRows(products, limit = 10){
+
+  if(!products || products.length === 0){
+    return `
+      <div class="empty">
+        ยังไม่มีข้อมูลสินค้าในช่วงนี้ค่ะ
+      </div>
+    `;
+  }
+
+  return products
+    .slice(0, limit)
+    .map((p, index) => {
+
+      const rankClass =
+        index < 3 ? "rank top" : "rank";
+
+      const typeTag =
+        p.order_type === "CUSTOM"
+          ? `<span class="tag custom">CUSTOM</span>`
+          : `<span class="tag">NORMAL</span>`;
+
+      return `
+        <div class="product-row">
+
+          <div class="${rankClass}">
+            ${index + 1}
+          </div>
+
+          <div>
+            <div class="product-name">
+              ${p.product_name || "-"}
+              ${typeTag}
+            </div>
+
+            <div class="product-meta">
+              ${p.product_id || "-"} · ${p.order_count || 0} ออเดอร์
+            </div>
+          </div>
+
+          <div class="product-num">
+            ${money(p.total_qty)}
+            <small>ชิ้น</small>
+            <small>${money(p.total_sales)} บาท</small>
+          </div>
+
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function renderDashboard(data){
+
+  const topProducts =
+    data.top_products || [];
+
+  const normalProducts =
+    data.normal_products || [];
+
+  const customProducts =
+    data.custom_products || [];
+
+  document.getElementById("app").innerHTML = `
+    <div class="report" id="product-report-card">
+
+      <div class="report-header">
+        <div class="brand">PaTae Cafe</div>
+        <div class="title">Product Sales Report</div>
+        <div class="date-pill">📅 ${getReportDateText()}</div>
+      </div>
+
+      <div class="kpi-grid">
+
+        <div class="kpi-card">
+          <div class="kpi-icon">🏆</div>
+          <div class="kpi-label">จำนวนสินค้าที่ขาย<br>Product Count</div>
+          <div class="kpi-value">${money(data.product_count)}</div>
+          <div class="kpi-unit">รายการ</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon">🧺</div>
+          <div class="kpi-label">จำนวนชิ้นรวม<br>Total Qty</div>
+          <div class="kpi-value">${money(data.total_qty)}</div>
+          <div class="kpi-unit">ชิ้น</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon">💰</div>
+          <div class="kpi-label">ยอดขายสินค้า<br>Product Sales</div>
+          <div class="kpi-value">${money(data.total_sales)}</div>
+          <div class="kpi-unit">บาท</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#7b5a35;">✅</div>
+          <div class="kpi-label">ออเดอร์ที่ชำระแล้ว<br>Paid Orders</div>
+          <div class="kpi-value">${money(data.paid_order_count)}</div>
+          <div class="kpi-unit">ออเดอร์</div>
+        </div>
+
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          🏆 Top Selling Items
+        </div>
+
+        ${productRows(topProducts, 10)}
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          ☕ Normal Products
+        </div>
+
+        ${productRows(normalProducts, 10)}
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          ✨ Custom Orders
+        </div>
+
+        ${productRows(customProducts, 10)}
+      </div>
+
+      <div class="footer-note">
+        รายงานนี้นับจาก order_items และเฉพาะออเดอร์ที่ชำระเงินแล้ว<br>
+        Auto-generated Product Sales Report
+      </div>
+
+    </div>
+  `;
+}
+
+async function renderProductReport(){
+
+  renderFilter();
+
+  document.getElementById("app").innerHTML = `
+    <div class="loading">
+      กำลังโหลด Product Sales Report...
+    </div>
+  `;
+
+  document.getElementById("product-image-preview").innerHTML = "";
+
+  try{
+
+    const res =
+      await fetch(getApiUrl());
+
+    const data =
+      await res.json();
+
+    if(!data.success){
+      throw new Error(data.message || "โหลดรายงานไม่สำเร็จ");
+    }
+
+    renderDashboard(data);
+
+  }catch(err){
+
+    console.error(err);
+
+    document.getElementById("app").innerHTML = `
+      <div class="error">
+        โหลด Product Sales Report ไม่สำเร็จค่ะ<br>
+        กรุณาตรวจสอบ n8n API /patae/product-sales
+      </div>
+    `;
+  }
+}
+
+function goBackToAdmin(){
+  window.location.href = "admin.html";
+}
+
+function setProductImageButtonState(isLoading){
+
+  const btn =
+    document.getElementById("generate-product-image-btn");
+
+  if(!btn){
+    return;
+  }
+
+  if(isLoading){
+
+    if(!btn.dataset.originalText){
+      btn.dataset.originalText = btn.innerText;
+    }
+
+    btn.innerText =
+      "กำลังสร้างรูป...";
+
+    btn.disabled = true;
+
+  }else{
+
+    btn.innerText =
+      btn.dataset.originalText ||
+      "🖼 สร้างรูป Product Sales Report";
+
+    btn.disabled = false;
+  }
+}
+
+async function generateProductReportImage(){
+
+  try{
+
+    setProductImageButtonState(true);
+
+    const target =
+      document.getElementById("product-report-card");
+
+    if(!target){
+      alert("ไม่พบ Product Sales Report สำหรับสร้างรูปค่ะ");
+      return;
+    }
+
+    const canvas =
+      await html2canvas(target, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff"
+      });
+
+    const imageUrl =
+      canvas.toDataURL("image/png");
+
+    const preview =
+      document.getElementById("product-image-preview");
+
+    preview.innerHTML = `
+      <div class="preview-box">
+        <div class="preview-note">
+          กดค้างที่รูปเพื่อบันทึก หรือแชร์ Product Sales Report ค่ะ
+        </div>
+
+        <img
+          src="${imageUrl}"
+          alt="Product Sales Report Image"
+          class="preview-img"
+        >
+      </div>
+    `;
+
+    preview.scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
+
+  }catch(err){
+
+    console.error(err);
+    alert("สร้างรูป Product Sales Report ไม่สำเร็จค่ะ");
+
+  }finally{
+
+    setProductImageButtonState(false);
+
+  }
+}
+
+renderProductReport();
+</script>
+
+</body>
+</html>
