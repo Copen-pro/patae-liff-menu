@@ -2142,25 +2142,11 @@ const totalOrders =
           .toUpperCase() === "WALK_IN"
       );
 
-    const linePaidOrders =
-      paidOrders.filter(o =>
-        String(o.order_channel || "")
-          .trim()
-          .toUpperCase() === "LINE"
-      );
+   const lineSales =
+  lineOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
-    const walkinPaidOrders =
-      paidOrders.filter(o =>
-        String(o.order_channel || "")
-          .trim()
-          .toUpperCase() === "WALK_IN"
-      );
-
-    const lineSales =
-      linePaidOrders.reduce((sum, o) => sum + getAmount(o), 0);
-
-    const walkinSales =
-      walkinPaidOrders.reduce((sum, o) => sum + getAmount(o), 0);
+const walkinSales =
+  walkinChannelOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
     const pickupOrders =
       selectedOrders.filter(o =>
@@ -2183,35 +2169,14 @@ const totalOrders =
           .toLowerCase() === "walk_in"
       );
 
-    const pickupPaidOrders =
-      paidOrders.filter(o =>
-        String(o.fulfillment_type || "")
-          .trim()
-          .toLowerCase() === "pickup"
-      );
-
-    const deliveryPaidOrders =
-      paidOrders.filter(o =>
-        String(o.fulfillment_type || "")
-          .trim()
-          .toLowerCase() === "delivery"
-      );
-
-    const walkinFulfillmentPaidOrders =
-      paidOrders.filter(o =>
-        String(o.fulfillment_type || "")
-          .trim()
-          .toLowerCase() === "walk_in"
-      );
-
     const pickupSales =
-      pickupPaidOrders.reduce((sum, o) => sum + getAmount(o), 0);
+  pickupOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
-    const deliverySales =
-      deliveryPaidOrders.reduce((sum, o) => sum + getAmount(o), 0);
+const deliverySales =
+  deliveryOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
-    const walkinFulfillmentSales =
-      walkinFulfillmentPaidOrders.reduce((sum, o) => sum + getAmount(o), 0);
+const walkinFulfillmentSales =
+  walkinFulfillmentOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
     const reportDateText =
       salesReportMode === "today"
