@@ -1935,8 +1935,9 @@ async function renderSalesSummary(){
   const box = document.getElementById("orders");
 
   box.innerHTML = `
+    ${renderSalesReportFilter()}
     <div class="sales-panel">
-      <h3>📊 Daily Sales Summary</h3>
+      <h3>📊 Sales Report</h3>
       <div class="loading">กำลังโหลดสรุปยอดขาย...</div>
     </div>
   `;
@@ -1946,35 +1947,37 @@ async function renderSalesSummary(){
     const res = await fetch(GET_ORDERS_API);
     const data = await res.json();
 
-    const orders = Array.isArray(data)
+    const allOrders = Array.isArray(data)
       ? data
       : (data.orders || data.data || []);
 
-    currentOrders = orders;
+    currentOrders = allOrders;
+
+    const selectedOrders =
+      allOrders.filter(isOrderInSelectedSalesReport);
 
     const paidOrders =
-      orders.filter(o =>
+      selectedOrders.filter(o =>
         String(o.payment_status || "")
           .trim()
           .toUpperCase() === "PAID"
       );
 
     const unpaidOrders =
-      orders.filter(o =>
+      selectedOrders.filter(o =>
         String(o.payment_status || "UNPAID")
           .trim()
           .toUpperCase() !== "PAID"
       );
 
+    const getAmount = (o) =>
+      Number(o.grand_total || o.total_amount || 0);
+
     const totalSales =
-      paidOrders.reduce((sum, o) => {
-        return sum + Number(o.grand_total || o.total_amount || 0);
-      }, 0);
+      paidOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
     const unpaidTotal =
-      unpaidOrders.reduce((sum, o) => {
-        return sum + Number(o.grand_total || o.total_amount || 0);
-      }, 0);
+      unpaidOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
     const lineOrders =
       paidOrders.filter(o =>
@@ -1991,13 +1994,16 @@ async function renderSalesSummary(){
       );
 
     const lineSales =
-      lineOrders.reduce((sum, o) =>
-        sum + Number(o.grand_total || o.total_amount || 0), 0
-      );
+      lineOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
     const walkinSales =
-      walkinOrders.reduce((sum, o) =>
-        sum + Number(o.grand_total || o.total_amount || 0), 0
+      walkinOrders.reduce((sum, o) => sum + getAmount(o), 0);
+
+    const pickupOrders =
+      paidOrders.filter(o =>
+        String(o.fulfillment_type || "")
+          .trim()
+          .toLowerCase() === "pickup"
       );
 
     const deliveryOrders =
@@ -2007,13 +2013,6 @@ async function renderSalesSummary(){
           .toLowerCase() === "delivery"
       );
 
-    const pickupOrders =
-      paidOrders.filter(o =>
-        String(o.fulfillment_type || "")
-          .trim()
-          .toLowerCase() === "pickup"
-      );
-
     const walkinFulfillmentOrders =
       paidOrders.filter(o =>
         String(o.fulfillment_type || "")
@@ -2021,35 +2020,31 @@ async function renderSalesSummary(){
           .toLowerCase() === "walk_in"
       );
 
-    const deliverySales =
-      deliveryOrders.reduce((sum, o) =>
-        sum + Number(o.grand_total || o.total_amount || 0), 0
-      );
-
     const pickupSales =
-      pickupOrders.reduce((sum, o) =>
-        sum + Number(o.grand_total || o.total_amount || 0), 0
-      );
+      pickupOrders.reduce((sum, o) => sum + getAmount(o), 0);
+
+    const deliverySales =
+      deliveryOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
     const walkinFulfillmentSales =
-      walkinFulfillmentOrders.reduce((sum, o) =>
-        sum + Number(o.grand_total || o.total_amount || 0), 0
-      );
+      walkinFulfillmentOrders.reduce((sum, o) => sum + getAmount(o), 0);
 
     box.innerHTML = `
+      ${renderSalesReportFilter()}
+
       <div class="sales-panel">
 
-        <h3>📊 Daily Sales Summary</h3>
+        <h3>📊 Sales Report</h3>
 
         <div class="sales-grid">
 
           <div class="sales-card">
-            <div class="sales-card-title">ยอดขายวันนี้</div>
+            <div class="sales-card-title">ยอดขาย</div>
             <div class="sales-card-value">${totalSales.toLocaleString("th-TH")} บาท</div>
           </div>
 
           <div class="sales-card">
-            <div class="sales-card-title">จำนวนบิลที่ชำระแล้ว</div>
+            <div class="sales-card-title">บิลที่ชำระแล้ว</div>
             <div class="sales-card-value">${paidOrders.length}</div>
           </div>
 
@@ -2059,7 +2054,7 @@ async function renderSalesSummary(){
           </div>
 
           <div class="sales-card">
-            <div class="sales-card-title">จำนวนค้างชำระ</div>
+            <div class="sales-card-title">บิลค้างชำระ</div>
             <div class="sales-card-value">${unpaidOrders.length}</div>
           </div>
 
@@ -2106,6 +2101,7 @@ async function renderSalesSummary(){
     console.error(err);
 
     box.innerHTML = `
+      ${renderSalesReportFilter()}
       <div class="empty">
         โหลดสรุปยอดขายไม่สำเร็จค่ะ
       </div>
