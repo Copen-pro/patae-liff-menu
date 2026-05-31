@@ -512,6 +512,8 @@ const PRODUCTS_API =
 const WALKIN_CREATE_ORDER_API =
 "https://copen.app.n8n.cloud/webhook/patae/admin/walkin/create-order";
 
+const RECEIPT_PAGE_URL = "receipt.html";
+  
 let walkinProducts = [];
 let walkinCart = {};
 let walkinCategory = null;
@@ -708,6 +710,12 @@ if(paymentStatus === "PAID"){
   paidButton = `
     <button class="btn-paid" disabled>
       ✅ PAID
+    </button>
+
+    <button
+      class="btn-done"
+      onclick="openReceipt('${order.order_no}')">
+      🧾 Receipt
     </button>
   `;
 
@@ -1129,6 +1137,19 @@ if(
   }
 }
 
+function openReceipt(orderNo){
+
+  if(!orderNo){
+    alert("ไม่พบเลขออเดอร์ค่ะ");
+    return;
+  }
+
+  const url =
+    `${RECEIPT_PAGE_URL}?order_no=${encodeURIComponent(orderNo)}`;
+
+  window.open(url, "_blank");
+}
+  
 async function markPaid(orderNo){
 
   if(!confirm(`บันทึกว่า ${orderNo} ชำระเงินแล้ว?`)){
