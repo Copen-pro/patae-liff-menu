@@ -72,12 +72,27 @@ function getBangkokDateString(value){
   return date.toLocaleDateString("sv-SE",{timeZone:"Asia/Bangkok"});
 }
 function money(value){return Number(value||0).toLocaleString("th-TH");}
-function getAmount(order){return Number(order.grand_total || order.total_amount || 0);}
+
+function getProductSalesAmount(order){
+  const totalAmount = Number(order.total_amount || 0);
+  const customPrice = Number(order.custom_price || 0);
+  return totalAmount + customPrice;
+}
+
+function getDeliveryAmount(order){
+  return Number(order.delivery_fee || 0);
+}
+
+function getGrandAmount(order){
+  return getProductSalesAmount(order) + getDeliveryAmount(order);
+}
+
 function getSalesDate(order){
   const paidDate = getBangkokDateString(order.paid_at);
   const orderDate = getBangkokDateString(order.order_datetime);
   return paidDate || orderDate;
 }
+
 function isOrderInSelectedSalesReport(order){
   const salesDate = getSalesDate(order);
   if(!salesDate) return false;
@@ -89,6 +104,7 @@ function isOrderInSelectedSalesReport(order){
   }
   return false;
 }
+
 function renderFilter(){
   const today = getTodayString();
   const startValue = salesReportStartDate || today;
@@ -109,11 +125,13 @@ function renderFilter(){
         <button class="image-btn" style="width:100%;margin-top:10px;" onclick="applySalesReportRange()">🔎 ดูรายงาน</button>
       ` : ""}
       <div class="small-note">
-        ยอดขายรวม = ทุกออเดอร์ในช่วงที่เลือก<br>
-        ยอดชำระแล้ว / ค้างชำระ แยกตาม payment_status
+        ยอดขายสินค้า = ไม่รวมค่าส่ง<br>
+        ยอดรวมทั้งหมด = ยอดขายสินค้า + ค่าส่ง<br>
+        ยอดชำระแล้ว / ค้างชำระ คิดจากยอดรวมทั้งหมด
       </div>
     </div>`;
 }
+
 function setSalesReportMode(mode){
   salesReportMode = mode;
   if(mode === "today"){salesReportStartDate = ""; salesReportEndDate = "";}
@@ -124,6 +142,7 @@ function setSalesReportMode(mode){
   }
   renderSalesReport();
 }
+
 function applySalesReportRange(){
   const start = document.getElementById("sales-start-date")?.value || "";
   const end = document.getElementById("sales-end-date")?.value || "";
@@ -134,6 +153,7 @@ function applySalesReportRange(){
   salesReportMode = "range";
   renderSalesReport();
 }
+
 async function loadOrdersIfNeeded(){
   if(currentOrders.length > 0) return currentOrders;
   const res = await fetch(GET_ORDERS_API);
@@ -141,31 +161,70 @@ async function loadOrdersIfNeeded(){
   currentOrders = Array.isArray(data) ? data : (data.orders || data.data || []);
   return currentOrders;
 }
+
 function getReportDateText(){
   if(salesReportMode === "today") return `ประจำวันที่ ${getTodayString()}`;
   if(salesReportMode === "range") return `ช่วงวันที่ ${salesReportStartDate || "-"} ถึง ${salesReportEndDate || "-"}`;
   return "รายงานทั้งหมด";
 }
+
 function renderDashboard(allOrders){
   const selectedOrders = allOrders.filter(isOrderInSelectedSalesReport);
-  const paidOrders = selectedOrders.filter(o => String(o.payment_status || "").trim().toUpperCase() === "PAID");
-  const unpaidOrders = selectedOrders.filter(o => String(o.payment_status || "UNPAID").trim().toUpperCase() !== "PAID");
 
-  const totalSales = selectedOrders.reduce((sum,o)=>sum+getAmount(o),0);
-  const paidSales = paidOrders.reduce((sum,o)=>sum+getAmount(o),0);
-  const unpaidSales = unpaidOrders.reduce((sum,o)=>sum+getAmount(o),0);
+  const paidOrders = selectedOrders.filter(o =>
+    String(o.payment_status || "").trim().toUpperCase() === "PAID"
+  );
 
-  const lineOrders = selectedOrders.filter(o => String(o.order_channel || "").trim().toUpperCase() === "LINE");
-  const walkinChannelOrders = selectedOrders.filter(o => String(o.order_channel || "").trim().toUpperCase() === "WALK_IN");
-  const lineSales = lineOrders.reduce((sum,o)=>sum+getAmount(o),0);
-  const walkinSales = walkinChannelOrders.reduce((sum,o)=>sum+getAmount(o),0);
+  const unpaidOrders = selectedOrders.filter(o =>
+    String(o.payment_status || "UNPAID").trim().toUpperCase() !== "PAID"
+  );
 
-  const pickupOrders = selectedOrders.filter(o => String(o.fulfillment_type || "").trim().toLowerCase() === "pickup");
-  const deliveryOrders = selectedOrders.filter(o => String(o.fulfillment_type || "").trim().toLowerCase() === "delivery");
-  const walkinFulfillmentOrders = selectedOrders.filter(o => String(o.fulfillment_type || "").trim().toLowerCase() === "walk_in");
-  const pickupSales = pickupOrders.reduce((sum,o)=>sum+getAmount(o),0);
-  const deliverySales = deliveryOrders.reduce((sum,o)=>sum+getAmount(o),0);
-  const walkinFulfillmentSales = walkinFulfillmentOrders.reduce((sum,o)=>sum+getAmount(o),0);
+  const productSales = selectedOrders.reduce((sum, o) => sum + getProductSalesAmount(o), 0);
+  const deliveryFeeTotal = selectedOrders.reduce((sum, o) => sum + getDeliveryAmount(o), 0);
+  const grandSales = selectedOrders.reduce((sum, o) => sum + getGrandAmount(o), 0);
+
+  const paidSales = paidOrders.reduce((sum, o) => sum + getGrandAmount(o), 0);
+  const unpaidSales = unpaidOrders.reduce((sum, o) => sum + getGrandAmount(o), 0);
+
+  const lineOrders = selectedOrders.filter(o =>
+    String(o.order_channel || "").trim().toUpperCase() === "LINE"
+  );
+
+  const walkinChannelOrders = selectedOrders.filter(o =>
+    String(o.order_channel || "").trim().toUpperCase() === "WALK_IN"
+  );
+
+  const lineProductSales = lineOrders.reduce((sum, o) => sum + getProductSalesAmount(o), 0);
+  const lineDeliveryFee = lineOrders.reduce((sum, o) => sum + getDeliveryAmount(o), 0);
+  const lineGrandTotal = lineOrders.reduce((sum, o) => sum + getGrandAmount(o), 0);
+
+  const walkinProductSales = walkinChannelOrders.reduce((sum, o) => sum + getProductSalesAmount(o), 0);
+  const walkinDeliveryFee = walkinChannelOrders.reduce((sum, o) => sum + getDeliveryAmount(o), 0);
+  const walkinGrandTotal = walkinChannelOrders.reduce((sum, o) => sum + getGrandAmount(o), 0);
+
+  const pickupOrders = selectedOrders.filter(o =>
+    String(o.fulfillment_type || "").trim().toLowerCase() === "pickup"
+  );
+
+  const deliveryOrders = selectedOrders.filter(o =>
+    String(o.fulfillment_type || "").trim().toLowerCase() === "delivery"
+  );
+
+  const walkinFulfillmentOrders = selectedOrders.filter(o =>
+    String(o.fulfillment_type || "").trim().toLowerCase() === "walk_in"
+  );
+
+  const pickupProductSales = pickupOrders.reduce((sum, o) => sum + getProductSalesAmount(o), 0);
+  const pickupDeliveryFee = pickupOrders.reduce((sum, o) => sum + getDeliveryAmount(o), 0);
+  const pickupGrandTotal = pickupOrders.reduce((sum, o) => sum + getGrandAmount(o), 0);
+
+  const deliveryProductSales = deliveryOrders.reduce((sum, o) => sum + getProductSalesAmount(o), 0);
+  const deliveryFeeSales = deliveryOrders.reduce((sum, o) => sum + getDeliveryAmount(o), 0);
+  const deliveryGrandTotal = deliveryOrders.reduce((sum, o) => sum + getGrandAmount(o), 0);
+
+  const walkinFulfillmentProductSales = walkinFulfillmentOrders.reduce((sum, o) => sum + getProductSalesAmount(o), 0);
+  const walkinFulfillmentDeliveryFee = walkinFulfillmentOrders.reduce((sum, o) => sum + getDeliveryAmount(o), 0);
+  const walkinFulfillmentGrandTotal = walkinFulfillmentOrders.reduce((sum, o) => sum + getGrandAmount(o), 0);
 
   document.getElementById("app").innerHTML = `
     <div class="sales-dashboard" id="sales-report-card">
@@ -174,31 +233,171 @@ function renderDashboard(allOrders){
         <div class="title">Daily Sales Summary</div>
         <div class="date-pill">📅 ${getReportDateText()}</div>
       </div>
+
       <div class="kpi-grid">
-        <div class="kpi-card"><div class="kpi-icon">💰</div><div class="kpi-label">ยอดขายรวม<br>Total Sales</div><div class="kpi-value">${money(totalSales)}</div><div class="kpi-unit">บาท</div></div>
-        <div class="kpi-card"><div class="kpi-icon">✅</div><div class="kpi-label">ยอดชำระแล้ว<br>Paid</div><div class="kpi-value">${money(paidSales)}</div><div class="kpi-unit">บาท</div></div>
-        <div class="kpi-card"><div class="kpi-icon" style="background:#a15c00;">⏳</div><div class="kpi-label">ยอดค้างชำระ<br>Unpaid</div><div class="kpi-value" style="color:#a15c00;">${money(unpaidSales)}</div><div class="kpi-unit">บาท</div></div>
-        <div class="kpi-card"><div class="kpi-icon" style="background:#7b5a35;">🧾</div><div class="kpi-label">จำนวนออเดอร์<br>Total Orders</div><div class="kpi-value">${selectedOrders.length}</div><div class="kpi-unit">ออเดอร์</div></div>
+        <div class="kpi-card">
+          <div class="kpi-icon">💰</div>
+          <div class="kpi-label">ยอดขายสินค้า<br>Product Sales</div>
+          <div class="kpi-value">${money(productSales)}</div>
+          <div class="kpi-unit">บาท</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon">✅</div>
+          <div class="kpi-label">ยอดชำระแล้ว<br>Paid</div>
+          <div class="kpi-value">${money(paidSales)}</div>
+          <div class="kpi-unit">บาท</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#a15c00;">⏳</div>
+          <div class="kpi-label">ยอดค้างชำระ<br>Unpaid</div>
+          <div class="kpi-value" style="color:#a15c00;">${money(unpaidSales)}</div>
+          <div class="kpi-unit">บาท</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#7b5a35;">🧾</div>
+          <div class="kpi-label">จำนวนออเดอร์<br>Total Orders</div>
+          <div class="kpi-value">${selectedOrders.length}</div>
+          <div class="kpi-unit">ออเดอร์</div>
+        </div>
       </div>
+
+      <div class="section">
+        <div class="section-title">🧾 สรุปยอดรวม / Sales Breakdown</div>
+
+        <div class="row">
+          <span>ยอดขายสินค้า</span>
+          <strong>${money(productSales)} บาท</strong>
+        </div>
+
+        <div class="row">
+          <span>ค่าส่ง</span>
+          <strong>${money(deliveryFeeTotal)} บาท</strong>
+        </div>
+
+        <div class="row">
+          <span>ยอดรวมทั้งหมด</span>
+          <strong>${money(grandSales)} บาท</strong>
+        </div>
+      </div>
+
       <div class="section">
         <div class="section-title">🏪 ช่องทางการขาย / Sales Channels</div>
-        <div class="row"><span>LINE Orders</span><strong>${lineOrders.length} ออเดอร์</strong></div>
-        <div class="row"><span>ยอดรวม LINE</span><strong>${money(lineSales)} บาท</strong></div>
-        <div class="row"><span>Walk-in Orders</span><strong>${walkinChannelOrders.length} ออเดอร์</strong></div>
-        <div class="row"><span>ยอดรวม Walk-in</span><strong>${money(walkinSales)} บาท</strong></div>
+
+        <div class="row">
+          <span>LINE Orders</span>
+          <strong>${lineOrders.length} ออเดอร์</strong>
+        </div>
+
+        <div class="row">
+          <span>ยอดสินค้า LINE</span>
+          <strong>${money(lineProductSales)} บาท</strong>
+        </div>
+
+        <div class="row">
+          <span>ค่าส่ง LINE</span>
+          <strong>${money(lineDeliveryFee)} บาท</strong>
+        </div>
+
+        <div class="row">
+          <span>ยอดรวม LINE</span>
+          <strong>${money(lineGrandTotal)} บาท</strong>
+        </div>
+
+        <div class="row">
+          <span>Walk-in Orders</span>
+          <strong>${walkinChannelOrders.length} ออเดอร์</strong>
+        </div>
+
+        <div class="row">
+          <span>ยอดสินค้า Walk-in</span>
+          <strong>${money(walkinProductSales)} บาท</strong>
+        </div>
+
+        <div class="row">
+          <span>ค่าส่ง Walk-in</span>
+          <strong>${money(walkinDeliveryFee)} บาท</strong>
+        </div>
+
+        <div class="row">
+          <span>ยอดรวม Walk-in</span>
+          <strong>${money(walkinGrandTotal)} บาท</strong>
+        </div>
       </div>
+
       <div class="section">
         <div class="section-title">🛵 ช่องทางการรับ / จัดส่ง</div>
-        <div class="row"><span>Pickup</span><span class="pill">${pickupOrders.length} ออเดอร์</span></div>
-        <div class="row"><span>ยอดรวม Pickup</span><strong>${money(pickupSales)} บาท</strong></div>
-        <div class="row"><span>Delivery</span><span class="pill">${deliveryOrders.length} ออเดอร์</span></div>
-        <div class="row"><span>ยอดรวม Delivery</span><strong>${money(deliverySales)} บาท</strong></div>
-        <div class="row"><span>Walk-in</span><span class="pill">${walkinFulfillmentOrders.length} ออเดอร์</span></div>
-        <div class="row"><span>ยอดรวม Walk-in</span><strong>${money(walkinFulfillmentSales)} บาท</strong></div>
+
+        <div class="row">
+          <span>Pickup</span>
+          <span class="pill">${pickupOrders.length} ออเดอร์</span>
+        </div>
+
+        <div class="row">
+          <span>ยอดสินค้า Pickup</span>
+          <strong>${money(pickupProductSales)} บาท</strong>
+        </div>
+
+        <div class="row">
+          <span>ค่าส่ง Pickup</span>
+          <strong>${money(pickupDeliveryFee)} บาท</strong>
+        </div>
+
+        <div class="row">
+          <span>ยอดรวม Pickup</span>
+          <strong>${money(pickupGrandTotal)} บาท</strong>
+        </div>
+
+        <div class="row">
+          <span>Delivery</span>
+          <span class="pill">${deliveryOrders.length} ออเดอร์</span>
+        </div>
+
+        <div class="row">
+          <span>ยอดสินค้า Delivery</span>
+          <strong>${money(deliveryProductSales)} บาท</strong>
+        </div>
+
+        <div class="row">
+          <span>ค่าส่ง Delivery</span>
+          <strong>${money(deliveryFeeSales)} บาท</strong>
+        </div>
+
+        <div class="row">
+          <span>ยอดรวม Delivery</span>
+          <strong>${money(deliveryGrandTotal)} บาท</strong>
+        </div>
+
+        <div class="row">
+          <span>Walk-in</span>
+          <span class="pill">${walkinFulfillmentOrders.length} ออเดอร์</span>
+        </div>
+
+        <div class="row">
+          <span>ยอดสินค้า Walk-in</span>
+          <strong>${money(walkinFulfillmentProductSales)} บาท</strong>
+        </div>
+
+        <div class="row">
+          <span>ค่าส่ง Walk-in</span>
+          <strong>${money(walkinFulfillmentDeliveryFee)} บาท</strong>
+        </div>
+
+        <div class="row">
+          <span>ยอดรวม Walk-in</span>
+          <strong>${money(walkinFulfillmentGrandTotal)} บาท</strong>
+        </div>
       </div>
-      <div class="footer-note">รายงานนี้สร้างจากข้อมูลออเดอร์ในช่วงวันที่ที่เลือก<br>Auto-generated Sales Report</div>
+
+      <div class="footer-note">
+        รายงานนี้แยกยอดขายสินค้าออกจากค่าส่ง<br>
+        Auto-generated Sales Report
+      </div>
     </div>`;
 }
+
 async function renderSalesReport(){
   renderFilter();
   document.getElementById("app").innerHTML = `<div class="loading">กำลังโหลด Sales Report...</div>`;
@@ -211,7 +410,9 @@ async function renderSalesReport(){
     document.getElementById("app").innerHTML = `<div class="error">โหลด Sales Report ไม่สำเร็จค่ะ</div>`;
   }
 }
+
 function goBackToAdmin(){window.location.href = "admin.html";}
+
 function setSalesImageButtonState(isLoading){
   const btn = document.getElementById("generate-sales-image-btn");
   if(!btn) return;
@@ -224,6 +425,7 @@ function setSalesImageButtonState(isLoading){
     btn.disabled = false;
   }
 }
+
 async function generateSalesReportImage(){
   try{
     setSalesImageButtonState(true);
@@ -241,6 +443,7 @@ async function generateSalesReportImage(){
     setSalesImageButtonState(false);
   }
 }
+
 renderSalesReport();
 </script>
 </body>
