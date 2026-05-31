@@ -426,8 +426,14 @@ function money(value){
   return Number(value || 0).toLocaleString("th-TH");
 }
 
+function price(value){
+  return Number(value || 0).toLocaleString("th-TH", {
+    maximumFractionDigits: 2
+  });
+}
+
 function isValidDateText(value){
-  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+  return /^\\d{4}-\\d{2}-\\d{2}$/.test(value);
 }
 
 function getReportDateText(){
@@ -545,8 +551,8 @@ function renderFilter(){
       }
 
       <div class="small-note">
-        รายงานนี้นับเฉพาะรายการจากออเดอร์ที่ชำระเงินแล้ว<br>
-        รูปแบบวันที่: YYYY-MM-DD เช่น 2026-05-31
+        รายงานนี้นับจาก order_items ของทุกออเดอร์ในช่วงวันที่ที่เลือก<br>
+        ไม่รวมค่าส่ง และใช้ order_datetime / queue_date เป็นหลัก
       </div>
 
     </div>
@@ -646,7 +652,7 @@ function applyReportRange(){
   renderProductReport();
 }
 
-function productRows(products, limit = 10){
+function productRows(products, limit = 20, options = {}){
 
   if(!products || products.length === 0){
     return `
@@ -655,6 +661,9 @@ function productRows(products, limit = 10){
       </div>
     `;
   }
+
+  const showAvg =
+    options.showAvg !== false;
 
   return products
     .slice(0, limit)
@@ -667,6 +676,11 @@ function productRows(products, limit = 10){
         p.order_type === "CUSTOM"
           ? `<span class="tag custom">CUSTOM</span>`
           : `<span class="tag">NORMAL</span>`;
+
+      const avg =
+        p.avg_price !== undefined
+          ? p.avg_price
+          : p.avg_unit_price;
 
       return `
         <div class="product-row">
@@ -682,7 +696,12 @@ function productRows(products, limit = 10){
             </div>
 
             <div class="product-meta">
-              ${p.product_id || "-"} · ${p.order_count || 0} ออเดอร์
+              ${p.product_id || "-"} · ${p.order_count || 0} ออเดอร์ · ${p.line_count || 0} รายการ
+              ${
+                showAvg
+                  ? `<br>ราคาเฉลี่ย ${price(avg)} บาท/ชิ้น`
+                  : ""
+              }
             </div>
           </div>
 
@@ -700,11 +719,14 @@ function productRows(products, limit = 10){
 
 function renderDashboard(data){
 
-  const topProducts =
-    data.top_products || [];
+  const productSalesList =
+    data.product_sales_list || [];
 
-  const normalProducts =
-    data.normal_products || [];
+  const topByQty =
+    data.top_by_qty || data.top_products || [];
+
+  const topBySales =
+    data.top_by_sales || [];
 
   const customProducts =
     data.custom_products || [];
@@ -721,10 +743,24 @@ function renderDashboard(data){
       <div class="kpi-grid">
 
         <div class="kpi-card">
-          <div class="kpi-icon">🏆</div>
-          <div class="kpi-label">จำนวนสินค้าที่ขาย<br>Product Count</div>
-          <div class="kpi-value">${money(data.product_count)}</div>
-          <div class="kpi-unit">รายการ</div>
+          <div class="kpi-icon">🧾</div>
+          <div class="kpi-label">ออเดอร์ทั้งหมด<br>Total Orders</div>
+          <div class="kpi-value">${money(data.order_count)}</div>
+          <div class="kpi-unit">ออเดอร์</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#7b5a35;">✅</div>
+          <div class="kpi-label">ชำระแล้ว<br>Paid Orders</div>
+          <div class="kpi-value">${money(data.paid_order_count)}</div>
+          <div class="kpi-unit">ออเดอร์</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#a15c00;">⏳</div>
+          <div class="kpi-label">ค้างชำระ<br>Unpaid Orders</div>
+          <div class="kpi-value" style="color:#a15c00;">${money(data.unpaid_order_count)}</div>
+          <div class="kpi-unit">ออเดอร์</div>
         </div>
 
         <div class="kpi-card">
@@ -735,35 +771,43 @@ function renderDashboard(data){
         </div>
 
         <div class="kpi-card">
+          <div class="kpi-icon">🏆</div>
+          <div class="kpi-label">จำนวนสินค้า<br>Product Count</div>
+          <div class="kpi-value">${money(data.product_count)}</div>
+          <div class="kpi-unit">รายการ</div>
+        </div>
+
+        <div class="kpi-card">
           <div class="kpi-icon">💰</div>
           <div class="kpi-label">ยอดขายสินค้า<br>Product Sales</div>
           <div class="kpi-value">${money(data.total_sales)}</div>
           <div class="kpi-unit">บาท</div>
         </div>
 
-        <div class="kpi-card">
-          <div class="kpi-icon" style="background:#7b5a35;">✅</div>
-          <div class="kpi-label">ออเดอร์ที่ชำระแล้ว<br>Paid Orders</div>
-          <div class="kpi-value">${money(data.paid_order_count)}</div>
-          <div class="kpi-unit">ออเดอร์</div>
-        </div>
-
       </div>
 
       <div class="section">
         <div class="section-title">
-          🏆 Top Selling Items
+          📋 Product Sale List
         </div>
 
-        ${productRows(topProducts, 10)}
+        ${productRows(productSalesList, 50)}
       </div>
 
       <div class="section">
         <div class="section-title">
-          ☕ Normal Products
+          🔢 Top Sale by Qty
         </div>
 
-        ${productRows(normalProducts, 10)}
+        ${productRows(topByQty, 10)}
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          💰 Top Sale by Sales
+        </div>
+
+        ${productRows(topBySales, 10)}
       </div>
 
       <div class="section">
@@ -771,11 +815,11 @@ function renderDashboard(data){
           ✨ Custom Orders
         </div>
 
-        ${productRows(customProducts, 10)}
+        ${productRows(customProducts, 20)}
       </div>
 
       <div class="footer-note">
-        รายงานนี้นับจาก order_items และเฉพาะออเดอร์ที่ชำระเงินแล้ว<br>
+        รายงานนี้นับจาก Product Sale List ก่อน แล้วค่อยจัดอันดับ Top Sale<br>
         Auto-generated Product Sales Report
       </div>
 
@@ -797,29 +841,19 @@ async function renderProductReport(){
 
   try{
 
-const apiUrl = getApiUrl();
+    const res =
+      await fetch(getApiUrl());
 
-const res =
-  await fetch(apiUrl);
+    if(!res.ok){
+      throw new Error(`HTTP ${res.status}`);
+    }
 
-if(!res.ok){
-  throw new Error(`HTTP ${res.status} ${res.statusText}`);
-}
+    const data =
+      await res.json();
 
-const text =
-  await res.text();
-
-let data;
-
-try{
-  data = JSON.parse(text);
-}catch(parseErr){
-  throw new Error(`API ไม่ได้ส่ง JSON กลับมา: ${text.slice(0, 120)}`);
-}
-
-if(!data.success){
-  throw new Error(data.message || "API success ไม่ใช่ true");
-}
+    if(!data.success){
+      throw new Error(data.message || "โหลดรายงานไม่สำเร็จ");
+    }
 
     renderDashboard(data);
 
@@ -827,14 +861,13 @@ if(!data.success){
 
     console.error(err);
 
-document.getElementById("app").innerHTML = `
-  <div class="error">
-    โหลด Product Sales Report ไม่สำเร็จค่ะ<br>
-    <strong>${err.message || err}</strong><br><br>
-    API: ${getApiUrl()}<br><br>
-    กรุณาตรวจสอบ n8n API /patae/product-sales
-  </div>
-`;
+    document.getElementById("app").innerHTML = `
+      <div class="error">
+        โหลด Product Sales Report ไม่สำเร็จค่ะ<br>
+        ${err.message || err}<br><br>
+        กรุณาตรวจสอบ n8n API /patae/product-sales
+      </div>
+    `;
   }
 }
 
