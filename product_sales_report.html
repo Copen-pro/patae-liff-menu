@@ -797,15 +797,29 @@ async function renderProductReport(){
 
   try{
 
-    const res =
-      await fetch(getApiUrl());
+const apiUrl = getApiUrl();
 
-    const data =
-      await res.json();
+const res =
+  await fetch(apiUrl);
 
-    if(!data.success){
-      throw new Error(data.message || "โหลดรายงานไม่สำเร็จ");
-    }
+if(!res.ok){
+  throw new Error(`HTTP ${res.status} ${res.statusText}`);
+}
+
+const text =
+  await res.text();
+
+let data;
+
+try{
+  data = JSON.parse(text);
+}catch(parseErr){
+  throw new Error(`API ไม่ได้ส่ง JSON กลับมา: ${text.slice(0, 120)}`);
+}
+
+if(!data.success){
+  throw new Error(data.message || "API success ไม่ใช่ true");
+}
 
     renderDashboard(data);
 
@@ -813,12 +827,14 @@ async function renderProductReport(){
 
     console.error(err);
 
-    document.getElementById("app").innerHTML = `
-      <div class="error">
-        โหลด Product Sales Report ไม่สำเร็จค่ะ<br>
-        กรุณาตรวจสอบ n8n API /patae/product-sales
-      </div>
-    `;
+document.getElementById("app").innerHTML = `
+  <div class="error">
+    โหลด Product Sales Report ไม่สำเร็จค่ะ<br>
+    <strong>${err.message || err}</strong><br><br>
+    API: ${getApiUrl()}<br><br>
+    กรุณาตรวจสอบ n8n API /patae/product-sales
+  </div>
+`;
   }
 }
 
