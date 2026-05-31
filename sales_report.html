@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PaTae Cafe Sales Report</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root{--primary:#233b2a;--brown:#5b3a2e;--warning:#a15c00;--bg:#f6f2ed;--paper:#fffaf2;--border:#eadfce;--muted:#777;}
+    body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#222;padding:16px;}
+    .page-wrap,.top-actions{max-width:460px;margin:0 auto;}
+    .top-actions{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;}
+    button{border:none;border-radius:14px;padding:13px 16px;font-size:15px;font-weight:bold;cursor:pointer;}
+    button:disabled{opacity:.65;cursor:not-allowed;}
+    .back-btn{background:#ddd;color:#333;}
+    .image-btn{background:var(--primary);color:white;}
+    .filter{background:white;border-radius:16px;padding:12px;margin-bottom:12px;box-shadow:0 3px 10px rgba(0,0,0,.06);}
+    .filter-title{font-weight:bold;margin-bottom:10px;}
+    .filter-buttons{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+    .filter-buttons button{flex:1;background:#eee;color:#333;}
+    .filter-buttons button.active{background:var(--primary);color:white;}
+    .date-row{display:flex;gap:8px;margin-top:8px;}
+    .date-row input{flex:1;padding:10px;border:1px solid #ddd;border-radius:10px;font-size:14px;box-sizing:border-box;}
+    .small-note{font-size:13px;color:#777;line-height:1.5;margin-top:8px;}
+    .sales-dashboard{background:var(--paper);border-radius:24px;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.08);border:1px solid var(--border);}
+    .sales-dashboard-header{text-align:center;padding:12px 8px 16px;border-bottom:1px dashed #d8c8b3;margin-bottom:14px;}
+    .brand{font-size:27px;font-weight:bold;color:var(--primary);}
+    .title{font-size:18px;color:var(--brown);margin-top:4px;}
+    .date-pill{display:inline-block;margin-top:10px;background:var(--primary);color:white;padding:8px 14px;border-radius:999px;font-size:13px;}
+    .kpi-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+    .kpi-card{background:white;border-radius:18px;padding:14px;text-align:center;border:1px solid #eee3d4;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+    .kpi-icon{width:42px;height:42px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:20px;}
+    .kpi-label{font-size:13px;color:#555;line-height:1.4;}
+    .kpi-value{font-size:25px;font-weight:bold;color:var(--primary);margin-top:8px;}
+    .kpi-unit{font-size:13px;color:#777;}
+    .section{background:white;border-radius:18px;padding:14px;margin-top:14px;border:1px solid #eee3d4;}
+    .section-title{background:var(--primary);color:white;border-radius:14px;padding:10px 12px;font-weight:bold;margin-bottom:10px;}
+    .row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px dashed #ddd;}
+    .row:last-child{border-bottom:none;}
+    .row span{color:#333;}
+    .row strong{color:var(--primary);font-size:17px;text-align:right;}
+    .pill{background:#eef3e8;color:var(--primary);padding:6px 12px;border-radius:999px;font-weight:bold;}
+    .footer-note{text-align:center;color:var(--muted);font-size:13px;margin-top:14px;line-height:1.5;}
+    .loading,.error{background:white;border-radius:18px;padding:24px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.08);line-height:1.6;}
+    .preview-box{margin-top:14px;background:white;border-radius:16px;padding:12px;box-shadow:0 4px 12px rgba(0,0,0,.08);text-align:center;}
+    .preview-note{font-size:14px;color:#555;margin-bottom:10px;line-height:1.5;}
+    .preview-img{width:100%;max-width:460px;border-radius:12px;border:1px solid #eee;background:white;}
+  </style>
+</head>
+<body>
+<div class="top-actions"><button class="back-btn" onclick="goBackToAdmin()">กลับ Admin</button></div>
+<div class="page-wrap">
+  <div id="filter-box"></div>
+  <div id="app"><div class="loading">กำลังโหลด Sales Report...</div></div>
+  <div class="top-actions" style="margin-top:12px;">
+    <button id="generate-sales-image-btn" class="image-btn" onclick="generateSalesReportImage()">🖼 สร้างรูป Sales Report</button>
+  </div>
+  <div id="sales-image-preview"></div>
+</div>
+<script>
+const GET_ORDERS_API = "https://copen.app.n8n.cloud/webhook/patae/admin/orders";
+let salesReportMode = "today";
+let salesReportStartDate = "";
+let salesReportEndDate = "";
+let currentOrders = [];
+
+function getTodayString(){return new Date().toLocaleDateString("sv-SE",{timeZone:"Asia/Bangkok"});}
+function getBangkokDateString(value){
+  if(!value) return "";
+  const date = new Date(value);
+  if(isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("sv-SE",{timeZone:"Asia/Bangkok"});
+}
+function money(value){return Number(value||0).toLocaleString("th-TH");}
+function getAmount(order){return Number(order.grand_total || order.total_amount || 0);}
+function getSalesDate(order){
+  const paidDate = getBangkokDateString(order.paid_at);
+  const orderDate = getBangkokDateString(order.order_datetime);
+  return paidDate || orderDate;
+}
+function isOrderInSelectedSalesReport(order){
+  const salesDate = getSalesDate(order);
+  if(!salesDate) return false;
+  if(salesReportMode === "all") return true;
+  if(salesReportMode === "today") return salesDate === getTodayString();
+  if(salesReportMode === "range"){
+    if(!salesReportStartDate || !salesReportEndDate) return salesDate === getTodayString();
+    return salesDate >= salesReportStartDate && salesDate <= salesReportEndDate;
+  }
+  return false;
+}
+function renderFilter(){
+  const today = getTodayString();
+  const startValue = salesReportStartDate || today;
+  const endValue = salesReportEndDate || today;
+  document.getElementById("filter-box").innerHTML = `
+    <div class="filter">
+      <div class="filter-title">📊 Sales Report</div>
+      <div class="filter-buttons">
+        <button class="${salesReportMode === "today" ? "active" : ""}" onclick="setSalesReportMode('today')">วันนี้</button>
+        <button class="${salesReportMode === "range" ? "active" : ""}" onclick="setSalesReportMode('range')">ช่วงวันที่</button>
+        <button class="${salesReportMode === "all" ? "active" : ""}" onclick="setSalesReportMode('all')">ทั้งหมด</button>
+      </div>
+      ${salesReportMode === "range" ? `
+        <div class="date-row">
+          <input id="sales-start-date" type="date" value="${startValue}">
+          <input id="sales-end-date" type="date" value="${endValue}">
+        </div>
+        <button class="image-btn" style="width:100%;margin-top:10px;" onclick="applySalesReportRange()">🔎 ดูรายงาน</button>
+      ` : ""}
+      <div class="small-note">
+        ยอดขายรวม = ทุกออเดอร์ในช่วงที่เลือก<br>
+        ยอดชำระแล้ว / ค้างชำระ แยกตาม payment_status
+      </div>
+    </div>`;
+}
+function setSalesReportMode(mode){
+  salesReportMode = mode;
+  if(mode === "today"){salesReportStartDate = ""; salesReportEndDate = "";}
+  if(mode === "range"){
+    const today = getTodayString();
+    if(!salesReportStartDate) salesReportStartDate = today;
+    if(!salesReportEndDate) salesReportEndDate = today;
+  }
+  renderSalesReport();
+}
+function applySalesReportRange(){
+  const start = document.getElementById("sales-start-date")?.value || "";
+  const end = document.getElementById("sales-end-date")?.value || "";
+  if(!start || !end){alert("กรุณาเลือกวันที่เริ่มต้นและวันที่สิ้นสุดค่ะ"); return;}
+  if(start > end){alert("วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุดค่ะ"); return;}
+  salesReportStartDate = start;
+  salesReportEndDate = end;
+  salesReportMode = "range";
+  renderSalesReport();
+}
+async function loadOrdersIfNeeded(){
+  if(currentOrders.length > 0) return currentOrders;
+  const res = await fetch(GET_ORDERS_API);
+  const data = await res.json();
+  currentOrders = Array.isArray(data) ? data : (data.orders || data.data || []);
+  return currentOrders;
+}
+function getReportDateText(){
+  if(salesReportMode === "today") return `ประจำวันที่ ${getTodayString()}`;
+  if(salesReportMode === "range") return `ช่วงวันที่ ${salesReportStartDate || "-"} ถึง ${salesReportEndDate || "-"}`;
+  return "รายงานทั้งหมด";
+}
+function renderDashboard(allOrders){
+  const selectedOrders = allOrders.filter(isOrderInSelectedSalesReport);
+  const paidOrders = selectedOrders.filter(o => String(o.payment_status || "").trim().toUpperCase() === "PAID");
+  const unpaidOrders = selectedOrders.filter(o => String(o.payment_status || "UNPAID").trim().toUpperCase() !== "PAID");
+
+  const totalSales = selectedOrders.reduce((sum,o)=>sum+getAmount(o),0);
+  const paidSales = paidOrders.reduce((sum,o)=>sum+getAmount(o),0);
+  const unpaidSales = unpaidOrders.reduce((sum,o)=>sum+getAmount(o),0);
+
+  const lineOrders = selectedOrders.filter(o => String(o.order_channel || "").trim().toUpperCase() === "LINE");
+  const walkinChannelOrders = selectedOrders.filter(o => String(o.order_channel || "").trim().toUpperCase() === "WALK_IN");
+  const lineSales = lineOrders.reduce((sum,o)=>sum+getAmount(o),0);
+  const walkinSales = walkinChannelOrders.reduce((sum,o)=>sum+getAmount(o),0);
+
+  const pickupOrders = selectedOrders.filter(o => String(o.fulfillment_type || "").trim().toLowerCase() === "pickup");
+  const deliveryOrders = selectedOrders.filter(o => String(o.fulfillment_type || "").trim().toLowerCase() === "delivery");
+  const walkinFulfillmentOrders = selectedOrders.filter(o => String(o.fulfillment_type || "").trim().toLowerCase() === "walk_in");
+  const pickupSales = pickupOrders.reduce((sum,o)=>sum+getAmount(o),0);
+  const deliverySales = deliveryOrders.reduce((sum,o)=>sum+getAmount(o),0);
+  const walkinFulfillmentSales = walkinFulfillmentOrders.reduce((sum,o)=>sum+getAmount(o),0);
+
+  document.getElementById("app").innerHTML = `
+    <div class="sales-dashboard" id="sales-report-card">
+      <div class="sales-dashboard-header">
+        <div class="brand">PaTae Cafe</div>
+        <div class="title">Daily Sales Summary</div>
+        <div class="date-pill">📅 ${getReportDateText()}</div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-icon">💰</div><div class="kpi-label">ยอดขายรวม<br>Total Sales</div><div class="kpi-value">${money(totalSales)}</div><div class="kpi-unit">บาท</div></div>
+        <div class="kpi-card"><div class="kpi-icon">✅</div><div class="kpi-label">ยอดชำระแล้ว<br>Paid</div><div class="kpi-value">${money(paidSales)}</div><div class="kpi-unit">บาท</div></div>
+        <div class="kpi-card"><div class="kpi-icon" style="background:#a15c00;">⏳</div><div class="kpi-label">ยอดค้างชำระ<br>Unpaid</div><div class="kpi-value" style="color:#a15c00;">${money(unpaidSales)}</div><div class="kpi-unit">บาท</div></div>
+        <div class="kpi-card"><div class="kpi-icon" style="background:#7b5a35;">🧾</div><div class="kpi-label">จำนวนออเดอร์<br>Total Orders</div><div class="kpi-value">${selectedOrders.length}</div><div class="kpi-unit">ออเดอร์</div></div>
+      </div>
+      <div class="section">
+        <div class="section-title">🏪 ช่องทางการขาย / Sales Channels</div>
+        <div class="row"><span>LINE Orders</span><strong>${lineOrders.length} ออเดอร์</strong></div>
+        <div class="row"><span>ยอดรวม LINE</span><strong>${money(lineSales)} บาท</strong></div>
+        <div class="row"><span>Walk-in Orders</span><strong>${walkinChannelOrders.length} ออเดอร์</strong></div>
+        <div class="row"><span>ยอดรวม Walk-in</span><strong>${money(walkinSales)} บาท</strong></div>
+      </div>
+      <div class="section">
+        <div class="section-title">🛵 ช่องทางการรับ / จัดส่ง</div>
+        <div class="row"><span>Pickup</span><span class="pill">${pickupOrders.length} ออเดอร์</span></div>
+        <div class="row"><span>ยอดรวม Pickup</span><strong>${money(pickupSales)} บาท</strong></div>
+        <div class="row"><span>Delivery</span><span class="pill">${deliveryOrders.length} ออเดอร์</span></div>
+        <div class="row"><span>ยอดรวม Delivery</span><strong>${money(deliverySales)} บาท</strong></div>
+        <div class="row"><span>Walk-in</span><span class="pill">${walkinFulfillmentOrders.length} ออเดอร์</span></div>
+        <div class="row"><span>ยอดรวม Walk-in</span><strong>${money(walkinFulfillmentSales)} บาท</strong></div>
+      </div>
+      <div class="footer-note">รายงานนี้สร้างจากข้อมูลออเดอร์ในช่วงวันที่ที่เลือก<br>Auto-generated Sales Report</div>
+    </div>`;
+}
+async function renderSalesReport(){
+  renderFilter();
+  document.getElementById("app").innerHTML = `<div class="loading">กำลังโหลด Sales Report...</div>`;
+  document.getElementById("sales-image-preview").innerHTML = "";
+  try{
+    const allOrders = await loadOrdersIfNeeded();
+    renderDashboard(allOrders);
+  }catch(err){
+    console.error(err);
+    document.getElementById("app").innerHTML = `<div class="error">โหลด Sales Report ไม่สำเร็จค่ะ</div>`;
+  }
+}
+function goBackToAdmin(){window.location.href = "admin.html";}
+function setSalesImageButtonState(isLoading){
+  const btn = document.getElementById("generate-sales-image-btn");
+  if(!btn) return;
+  if(isLoading){
+    if(!btn.dataset.originalText) btn.dataset.originalText = btn.innerText;
+    btn.innerText = "กำลังสร้างรูป...";
+    btn.disabled = true;
+  }else{
+    btn.innerText = btn.dataset.originalText || "🖼 สร้างรูป Sales Report";
+    btn.disabled = false;
+  }
+}
+async function generateSalesReportImage(){
+  try{
+    setSalesImageButtonState(true);
+    const target = document.getElementById("sales-report-card");
+    if(!target){alert("ไม่พบ Sales Report สำหรับสร้างรูปค่ะ"); return;}
+    const canvas = await html2canvas(target,{scale:2,useCORS:true,backgroundColor:"#ffffff"});
+    const imageUrl = canvas.toDataURL("image/png");
+    const preview = document.getElementById("sales-image-preview");
+    preview.innerHTML = `<div class="preview-box"><div class="preview-note">กดค้างที่รูปเพื่อบันทึก หรือแชร์ Sales Report ค่ะ</div><img src="${imageUrl}" alt="Sales Report Image" class="preview-img"></div>`;
+    preview.scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(err){
+    console.error(err);
+    alert("สร้างรูป Sales Report ไม่สำเร็จค่ะ");
+  }finally{
+    setSalesImageButtonState(false);
+  }
+}
+renderSalesReport();
+</script>
+</body>
+</html>
