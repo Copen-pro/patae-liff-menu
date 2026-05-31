@@ -631,11 +631,6 @@ function applyReportRange(){
     return;
   }
 
-  if(!isValidDateText(start) || !isValidDateText(end)){
-    alert("กรุณากรอกวันที่รูปแบบ YYYY-MM-DD เช่น 2026-05-31 ค่ะ");
-    return;
-  }
-
   if(start > end){
     alert("วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุดค่ะ");
     return;
