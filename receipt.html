@@ -398,12 +398,8 @@ function renderReceipt(data){
 
 function goBackToAdmin(){
 
-  if(window.opener){
-    window.close();
-    return;
-  }
-
   window.location.href = "admin.html";
+
 }
 
 function setButtonState(buttonId, loadingText, isLoading){
