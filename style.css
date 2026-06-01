@@ -272,4 +272,17 @@ body{
     height:28px;
     font-size:16px;
   }
+  
+  .image-disclaimer{
+  max-width:520px;
+  margin:10px auto 8px;
+  padding:8px 12px;
+  background:#fff7e8;
+  color:#7a5a2e;
+  border:1px solid #ead8b8;
+  border-radius:12px;
+  font-size:12px;
+  line-height:1.5;
+  text-align:center;
+}
 }
