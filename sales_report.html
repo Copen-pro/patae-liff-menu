@@ -45,6 +45,12 @@
     .preview-box{margin-top:14px;background:white;border-radius:16px;padding:12px;box-shadow:0 4px 12px rgba(0,0,0,.08);text-align:center;}
     .preview-note{font-size:14px;color:#555;margin-bottom:10px;line-height:1.5;}
     .preview-img{width:100%;max-width:460px;border-radius:12px;border:1px solid #eee;background:white;}
+    .kpi-label small,
+    .row small{
+      color:#777;
+      font-size:12px;
+      font-weight:normal;
+    }
   </style>
 </head>
 <body>
@@ -276,9 +282,6 @@ const selectedOrders =
     String(o.fulfillment_type || "").trim().toLowerCase() === "delivery"
   );
 
-  const walkinFulfillmentOrders = selectedOrders.filter(o =>
-    String(o.fulfillment_type || "").trim().toLowerCase() === "walk_in"
-  );
 
   const pickupProductSales = pickupOrders.reduce((sum, o) => sum + getProductSalesAmount(o), 0);
   const pickupDeliveryFee = pickupOrders.reduce((sum, o) => sum + getDeliveryAmount(o), 0);
@@ -287,10 +290,6 @@ const selectedOrders =
   const deliveryProductSales = deliveryOrders.reduce((sum, o) => sum + getProductSalesAmount(o), 0);
   const deliveryFeeSales = deliveryOrders.reduce((sum, o) => sum + getDeliveryAmount(o), 0);
   const deliveryGrandTotal = deliveryOrders.reduce((sum, o) => sum + getGrandAmount(o), 0);
-
-  const walkinFulfillmentProductSales = walkinFulfillmentOrders.reduce((sum, o) => sum + getProductSalesAmount(o), 0);
-  const walkinFulfillmentDeliveryFee = walkinFulfillmentOrders.reduce((sum, o) => sum + getDeliveryAmount(o), 0);
-  const walkinFulfillmentGrandTotal = walkinFulfillmentOrders.reduce((sum, o) => sum + getGrandAmount(o), 0);
 
   document.getElementById("app").innerHTML = `
     <div class="sales-dashboard" id="sales-report-card">
@@ -303,48 +302,62 @@ const selectedOrders =
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-icon">💰</div>
-          <div class="kpi-label">ยอดขายสินค้า<br>Product Sales</div>
+          <div class="kpi-label">ยอดขายสินค้า<br><small>ไม่รวมค่าส่ง</small></div>
           <div class="kpi-value">${money(productSales)}</div>
           <div class="kpi-unit">บาท</div>
         </div>
-
+        
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#5E7C5A;">🛵</div>
+          <div class="kpi-label">ค่าส่ง<br><small>Delivery Fee</small></div>
+          <div class="kpi-value">${money(deliveryFeeTotal)}</div>
+          <div class="kpi-unit">บาท</div>
+        </div>
+        
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#7b5a35;">🧾</div>
+          <div class="kpi-label">ยอดรวมทั้งหมด<br><small>รวมค่าส่ง</small></div>
+          <div class="kpi-value">${money(grandSales)}</div>
+          <div class="kpi-unit">บาท</div>
+        </div>
+        
         <div class="kpi-card">
           <div class="kpi-icon">✅</div>
-          <div class="kpi-label">ยอดชำระแล้ว<br>Paid</div>
+          <div class="kpi-label">ชำระแล้ว<br><small>รวมค่าส่ง</small></div>
           <div class="kpi-value">${money(paidSales)}</div>
           <div class="kpi-unit">บาท</div>
         </div>
 
         <div class="kpi-card">
           <div class="kpi-icon" style="background:#a15c00;">⏳</div>
-          <div class="kpi-label">ยอดค้างชำระ<br>Unpaid</div>
+          <div class="kpi-label">ค้างชำระ<br><small>รวมค่าส่ง</small></div>
           <div class="kpi-value" style="color:#a15c00;">${money(unpaidSales)}</div>
           <div class="kpi-unit">บาท</div>
         </div>
 
         <div class="kpi-card">
           <div class="kpi-icon" style="background:#7b5a35;">🧾</div>
-          <div class="kpi-label">จำนวนออเดอร์<br>Total Orders</div>
+          <div class="kpi-label">จำนวนออเดอร์<br><small>Total Orders</small></div>
           <div class="kpi-value">${selectedOrders.length}</div>
           <div class="kpi-unit">ออเดอร์</div>
         </div>
       </div>
 
       <div class="section">
-        <div class="section-title">🧾 สรุปยอดรวม / Sales Breakdown</div>
+        <div class="section-title">🧾 สรุปยอดขาย / Sales Breakdown</div>
 
         <div class="row">
-          <span>ยอดขายสินค้า</span>
+          <span>ยอดขายสินค้า<br><small>ไม่รวมค่าส่ง</small></span>
           <strong>${money(productSales)} บาท</strong>
         </div>
 
         <div class="row">
-          <span>ค่าส่ง</span>
+          <span>ค่าส่ง<br><small>Delivery Fee</small></span>
           <strong>${money(deliveryFeeTotal)} บาท</strong>
         </div>
 
         <div class="row">
-          <span>ยอดรวมทั้งหมด</span>
+          <span>ยอดรวมทั้งหมด<br><small>ยอดขายสินค้า + ค่าส่ง</small></span>
           <strong>${money(grandSales)} บาท</strong>
         </div>
       </div>
@@ -358,7 +371,7 @@ const selectedOrders =
         </div>
 
         <div class="row">
-          <span>ยอดสินค้า LINE</span>
+          <span>ยอดสินค้า LINE<br><small>ไม่รวมค่าส่ง</small></span>
           <strong>${money(lineProductSales)} บาท</strong>
         </div>
 
@@ -368,7 +381,7 @@ const selectedOrders =
         </div>
 
         <div class="row">
-          <span>ยอดรวม LINE</span>
+          <span>ยอดรวม LINE<br><small>รวมค่าส่ง</small></span>
           <strong>${money(lineGrandTotal)} บาท</strong>
         </div>
 
@@ -378,7 +391,7 @@ const selectedOrders =
         </div>
 
         <div class="row">
-          <span>ยอดสินค้า Walk-in</span>
+          <span>ยอดสินค้า Walk-in<br><small>ไม่รวมค่าส่ง</small></span>
           <strong>${money(walkinProductSales)} บาท</strong>
         </div>
 
@@ -388,13 +401,13 @@ const selectedOrders =
         </div>
 
         <div class="row">
-          <span>ยอดรวม Walk-in</span>
+          <span>ยอดรวม Walk-in<br><small>รวมค่าส่ง</small></span>
           <strong>${money(walkinGrandTotal)} บาท</strong>
         </div>
       </div>
 
       <div class="section">
-        <div class="section-title">🛵 ช่องทางการรับ / จัดส่ง</div>
+        <div class="section-title">🛵 วิธีรับสินค้า / Fulfillment</div>
 
         <div class="row">
           <span>Pickup</span>
@@ -402,7 +415,7 @@ const selectedOrders =
         </div>
 
         <div class="row">
-          <span>ยอดสินค้า Pickup</span>
+          <span>ยอดสินค้า Pickup<br><small>ไม่รวมค่าส่ง</small></span>
           <strong>${money(pickupProductSales)} บาท</strong>
         </div>
 
@@ -412,7 +425,7 @@ const selectedOrders =
         </div>
 
         <div class="row">
-          <span>ยอดรวม Pickup</span>
+          <span>ยอดรวม Pickup<br><small>รวมค่าส่ง</small></span>
           <strong>${money(pickupGrandTotal)} บาท</strong>
         </div>
 
@@ -422,7 +435,7 @@ const selectedOrders =
         </div>
 
         <div class="row">
-          <span>ยอดสินค้า Delivery</span>
+          <span>ยอดสินค้า Delivery<br><small>ไม่รวมค่าส่ง</small></span>
           <strong>${money(deliveryProductSales)} บาท</strong>
         </div>
 
@@ -432,7 +445,7 @@ const selectedOrders =
         </div>
 
         <div class="row">
-          <span>ยอดรวม Delivery</span>
+          <span>ยอดรวม Delivery<br><small>รวมค่าส่ง</small></span>
           <strong>${money(deliveryGrandTotal)} บาท</strong>
         </div>
 
@@ -441,20 +454,7 @@ const selectedOrders =
           <span class="pill">${walkinFulfillmentOrders.length} ออเดอร์</span>
         </div>
 
-        <div class="row">
-          <span>ยอดสินค้า Walk-in</span>
-          <strong>${money(walkinFulfillmentProductSales)} บาท</strong>
-        </div>
 
-        <div class="row">
-          <span>ค่าส่ง Walk-in</span>
-          <strong>${money(walkinFulfillmentDeliveryFee)} บาท</strong>
-        </div>
-
-        <div class="row">
-          <span>ยอดรวม Walk-in</span>
-          <strong>${money(walkinFulfillmentGrandTotal)} บาท</strong>
-        </div>
       </div>
 
       <div class="footer-note">
