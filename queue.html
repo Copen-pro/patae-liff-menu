@@ -253,24 +253,47 @@ function formatPromptPayId(id){
 
 function buildPromptPayPayload(promptPayId, amount){
 
-  const target =
-    formatPromptPayId(promptPayId);
+  const rawId =
+    String(promptPayId || "").replace(/\D/g, "");
+
+  let targetType = "01"; // mobile
+  let target = rawId;
+
+  // เบอร์มือถือไทย เช่น 0812345678
+  if(rawId.length === 10 && rawId.startsWith("0")){
+    targetType = "01";
+    target = "0066" + rawId.substring(1);
+  }
+
+  // เลขบัตรประชาชน 13 หลัก
+  else if(rawId.length === 13){
+    targetType = "02";
+    target = rawId;
+  }
+
+  // e-Wallet ID 15 หลัก
+  else if(rawId.length === 15){
+    targetType = "03";
+    target = rawId;
+  }
 
   const amountText =
     Number(amount || 0).toFixed(2);
 
   const merchantAccountInfo =
     emvField("00", "A000000677010111") +
-    emvField("01", target);
+    emvField(targetType, target);
 
   let payload =
-    emvField("00", "01") +
-    emvField("01", "12") +
-    emvField("29", merchantAccountInfo) +
-    emvField("53", "764") +
-    emvField("54", amountText) +
-    emvField("58", "TH") +
-    emvField("63", "");
+    emvField("00", "01") +                 // Payload Format Indicator
+    emvField("01", "12") +                 // Point of Initiation Method: dynamic QR
+    emvField("29", merchantAccountInfo) +  // PromptPay Merchant Account
+    emvField("53", "764") +                // Currency THB
+    emvField("54", amountText) +           // Amount
+    emvField("58", "TH");                  // Country
+
+  // สำคัญมาก: CRC field ต้องเป็น 6304 ก่อนคำนวณ
+  payload += "6304";
 
   const crc =
     crc16ccitt(payload);
