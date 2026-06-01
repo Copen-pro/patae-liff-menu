@@ -2605,7 +2605,7 @@ async function renderWalkinPanel(){
 
   <label>ประเภทการรับสินค้า</label>
   <select id="walkin-fulfillment-type" onchange="toggleWalkinDelivery()">
-    <option value="walk_in">รับหน้าร้าน / Walk-in</option>
+    <option value="pickup">รับหน้าร้าน / Pickup</option>
     <option value="delivery">จัดส่ง / Delivery</option>
   </select>
 
@@ -3049,7 +3049,7 @@ async function createWalkinOrder(mode){
   document.getElementById("walkin-custom-price").value = 0;
   document.getElementById("walkin-delivery-address").value = "";
   document.getElementById("walkin-delivery-fee").value = 0;
-  document.getElementById("walkin-fulfillment-type").value = "walk_in";
+  document.getElementById("walkin-fulfillment-type").value = "pickup";
   document.getElementById("walkin-delivery-box").style.display = "none";
 
   // หลังสร้าง Walk-in สำเร็จ ให้กลับไปหน้า Orders อัตโนมัติ
