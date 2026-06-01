@@ -184,6 +184,20 @@ function applySalesReportRange(){
   renderSalesReport();
 }
 
+function getFulfillmentType(order){
+
+  const type =
+    String(order.fulfillment_type || "")
+      .trim()
+      .toLowerCase();
+
+  if(type === "walk_in"){
+    return "pickup";
+  }
+
+  return type;
+}
+  
 async function loadOrdersIfNeeded(){
   if(currentOrders.length > 0) return currentOrders;
   const res = await fetch(GET_ORDERS_API);
@@ -274,13 +288,13 @@ const selectedOrders =
   const walkinDeliveryFee = walkinChannelOrders.reduce((sum, o) => sum + getDeliveryAmount(o), 0);
   const walkinGrandTotal = walkinChannelOrders.reduce((sum, o) => sum + getGrandAmount(o), 0);
 
-  const pickupOrders = selectedOrders.filter(o =>
-    String(o.fulfillment_type || "").trim().toLowerCase() === "pickup"
-  );
+const pickupOrders = selectedOrders.filter(o =>
+  getFulfillmentType(o) === "pickup"
+);
 
-  const deliveryOrders = selectedOrders.filter(o =>
-    String(o.fulfillment_type || "").trim().toLowerCase() === "delivery"
-  );
+const deliveryOrders = selectedOrders.filter(o =>
+  getFulfillmentType(o) === "delivery"
+);
 
 
   const pickupProductSales = pickupOrders.reduce((sum, o) => sum + getProductSalesAmount(o), 0);
