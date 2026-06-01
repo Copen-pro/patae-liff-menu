@@ -2968,11 +2968,14 @@ document.getElementById("orders-tab").classList.add("active");
 loadStoreStatus();
 loadOrders();
 
-setInterval(() => {
-  if(document.visibilityState === "visible"){
-    loadOrders();
-  }
-}, 600000); // 10 นาที
+// ปิด Auto Refresh แล้ว
+// ใช้ปุ่ม Refresh Orders แทน เพราะตอนนี้มี LINE แจ้งร้านทุก order แล้ว
+
+// setInterval(() => {
+//   if(document.visibilityState === "visible"){
+//     loadOrders();
+//   }
+// }, 600000); // 10 นาที
 
 function toggleWalkinDelivery(){
 
