@@ -722,6 +722,10 @@
 ⏰ เวลาเปิด-ปิด
 </button>
 
+<button onclick="showStorePanel('payment')">
+  💳 Payment
+</button>
+  
 </div>
 
 <div
@@ -755,6 +759,60 @@ onclick="quickSetStoreStatus('MAINTENANCE')">
 🛠 ปิดปรับปรุงระบบ
 
 </button>
+
+<div
+  id="store-payment-panel"
+  class="order-card store-panel"
+>
+
+  <h3>💳 Payment Setting</h3>
+
+  <div style="
+    background:#f8f5f1;
+    padding:12px;
+    border-radius:14px;
+    margin-bottom:12px;
+    line-height:1.6;
+  ">
+
+    <div>
+      <strong>PromptPay ปัจจุบัน:</strong>
+      <span id="current-promptpay-id">-</span>
+    </div>
+
+    <div>
+      <strong>ชื่อบัญชี/ร้าน:</strong>
+      <span id="current-promptpay-name">-</span>
+    </div>
+
+  </div>
+
+  <label>PromptPay ID</label>
+
+  <input
+    type="text"
+    id="promptpay-id"
+    placeholder="เช่น 08xxxxxxxx"
+    style="width:100%;padding:10px;margin:6px 0;border-radius:10px;border:1px solid #ddd;"
+  >
+
+  <label>ชื่อที่แสดงในหน้า Payment</label>
+
+  <input
+    type="text"
+    id="promptpay-name"
+    placeholder="เช่น PaTae Cafe"
+    style="width:100%;padding:10px;margin:6px 0;border-radius:10px;border:1px solid #ddd;"
+  >
+
+  <button
+    class="refresh"
+    onclick="savePaymentSettings()"
+  >
+    💾 บันทึก PromptPay
+  </button>
+
+</div>
   
 </div>
 
@@ -2042,15 +2100,31 @@ function showStorePanel(panel){
   const hours =
     document.getElementById("store-hours-panel");
 
-  control.classList.remove("active");
-  hours.classList.remove("active");
+  const payment =
+    document.getElementById("store-payment-panel");
 
-  if(panel === "control"){
+  if(control){
+    control.classList.remove("active");
+  }
+
+  if(hours){
+    hours.classList.remove("active");
+  }
+
+  if(payment){
+    payment.classList.remove("active");
+  }
+
+  if(panel === "control" && control){
     control.classList.add("active");
   }
 
-  if(panel === "hours"){
+  if(panel === "hours" && hours){
     hours.classList.add("active");
+  }
+
+  if(panel === "payment" && payment){
+    payment.classList.add("active");
   }
 }
 
@@ -2104,6 +2178,44 @@ if(storeStatus === "MAINTENANCE"){
       ).value = data.store_close;
     }
 
+const promptpayId =
+  data.promptpay_id || "";
+
+const promptpayName =
+  data.promptpay_name || "PaTae Cafe";
+
+const currentPromptpayId =
+  document.getElementById("current-promptpay-id");
+
+const currentPromptpayName =
+  document.getElementById("current-promptpay-name");
+
+const promptpayIdInput =
+  document.getElementById("promptpay-id");
+
+const promptpayNameInput =
+  document.getElementById("promptpay-name");
+
+if(currentPromptpayId){
+  currentPromptpayId.innerText =
+    promptpayId || "-";
+}
+
+if(currentPromptpayName){
+  currentPromptpayName.innerText =
+    promptpayName || "-";
+}
+
+if(promptpayIdInput){
+  promptpayIdInput.value =
+    promptpayId;
+}
+
+if(promptpayNameInput){
+  promptpayNameInput.value =
+    promptpayName;
+}
+    
   }catch(err){
 
     console.error(err);
@@ -3036,6 +3148,34 @@ async function saveStoreHours(){
   });
 }
 
+async function savePaymentSettings(){
+
+  const promptpayId =
+    document.getElementById("promptpay-id")?.value.trim() || "";
+
+  const promptpayName =
+    document.getElementById("promptpay-name")?.value.trim() || "PaTae Cafe";
+
+  if(!promptpayId){
+    alert("กรุณาระบุ PromptPay ID ค่ะ");
+    return;
+  }
+
+  if(!confirm(
+    `บันทึก PromptPay นี้ใช่ไหม?\n\n` +
+    `PromptPay: ${promptpayId}\n` +
+    `ชื่อ: ${promptpayName}`
+  )){
+    return;
+  }
+
+  await saveStoreSettings({
+    action: "SET_PAYMENT",
+    promptpay_id: promptpayId,
+    promptpay_name: promptpayName
+  });
+}
+  
 async function saveStoreSettings(payload){
 
   try{
@@ -3065,6 +3205,11 @@ if(data.success){
     .getElementById("store-hours-panel")
     .classList.remove("active");
 
+  document
+  .getElementById("store-payment-panel")
+  ?.classList.remove("active");
+
+  
   loadStoreStatus();
 
 }else{
