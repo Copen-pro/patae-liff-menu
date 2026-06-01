@@ -368,8 +368,10 @@ if(canShowPaymentQr(data) && grandTotal > 0){
 
       <div class="payment-qr-note">
         กรุณาสแกน QR เพื่อชำระเงิน<br>
+        หากสแกนจากหน้าจอไม่ได้ ให้บันทึกรูป QR<br>
+        แล้วเลือกจากแกลเลอรีในแอปธนาคาร<br>
         หลังชำระแล้ว กรุณาส่งสลิปทาง LINE Chat<br>
-        ร้านจะตรวจสอบและอัปเดตสถานะ PAID ให้ค่ะ
+        Patae จะตรวจสอบและอัปเดตสถานะ PAID ให้ค่ะ
       </div>
 
     </div>
@@ -440,8 +442,8 @@ if(canShowPaymentQr(data) && grandTotal > 0){
 
   new QRCode(qrEl, {
     text: payload,
-    width: 190,
-    height: 190,
+    width: 280,
+    height: 280,
     correctLevel: QRCode.CorrectLevel.M
   });
 
