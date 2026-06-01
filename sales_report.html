@@ -73,24 +73,48 @@ function getBangkokDateString(value){
 }
 function money(value){return Number(value||0).toLocaleString("th-TH");}
 
-function getProductSalesAmount(order){
-  const totalAmount = Number(order.total_amount || 0);
-  const customPrice = Number(order.custom_price || 0);
-  return totalAmount + customPrice;
-}
-
 function getDeliveryAmount(order){
+
   return Number(order.delivery_fee || 0);
+
 }
 
 function getGrandAmount(order){
-  return getProductSalesAmount(order) + getDeliveryAmount(order);
+
+  const grandTotal =
+    Number(order.grand_total || 0);
+
+  if(grandTotal > 0){
+    return grandTotal;
+  }
+
+  const totalAmount =
+    Number(order.total_amount || 0);
+
+  const customPrice =
+    Number(order.custom_price || 0);
+
+  const deliveryFee =
+    Number(order.delivery_fee || 0);
+
+  return totalAmount + customPrice + deliveryFee;
+}
+
+function getProductSalesAmount(order){
+
+  const grandAmount =
+    getGrandAmount(order);
+
+  const deliveryFee =
+    getDeliveryAmount(order);
+
+  return grandAmount - deliveryFee;
 }
 
 function getSalesDate(order){
-  const paidDate = getBangkokDateString(order.paid_at);
-  const orderDate = getBangkokDateString(order.order_datetime);
-  return paidDate || orderDate;
+
+  return getBangkokDateString(order.order_datetime);
+
 }
 
 function isOrderInSelectedSalesReport(order){
@@ -169,7 +193,25 @@ function getReportDateText(){
 }
 
 function renderDashboard(allOrders){
-  const selectedOrders = allOrders.filter(isOrderInSelectedSalesReport);
+  const selectedOrdersRaw =
+  allOrders.filter(isOrderInSelectedSalesReport);
+
+const orderMap =
+  new Map();
+
+selectedOrdersRaw.forEach(order => {
+
+  const orderNo =
+    String(order.order_no || "").trim();
+
+  if(orderNo && !orderMap.has(orderNo)){
+    orderMap.set(orderNo, order);
+  }
+
+});
+
+const selectedOrders =
+  Array.from(orderMap.values());
 
   const paidOrders = selectedOrders.filter(o =>
     String(o.payment_status || "").trim().toUpperCase() === "PAID"
@@ -185,6 +227,30 @@ function renderDashboard(allOrders){
 
   const paidSales = paidOrders.reduce((sum, o) => sum + getGrandAmount(o), 0);
   const unpaidSales = unpaidOrders.reduce((sum, o) => sum + getGrandAmount(o), 0);
+
+  ////////////
+  console.log("Sales Report Check", {
+  totalOrders: selectedOrders.length,
+  productSales,
+  deliveryFeeTotal,
+  grandSales,
+  paidSales,
+  unpaidSales,
+  productPlusDelivery: productSales + deliveryFeeTotal,
+  paidPlusUnpaid: paidSales + unpaidSales,
+  orders: selectedOrders.map(o => ({
+    order_no: o.order_no,
+    order_datetime: o.order_datetime,
+    payment_status: o.payment_status,
+    total_amount: o.total_amount,
+    custom_price: o.custom_price,
+    delivery_fee: o.delivery_fee,
+    grand_total: o.grand_total,
+    product_sales: getProductSalesAmount(o),
+    grand_amount: getGrandAmount(o)
+  }))
+});
+  ////////////
 
   const lineOrders = selectedOrders.filter(o =>
     String(o.order_channel || "").trim().toUpperCase() === "LINE"
