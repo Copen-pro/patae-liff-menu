@@ -712,6 +712,10 @@
 🏪 Store Status: Loading...
 </div>
 
+<div class="store-status-bar" id="promptpay-status-bar">
+💳 PromptPay: Loading...
+</div>
+    
 <div class="store-tabs">
 
 <button onclick="showStorePanel('control')">
@@ -2215,6 +2219,21 @@ if(promptpayIdInput){
 if(promptpayNameInput){
   promptpayNameInput.value =
     promptpayName;
+}
+
+const promptpayBar =
+  document.getElementById("promptpay-status-bar");
+
+if(promptpayBar){
+
+  if(promptpayId){
+    promptpayBar.innerText =
+      `💳 PromptPay: ${promptpayId} (${promptpayName || "PaTae Cafe"})`;
+  }else{
+    promptpayBar.innerText =
+      "💳 PromptPay: ยังไม่ได้กำหนด";
+  }
+
 }
     
   }catch(err){
