@@ -52,6 +52,50 @@
     .action-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #14251a,0 5px 10px rgba(0,0,0,.15)}
     .action-btn:disabled{background:#9aa39c;color:#eee;cursor:not-allowed;box-shadow:none;transform:none}
     .last-updated{text-align:center;color:#777;font-size:12px;margin:8px 0 4px}
+
+    .payment-qr-box{
+  margin-top:14px;
+  padding:16px;
+  background:#fffaf2;
+  border:1px solid #eadfce;
+  border-radius:18px;
+  text-align:center;
+}
+
+.payment-qr-title{
+  font-weight:bold;
+  color:#233b2a;
+  font-size:16px;
+  margin-bottom:8px;
+}
+
+.payment-qr-name{
+  color:#5c3b2e;
+  font-weight:bold;
+  margin-bottom:6px;
+}
+
+.payment-qr-amount{
+  font-size:24px;
+  font-weight:bold;
+  color:#5c3b2e;
+  margin:8px 0 12px;
+}
+
+.payment-qr{
+  display:flex;
+  justify-content:center;
+  margin:10px 0;
+}
+
+.payment-qr-note{
+  color:#777;
+  font-size:13px;
+  line-height:1.6;
+  margin-top:10px;
+}
+
+    
   </style>
 </head>
 <body>
@@ -74,6 +118,13 @@
 const LIFF_ID="2010088421-yQ9Cqk5p";
 const API_URL="https://copen.app.n8n.cloud/webhook/patae/my-queue";
 const CONFIRM_URL="https://copen.app.n8n.cloud/webhook/patae/delivery/confirm";
+const STORE_STATUS_API =
+  "https://copen.app.n8n.cloud/webhook/patae/store/status";
+
+let paymentSetting = {
+  promptpay_id: "",
+  promptpay_name: "PaTae Cafe"
+};
 const QUEUE_CACHE_PREFIX="patae_my_queue_cache_v2_";
 const QUEUE_CACHE_TTL=45*1000;
 let currentProfile=null;
@@ -149,7 +200,110 @@ async function confirmOrderFromQueue(orderNo,lineUserId,button){
     alert("ยืนยันออเดอร์ไม่สำเร็จค่ะ กรุณาลองใหม่");
   }
 }
-function buildOrderCard(data,lineUserId){
+
+  function crc16ccitt(payload){
+
+  let crc = 0xFFFF;
+
+  for(let i = 0; i < payload.length; i++){
+
+    crc ^= payload.charCodeAt(i) << 8;
+
+    for(let j = 0; j < 8; j++){
+
+      if((crc & 0x8000) !== 0){
+        crc = (crc << 1) ^ 0x1021;
+      }else{
+        crc = crc << 1;
+      }
+
+      crc &= 0xFFFF;
+    }
+  }
+
+  return crc
+    .toString(16)
+    .toUpperCase()
+    .padStart(4, "0");
+}
+
+function emvField(id, value){
+
+  const text =
+    String(value || "");
+
+  return (
+    id +
+    text.length.toString().padStart(2, "0") +
+    text
+  );
+}
+
+function formatPromptPayId(id){
+
+  const text =
+    String(id || "").replace(/\D/g, "");
+
+  if(text.length === 10 && text.startsWith("0")){
+    return "0066" + text.substring(1);
+  }
+
+  return text;
+}
+
+function buildPromptPayPayload(promptPayId, amount){
+
+  const target =
+    formatPromptPayId(promptPayId);
+
+  const amountText =
+    Number(amount || 0).toFixed(2);
+
+  const merchantAccountInfo =
+    emvField("00", "A000000677010111") +
+    emvField("01", target);
+
+  let payload =
+    emvField("00", "01") +
+    emvField("01", "12") +
+    emvField("29", merchantAccountInfo) +
+    emvField("53", "764") +
+    emvField("54", amountText) +
+    emvField("58", "TH") +
+    emvField("63", "");
+
+  const crc =
+    crc16ccitt(payload);
+
+  return payload + crc;
+}
+
+function canShowPaymentQr(data){
+
+  const paymentStatus =
+    String(data.payment_status || "UNPAID")
+      .trim()
+      .toUpperCase();
+
+  const quoteStatus =
+    String(data.quote_status || "NOT_REQUIRED")
+      .trim()
+      .toUpperCase();
+
+  const isUnpaid =
+    paymentStatus !== "PAID";
+
+  const isFinalAmount =
+    quoteStatus === "NOT_REQUIRED" ||
+    quoteStatus === "CONFIRMED";
+
+  const hasPromptPay =
+    !!paymentSetting.promptpay_id;
+
+  return isUnpaid && isFinalAmount && hasPromptPay;
+}
+  
+  function buildOrderCard(data,lineUserId){
   const card=document.createElement("div");
   card.className="order-card";
   const status=String(data.order_status||"NEW").trim().toUpperCase();
@@ -160,6 +314,44 @@ function buildOrderCard(data,lineUserId){
   const customPrice=Number(data.custom_price||0);
   const deliveryFee=Number(data.delivery_fee||0);
   const grandTotal=Number(data.grand_total||0)||totalAmount+customPrice+deliveryFee;
+    let paymentQrHtml = "";
+
+if(canShowPaymentQr(data) && grandTotal > 0){
+
+  const qrId =
+    "payment-qr-" +
+    String(data.order_no || "")
+      .replace(/[^a-zA-Z0-9]/g, "");
+
+  paymentQrHtml = `
+    <div class="payment-qr-box">
+
+      <div class="payment-qr-title">
+        💳 ชำระเงินด้วย PromptPay QR
+      </div>
+
+      <div class="payment-qr-name">
+        ${paymentSetting.promptpay_name || "PaTae Cafe"}
+      </div>
+
+      <div class="payment-qr-amount">
+        ${grandTotal.toLocaleString("th-TH")} บาท
+      </div>
+
+      <div
+        id="${qrId}"
+        class="payment-qr">
+      </div>
+
+      <div class="payment-qr-note">
+        กรุณาสแกน QR เพื่อชำระเงิน<br>
+        หลังชำระแล้ว กรุณาส่งสลิปทาง LINE Chat<br>
+        ร้านจะตรวจสอบและอัปเดตสถานะ PAID ให้ค่ะ
+      </div>
+
+    </div>
+  `;
+}
   const fulfillmentType=String(data.fulfillment_type||"").toLowerCase();
   const displayItemsSummary=cleanItemsSummary(data.items_summary);
   let amountHtml=`<div class="info-row"><span>ยอดสินค้า</span><strong>${totalAmount} บาท</strong></div>`;
@@ -186,8 +378,52 @@ function buildOrderCard(data,lineUserId){
     </div>
     <div class="info-grid"><div class="info-row"><span>ประเภท</span><strong>${data.fulfillment_type||"-"}</strong></div>${amountHtml}</div>
     <div class="items">${displayItemsSummary||"-"}</div>
-    ${customHtml}${quoteHtml}${readyHtml}`;
-  return card;
+    ${customHtml}${quoteHtml}${paymentQrHtml}${readyHtml}`;
+ setTimeout(() => {
+
+  if(!canShowPaymentQr(data) || grandTotal <= 0){
+    return;
+  }
+
+  const qrId =
+    "payment-qr-" +
+    String(data.order_no || "")
+      .replace(/[^a-zA-Z0-9]/g, "");
+
+  const qrEl =
+    card.querySelector("#" + qrId);
+
+  if(!qrEl){
+    return;
+  }
+
+  if(typeof QRCode === "undefined"){
+    qrEl.innerHTML = `
+      <div style="color:#a15c00;font-size:13px;line-height:1.5;">
+        ไม่สามารถโหลด QR Code ได้ค่ะ<br>
+        กรุณาแจ้งร้านเพื่อขอ QR ชำระเงิน
+      </div>
+    `;
+    return;
+  }
+
+  qrEl.innerHTML = "";
+
+  const payload =
+    buildPromptPayPayload(
+      paymentSetting.promptpay_id,
+      grandTotal
+    );
+
+  new QRCode(qrEl, {
+    text: payload,
+    width: 190,
+    height: 190,
+    correctLevel: QRCode.CorrectLevel.M
+  });
+
+}, 0);
+    return card;
 }
 function renderOrders(data,lineUserId,fromCache=false){
   const ordersList=document.getElementById("orders-list");
@@ -232,6 +468,7 @@ async function start(){
     await liff.init({liffId:LIFF_ID});
     if(!liff.isLoggedIn()){liff.login();return;}
     currentProfile=await liff.getProfile();
+    await loadPaymentSetting();
     const cached=readQueueCache(currentProfile.userId);
     if(cached){
       renderOrders(cached,currentProfile.userId,true);
@@ -244,6 +481,34 @@ async function start(){
     document.getElementById("orders-list").innerHTML=`<div class="error-card"><h3>โหลดข้อมูลไม่สำเร็จค่ะ</h3><p style="color:#777;line-height:1.5;">กรุณาลองใหม่อีกครั้ง</p><button class="secondary-btn" onclick="start()">🔄 Refresh</button></div>`;
   }
 }
+
+async function loadPaymentSetting(){
+
+  try{
+
+    const res =
+      await fetch(STORE_STATUS_API);
+
+    const data =
+      await res.json();
+
+    paymentSetting = {
+      promptpay_id: data.promptpay_id || "",
+      promptpay_name: data.promptpay_name || "PaTae Cafe"
+    };
+
+  }catch(err){
+
+    console.log("Load payment setting failed", err);
+
+    paymentSetting = {
+      promptpay_id: "",
+      promptpay_name: "PaTae Cafe"
+    };
+
+  }
+}
+  
 start();
 </script>
 </body>
