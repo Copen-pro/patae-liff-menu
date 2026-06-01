@@ -16,7 +16,12 @@
     .hero{background:linear-gradient(180deg,#2f5138,#1f3527);color:white;border-radius:26px;padding:22px 18px;box-shadow:0 8px 22px rgba(0,0,0,.16);text-align:center;margin-bottom:14px}
     .hero h2{margin:0;font-size:26px;letter-spacing:.5px}
     .hero p{margin:8px 0 0;opacity:.9;font-size:14px}
-    .top-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+   .top-actions{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+  margin:12px 0;
+}
     button{border:none;border-radius:16px;padding:13px 14px;font-size:15px;font-weight:bold;cursor:pointer}
     button:disabled{opacity:.65;cursor:not-allowed}
     .primary-btn{background:linear-gradient(180deg,#2f5138,#1f3527);color:white;box-shadow:0 5px 0 #14251a,0 8px 14px rgba(0,0,0,.15)}
@@ -51,10 +56,11 @@
 <body>
 <div class="page-card">
   <div class="hero"><h2>🧾 My Queue</h2><p>ติดตามสถานะออเดอร์ของคุณ</p></div>
-  <div class="top-actions">
-    <button class="secondary-btn" onclick="goMenu()">☕ สั่งเพิ่ม</button>
-    <button class="primary-btn" onclick="refreshQueue(true)">🔄 Refresh</button>
-  </div>
+<div class="top-actions">
+  <button class="primary-btn" onclick="refreshQueue(true)">
+    🔄 Refresh
+  </button>
+</div>
   <div id="last-updated" class="last-updated"></div>
   <div id="loading">
     <div class="skeleton">
@@ -72,7 +78,6 @@ const QUEUE_CACHE_TTL=45*1000;
 let currentProfile=null;
 let isLoadingQueue=false;
 
-function goMenu(){window.location.href="index.html";}
 function getStatusText(status){return {NEW:"รับออเดอร์แล้ว",PREPARING:"กำลังทำ",READY:"พร้อมรับแล้ว",DONE:"เสร็จแล้ว"}[status]||status;}
 function getQueueNumber(queueNo){const match=String(queueNo||"").match(/\d+/);return match?Number(match[0]):999999;}
 function getQueueDate(order){
