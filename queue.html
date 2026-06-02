@@ -95,6 +95,21 @@
   margin-top:10px;
 }
 
+    .customer-note-box{
+  margin-top:12px;
+  padding:12px;
+  background:#fff7e8;
+  border:1px solid #ead8b8;
+  border-radius:14px;
+  color:#5b3a2e;
+  font-size:14px;
+  line-height:1.5;
+}
+
+.customer-note-title{
+  font-weight:bold;
+  margin-bottom:4px;
+}
     
   </style>
 </head>
@@ -325,6 +340,16 @@ function canShowPaymentQr(data){
 
   return isUnpaid && isFinalAmount && hasPromptPay;
 }
+
+  function escapeHtml(value){
+
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
   
   function buildOrderCard(data,lineUserId){
   const card=document.createElement("div");
@@ -338,7 +363,20 @@ function canShowPaymentQr(data){
   const deliveryFee=Number(data.delivery_fee||0);
   const grandTotal=Number(data.grand_total||0)||totalAmount+customPrice+deliveryFee;
     let paymentQrHtml = "";
+  const customerNote =
+  String(data.customer_note || "")
+    .trim();
 
+let customerNoteHtml = "";
+
+if(customerNote){
+  customerNoteHtml = `
+    <div class="customer-note-box">
+      <div class="customer-note-title">📝 หมายเหตุ</div>
+      <div>${escapeHtml(customerNote)}</div>
+    </div>
+  `;
+}
 if(canShowPaymentQr(data) && grandTotal > 0){
 
   const qrId =
@@ -403,7 +441,7 @@ if(canShowPaymentQr(data) && grandTotal > 0){
     </div>
     <div class="info-grid"><div class="info-row"><span>ประเภท</span><strong>${data.fulfillment_type||"-"}</strong></div>${amountHtml}</div>
     <div class="items">${displayItemsSummary||"-"}</div>
-    ${customHtml}${quoteHtml}${paymentQrHtml}${readyHtml}`;
+    ${customHtml}${customerNoteHtml}${quoteHtml}${paymentQrHtml}${readyHtml}`;
  setTimeout(() => {
 
   if(!canShowPaymentQr(data) || grandTotal <= 0){
@@ -450,6 +488,8 @@ if(canShowPaymentQr(data) && grandTotal > 0){
 }, 0);
     return card;
 }
+
+  
 function renderOrders(data,lineUserId,fromCache=false){
   const ordersList=document.getElementById("orders-list");
   hideLoading();
