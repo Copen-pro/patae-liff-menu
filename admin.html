@@ -2642,6 +2642,12 @@ async function renderWalkinPanel(){
   <label>เบอร์โทร</label>
   <input id="walkin-customer-phone" type="tel" placeholder="ไม่บังคับ">
 
+  <label>หมายเหตุลูกค้า</label>
+<textarea
+  id="walkin-customer-note"
+  placeholder="เช่น หวานน้อย ไม่ใส่น้ำแข็ง แยกน้ำ"
+></textarea>
+
   <label>ประเภทการรับสินค้า</label>
   <select id="walkin-fulfillment-type" onchange="toggleWalkinDelivery()">
     <option value="pickup">รับหน้าร้าน / Pickup</option>
@@ -2951,6 +2957,9 @@ async function createWalkinOrder(mode){
   const customerPhone =
     document.getElementById("walkin-customer-phone").value.trim();
 
+  const customerNote =
+  document.getElementById("walkin-customer-note").value.trim();
+
   const fulfillmentType =
     document.getElementById("walkin-fulfillment-type").value;
 
@@ -3048,6 +3057,7 @@ async function createWalkinOrder(mode){
   const payload = {
     customer_name: customerName,
     customer_phone: customerPhone,
+    customer_note: customerNote,
     fulfillment_type: fulfillmentType,
     delivery_address: deliveryAddress,
     delivery_fee: deliveryFee,
@@ -3084,6 +3094,7 @@ async function createWalkinOrder(mode){
 
   document.getElementById("walkin-customer-name").value = "";
   document.getElementById("walkin-customer-phone").value = "";
+  document.getElementById("walkin-customer-note").value = "";    
   document.getElementById("walkin-custom-request").value = "";
   document.getElementById("walkin-custom-price").value = 0;
   document.getElementById("walkin-delivery-address").value = "";
