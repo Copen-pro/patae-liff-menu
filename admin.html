@@ -2773,10 +2773,22 @@ function renderWalkinProducts(){
     return;
   }
 
-  const products =
-    walkinProducts.filter(
-      p => p.category === walkinCategory
-    );
+const products =
+  walkinProducts
+    .filter(
+      p => String(p.category || "").trim() === walkinCategory
+    )
+    .sort((a, b) => {
+      const orderA = Number(a.product_order || 999);
+      const orderB = Number(b.product_order || 999);
+
+      if(orderA !== orderB){
+        return orderA - orderB;
+      }
+
+      return String(a.product_name || "")
+        .localeCompare(String(b.product_name || ""));
+    });
 
   box.innerHTML = "";
 
