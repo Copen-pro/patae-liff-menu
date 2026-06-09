@@ -276,6 +276,15 @@
   margin-bottom:8px;
 }
 
+.walkin-no-image{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#c9b79c;
+  font-size:38px;
+  background:#fffaf2;
+}
+
 .walkin-cart-header{
   display:flex;
   justify-content:space-between;
@@ -2595,13 +2604,43 @@ async function renderWalkinPanel(){
 
     await loadWalkinProducts();
 
-    const categories = [
-      ...new Set(
-        walkinProducts
-          .map(p => p.category)
-          .filter(Boolean)
-      )
-    ];
+const categoryMap = new Map();
+
+walkinProducts.forEach(p => {
+
+  const category =
+    String(p.category || "").trim();
+
+  if(!category){
+    return;
+  }
+
+  const categoryOrder =
+    Number(p.category_order || 999);
+
+  if(!categoryMap.has(category)){
+    categoryMap.set(category, categoryOrder);
+  }else{
+    categoryMap.set(
+      category,
+      Math.min(categoryMap.get(category), categoryOrder)
+    );
+  }
+
+});
+
+const categories =
+  Array.from(categoryMap.entries())
+    .sort((a, b) => {
+
+      if(a[1] !== b[1]){
+        return a[1] - b[1];
+      }
+
+      return a[0].localeCompare(b[0]);
+
+    })
+    .map(([category]) => category);
 
     box.innerHTML = `
       <div class="walkin-panel">
@@ -2792,51 +2831,69 @@ const products =
 
   box.innerHTML = "";
 
-  products.forEach(product => {
+products.forEach((product, index) => {
 
-    const qty =
-      walkinCart[product.product_id]?.qty || 0;
+  const productId =
+    String(product.product_id || `NO_ID_${index + 1}`).trim();
 
-    const div = document.createElement("div");
-    div.className = "walkin-product-card";
+  const productName =
+    String(
+      product.product_name ||
+      product.name ||
+      product.menu_name ||
+      "-"
+    ).trim();
 
-div.innerHTML = `
-  ${
-    product.image_url
-      ? `<img
-          class="walkin-product-img"
-          src="${optimizeAdminImage(product.image_url)}"
-          loading="lazy"
-        >`
-      : `<div
-          class="walkin-product-img"
-          style="display:flex;align-items:center;justify-content:center;color:#999;font-size:13px;">
-          No Image
-        </div>`
-  }
+  const productPrice =
+    Number(product.price || product.unit_price || 0);
 
-  <div class="walkin-product-name">
-    ${product.product_name}
-  </div>
+  const imageUrl =
+    String(product.image_url || "")
+      .trim();
 
-  <div class="walkin-product-price">
-    ${product.price} บาท
-  </div>
+  const qty =
+    walkinCart[productId]?.qty || 0;
 
-  <div class="walkin-qty-row">
-    <button onclick="decreaseWalkinQty('${product.product_id}')">
-      -
-    </button>
+  const div = document.createElement("div");
+  div.className = "walkin-product-card";
 
-    <strong>${qty}</strong>
+  div.innerHTML = `
+    ${
+      imageUrl
+        ? `<img
+            class="walkin-product-img"
+            src="${optimizeAdminImage(imageUrl)}"
+            loading="lazy"
+            alt="${productName}"
+          >`
+        : `<div class="walkin-product-img walkin-no-image">
+            ☕
+          </div>`
+    }
 
-    <button onclick="increaseWalkinQty('${product.product_id}')">
-      +
-    </button>
-  </div>
-`;
-    box.appendChild(div);
-  });
+    <div class="walkin-product-name">
+      ${productName}
+    </div>
+
+    <div class="walkin-product-price">
+      ${productPrice} บาท
+    </div>
+
+    <div class="walkin-qty-row">
+      <button onclick="decreaseWalkinQty('${productId}')">
+        -
+      </button>
+
+      <strong>${qty}</strong>
+
+      <button onclick="increaseWalkinQty('${productId}')">
+        +
+      </button>
+    </div>
+  `;
+
+  box.appendChild(div);
+});
 }
 
 function increaseWalkinQty(productId){
