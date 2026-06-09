@@ -47,6 +47,23 @@ body{
   background:#f8f5f1;
   display:block;
 }
+.card img,
+.product-no-image{
+  width:100%;
+  aspect-ratio:1 / 1;
+  object-fit:cover;
+  border-radius:14px 14px 0 0;
+}
+
+.product-no-image{
+  background:#fffaf2;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#c9b79c;
+  font-size:42px;
+}
+
 .card-content{padding:10px}
 .card-content h3{
   font-size:14px;
