@@ -1003,12 +1003,13 @@ onclick="saveStoreHours()">
     เมื่อปิดสินค้า ลูกค้าจะไม่เห็นเมนูนั้น และไม่สามารถกดสั่งได้
   </div>
 
-  <button
-    class="refresh"
-    onclick="loadProductMaintain()"
-  >
-    🔄 โหลดรายการสินค้า
-  </button>
+<button
+  id="product-maintain-toggle-btn"
+  class="refresh"
+  onclick="toggleProductMaintain()"
+>
+  🔄 โหลดรายการสินค้า
+</button>
 
   <div id="product-maintain-list">
     <div class="empty">
@@ -1098,6 +1099,7 @@ let walkinCart = {};
 let walkinCategory = null;
 let maintainProducts = [];
 let maintainCategory = "ALL";  
+let productMaintainVisible = false;  
   
 let soundEnabled = true;
 let knownOrderNos = new Set();
@@ -2333,12 +2335,49 @@ function showStorePanel(panel){
     payment.classList.add("active");
   }
 
-  if(panel === "products" && products){
-    products.classList.add("active");
-    loadProductMaintain();
-  }
+if(panel === "products" && products){
+  products.classList.add("active");
+}
 }
 
+async function toggleProductMaintain(){
+
+  const box =
+    document.getElementById("product-maintain-list");
+
+  const btn =
+    document.getElementById("product-maintain-toggle-btn");
+
+  if(!box){
+    return;
+  }
+
+  if(productMaintainVisible){
+
+    productMaintainVisible = false;
+
+    box.innerHTML = `
+      <div class="empty">
+        กด “โหลดรายการสินค้า” เพื่อแสดงรายการค่ะ
+      </div>
+    `;
+
+    if(btn){
+      btn.innerText = "🔄 โหลดรายการสินค้า";
+    }
+
+    return;
+  }
+
+  productMaintainVisible = true;
+
+  if(btn){
+    btn.innerText = "🙈 ซ่อนรายการสินค้า";
+  }
+
+  await loadProductMaintain();
+}
+  
 async function loadProductMaintain(){
 
   const box =
@@ -2366,7 +2405,8 @@ async function loadProductMaintain(){
       Array.isArray(data)
         ? data
         : (data.products || data.data || []);
-
+    productMaintainVisible = true;
+    
     renderProductMaintain();
 
   }catch(err){
