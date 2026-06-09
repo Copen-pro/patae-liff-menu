@@ -11,7 +11,7 @@ let isSubmitting = false;
 let lineProfile = null;
 let appStarted = false;
 
-const PRODUCTS_CACHE_KEY = "patae_products_cache_v2";
+const PRODUCTS_CACHE_KEY = "patae_products_cache_v3";
 const PRODUCTS_CACHE_TTL = 1 * 60 * 1000; // 1 นาที
 
 function isFromQueuePage(){
