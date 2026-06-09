@@ -262,26 +262,55 @@ function renderProducts(){
   );
 
   products.forEach(product => {
-    const qty = cart[product.product_id]?.qty || 0;
+    const productId =
+      String(product.product_id || "").trim();
+
+    const productName =
+      product.product_name ||
+      product.name ||
+      product.menu_name ||
+      "-";
+
+    const productPrice =
+      Number(product.price || product.unit_price || 0);
+
+    const imageUrl =
+      String(product.image_url || "")
+        .trim();
+
+    const qty =
+      cart[productId]?.qty || 0;
+
+    const imageHtml =
+      imageUrl
+        ? `
+          <img 
+            loading="lazy"
+            decoding="async"
+            src="${optimizeImage(imageUrl)}"
+            alt="${productName}"
+          >
+        `
+        : `
+          <div class="product-no-image">
+            ☕
+          </div>
+        `;
 
     const card = document.createElement("div");
     card.className = "card";
 
     card.innerHTML = `
-     <img 
-      loading="lazy"
-      decoding="async"
-      src="${optimizeImage(product.image_url)}"
-      alt="${product.product_name || "PaTae product"}"
-    >
+      ${imageHtml}
+
       <div class="card-content">
-        <h3>${product.product_name}</h3>
-        <div class="price">${product.price} บาท</div>
+        <h3>${productName}</h3>
+        <div class="price">${productPrice} บาท</div>
 
         <div class="qty-row">
-          <button onclick="decreaseQty('${product.product_id}')">-</button>
+          <button onclick="decreaseQty('${productId}')">-</button>
           <span>${qty}</span>
-          <button onclick="increaseQty('${product.product_id}')">+</button>
+          <button onclick="increaseQty('${productId}')">+</button>
         </div>
       </div>
     `;
