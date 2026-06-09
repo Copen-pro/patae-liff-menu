@@ -402,29 +402,51 @@ function decreaseQty(productId){
   renderProducts();
 }
 
-function updateCart(){
+function updateCartSummary(){
+
   const items = Object.values(cart);
 
   const totalQty = items.reduce(
-    (sum, i) => sum + i.qty,
+    (sum, i) => sum + Number(i.qty || 0),
     0
   );
 
   const totalAmount = items.reduce(
-    (sum, i) => sum + (i.qty * i.price),
+    (sum, i) => sum + (Number(i.qty || 0) * Number(i.price || 0)),
     0
   );
 
-  document.getElementById("cart-count").innerText = totalQty;
-  document.getElementById("cart-total").innerText = totalAmount;
-  document.getElementById("modal-total").innerText = totalAmount;
+  const cartCount =
+    document.getElementById("cart-count");
 
-  const checkoutTotal = document.getElementById("checkout-total");
+  const cartTotal =
+    document.getElementById("cart-total");
+
+  const modalTotal =
+    document.getElementById("modal-total");
+
+  const checkoutTotal =
+    document.getElementById("checkout-total");
+
+  if(cartCount){
+    cartCount.innerText = totalQty;
+  }
+
+  if(cartTotal){
+    cartTotal.innerText = totalAmount;
+  }
+
+  if(modalTotal){
+    modalTotal.innerText = totalAmount;
+  }
+
   if(checkoutTotal){
     checkoutTotal.innerText = totalAmount;
   }
+}
 
-  renderCartItems();
+function updateCart(){
+  updateCartSummary();
 }
 
 function renderCartItems(){
@@ -501,7 +523,8 @@ const customDetail =
 }
 
 function openCart(){
-  updateCart();
+  updateCartSummary();
+  renderCartItems();
 
   document.getElementById("cart-view").classList.remove("hidden");
   document.getElementById("checkout-view").classList.add("hidden");
@@ -526,7 +549,7 @@ function goCheckout(){
     return;
   }
 
-  updateCart();
+  updateCartSummary();
 
   document.getElementById("cart-view").classList.add("hidden");
   document.getElementById("checkout-view").classList.remove("hidden");
