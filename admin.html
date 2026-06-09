@@ -2406,6 +2406,13 @@ function isActiveProduct(product){
   ].includes(text);
 }
 
+function normalizeCategory(value){
+  return String(value || "")
+    .replace(/\u00A0/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+  
 function renderProductMaintain(){
 
   const box =
@@ -2420,7 +2427,7 @@ function renderProductMaintain(){
   maintainProducts.forEach(p => {
 
     const category =
-      String(p.category || "").trim();
+      normalizeCategory(p.category)
 
     if(!category){
       return;
@@ -2475,11 +2482,11 @@ function renderProductMaintain(){
     maintainProducts
       .filter(p => {
         const category =
-          String(p.category || "").trim();
+          normalizeCategory(p.category)
 
         return (
           maintainCategory === "ALL" ||
-          category === maintainCategory
+          category === normalizeCategory(maintainCategory)
         );
       })
       .sort((a, b) => {
