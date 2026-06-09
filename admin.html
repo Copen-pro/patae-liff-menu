@@ -709,6 +709,19 @@
 .note-box strong{
   color:#a15c00;
 }  
+
+.product-maintain-tab{
+  width:100%;
+  background:#5b3a2e;
+  color:white;
+  margin:8px 0 12px;
+  border-radius:16px;
+  padding:14px 16px;
+  font-size:16px;
+  font-weight:bold;
+  box-shadow:0 3px 10px rgba(0,0,0,0.08);
+}
+    
   </style>
 </head>
 
@@ -754,6 +767,12 @@
   
 </div>
 
+<button
+  class="product-maintain-tab"
+  onclick="showStorePanel('products')">
+  🧃 Product Maintain / เปิด-ปิดสินค้า
+</button>
+    
 <div
 id="store-control-panel"
 class="order-card store-panel">
@@ -877,7 +896,41 @@ onclick="saveStoreHours()">
 </button>
 
 </div>
-    
+
+<div
+  id="store-products-panel"
+  class="order-card store-panel"
+>
+
+  <h3>🧃 Product Maintain</h3>
+
+  <div style="
+    background:#f8f5f1;
+    padding:12px;
+    border-radius:14px;
+    margin-bottom:12px;
+    line-height:1.6;
+    color:#5b3a2e;
+    font-size:14px;
+  ">
+    ใช้สำหรับเปิด/ปิดสินค้า เช่น สินค้าหมดชั่วคราว  
+    เมื่อปิดสินค้า ลูกค้าจะไม่เห็นเมนูนั้น และไม่สามารถกดสั่งได้
+  </div>
+
+  <button
+    class="refresh"
+    onclick="loadProductMaintain()"
+  >
+    🔄 โหลดรายการสินค้า
+  </button>
+
+  <div id="product-maintain-list">
+    <div class="empty">
+      กด “โหลดรายการสินค้า” เพื่อแสดงรายการค่ะ
+    </div>
+  </div>
+
+</div>    
     
 <audio id="new-order-sound">
   <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
@@ -2156,6 +2209,9 @@ function showStorePanel(panel){
   const payment =
     document.getElementById("store-payment-panel");
 
+  const products =
+    document.getElementById("store-products-panel");
+
   if(control){
     control.classList.remove("active");
   }
@@ -2166,6 +2222,10 @@ function showStorePanel(panel){
 
   if(payment){
     payment.classList.remove("active");
+  }
+
+  if(products){
+    products.classList.remove("active");
   }
 
   if(panel === "control" && control){
@@ -2179,8 +2239,30 @@ function showStorePanel(panel){
   if(panel === "payment" && payment){
     payment.classList.add("active");
   }
+
+  if(panel === "products" && products){
+    products.classList.add("active");
+    loadProductMaintain();
+  }
 }
 
+async function loadProductMaintain(){
+
+  const box =
+    document.getElementById("product-maintain-list");
+
+  if(!box){
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="empty">
+      Product Maintain พร้อมแล้ว<br>
+      ขั้นต่อไปจะเชื่อม API เพื่อโหลดสินค้าและเปิด/ปิด is_active ค่ะ
+    </div>
+  `;
+}
+  
 async function loadStoreStatus(){
 
   try{
