@@ -721,6 +721,92 @@
   font-weight:bold;
   box-shadow:0 3px 10px rgba(0,0,0,0.08);
 }
+
+.product-maintain-filter{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  padding-bottom:6px;
+  margin:10px 0;
+}
+
+.product-maintain-filter button{
+  background:#eee;
+  white-space:nowrap;
+  padding:10px 12px;
+  border-radius:999px;
+  font-size:14px;
+}
+
+.product-maintain-filter button.active{
+  background:#233b2a;
+  color:white;
+}
+
+.product-maintain-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  background:#f8f5f1;
+  border:1px solid #eee;
+  border-radius:14px;
+  padding:12px;
+  margin:10px 0;
+}
+
+.product-maintain-info{
+  flex:1;
+  min-width:0;
+}
+
+.product-maintain-name{
+  font-weight:bold;
+  color:#233b2a;
+  line-height:1.35;
+}
+
+.product-maintain-meta{
+  color:#777;
+  font-size:13px;
+  margin-top:4px;
+}
+
+.product-status-badge{
+  display:inline-block;
+  margin-top:6px;
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.product-status-active{
+  background:#d9f7df;
+  color:#167c34;
+}
+
+.product-status-inactive{
+  background:#ffe0e0;
+  color:#a00000;
+}
+
+.product-toggle-btn{
+  min-width:92px;
+  padding:10px 12px;
+  border-radius:12px;
+  font-size:14px;
+}
+
+.product-toggle-off{
+  background:#a00000;
+  color:white;
+}
+
+.product-toggle-on{
+  background:#233b2a;
+  color:white;
+}
     
   </style>
 </head>
@@ -999,12 +1085,19 @@ const PRODUCTS_API =
 const WALKIN_CREATE_ORDER_API =
 "https://copen.app.n8n.cloud/webhook/patae/admin/walkin/create-order";
 
+const ADMIN_PRODUCTS_API =
+"https://copen.app.n8n.cloud/webhook/patae/admin/products";
+
+const UPDATE_PRODUCT_STATUS_API =
+"https://copen.app.n8n.cloud/webhook/patae/admin/product/status";
+  
 const RECEIPT_PAGE_URL = "receipt.html";
   
 let walkinProducts = [];
 let walkinCart = {};
 let walkinCategory = null;
-  
+let maintainProducts = [];
+let maintainCategory = "ALL";  
   
 let soundEnabled = true;
 let knownOrderNos = new Set();
@@ -2257,10 +2350,330 @@ async function loadProductMaintain(){
 
   box.innerHTML = `
     <div class="empty">
-      Product Maintain พร้อมแล้ว<br>
-      ขั้นต่อไปจะเชื่อม API เพื่อโหลดสินค้าและเปิด/ปิด is_active ค่ะ
+      กำลังโหลดรายการสินค้า...
     </div>
   `;
+
+  try{
+
+    const res =
+      await fetch(ADMIN_PRODUCTS_API);
+
+    const data =
+      await res.json();
+
+    maintainProducts =
+      Array.isArray(data)
+        ? data
+        : (data.products || data.data || []);
+
+    renderProductMaintain();
+
+  }catch(err){
+
+    console.error(err);
+
+    box.innerHTML = `
+      <div class="empty">
+        โหลดรายการสินค้าไม่สำเร็จค่ะ
+      </div>
+    `;
+  }
+}
+
+function isActiveProduct(product){
+
+  const value =
+    product.is_active;
+
+  if(value === false){
+    return false;
+  }
+
+  const text =
+    String(value ?? "TRUE")
+      .trim()
+      .toUpperCase();
+
+  return ![
+    "FALSE",
+    "NO",
+    "N",
+    "0",
+    "INACTIVE",
+    "ปิด",
+    "ไม่แสดง"
+  ].includes(text);
+}
+
+function renderProductMaintain(){
+
+  const box =
+    document.getElementById("product-maintain-list");
+
+  if(!box){
+    return;
+  }
+
+  const categoryMap = new Map();
+
+  maintainProducts.forEach(p => {
+
+    const category =
+      String(p.category || "").trim();
+
+    if(!category){
+      return;
+    }
+
+    const categoryOrder =
+      Number(p.category_order || 999);
+
+    if(!categoryMap.has(category)){
+      categoryMap.set(category, categoryOrder);
+    }else{
+      categoryMap.set(
+        category,
+        Math.min(categoryMap.get(category), categoryOrder)
+      );
+    }
+
+  });
+
+  const categories =
+    Array.from(categoryMap.entries())
+      .sort((a, b) => {
+
+        if(a[1] !== b[1]){
+          return a[1] - b[1];
+        }
+
+        return a[0].localeCompare(b[0]);
+
+      })
+      .map(([category]) => category);
+
+  const filterHtml = `
+    <div class="product-maintain-filter">
+      <button
+        class="${maintainCategory === "ALL" ? "active" : ""}"
+        onclick="setMaintainCategory('ALL')">
+        ทั้งหมด
+      </button>
+
+      ${categories.map(cat => `
+        <button
+          class="${maintainCategory === cat ? "active" : ""}"
+          onclick="setMaintainCategory('${cat.replaceAll("'", "\\'")}')">
+          ${cat}
+        </button>
+      `).join("")}
+    </div>
+  `;
+
+  const selectedProducts =
+    maintainProducts
+      .filter(p => {
+        const category =
+          String(p.category || "").trim();
+
+        return (
+          maintainCategory === "ALL" ||
+          category === maintainCategory
+        );
+      })
+      .sort((a, b) => {
+
+        const categoryOrderA =
+          Number(a.category_order || 999);
+
+        const categoryOrderB =
+          Number(b.category_order || 999);
+
+        if(categoryOrderA !== categoryOrderB){
+          return categoryOrderA - categoryOrderB;
+        }
+
+        const categoryA =
+          String(a.category || "");
+
+        const categoryB =
+          String(b.category || "");
+
+        if(categoryA !== categoryB){
+          return categoryA.localeCompare(categoryB);
+        }
+
+        const productOrderA =
+          Number(a.product_order || 999);
+
+        const productOrderB =
+          Number(b.product_order || 999);
+
+        if(productOrderA !== productOrderB){
+          return productOrderA - productOrderB;
+        }
+
+        return String(a.product_name || "")
+          .localeCompare(String(b.product_name || ""));
+      });
+
+  if(selectedProducts.length === 0){
+
+    box.innerHTML = `
+      ${filterHtml}
+      <div class="empty">
+        ไม่พบสินค้าในหมวดนี้ค่ะ
+      </div>
+    `;
+
+    return;
+  }
+
+  const listHtml =
+    selectedProducts.map(product => {
+
+      const productId =
+        String(product.product_id || "").trim();
+
+      const productName =
+        String(product.product_name || "-").trim();
+
+      const category =
+        String(product.category || "-").trim();
+
+      const price =
+        Number(product.price || 0);
+
+      const active =
+        isActiveProduct(product);
+
+      return `
+        <div class="product-maintain-item">
+
+          <div class="product-maintain-info">
+
+            <div class="product-maintain-name">
+              ${productName}
+            </div>
+
+            <div class="product-maintain-meta">
+              ${category} • ${price.toLocaleString("th-TH")} บาท
+              <br>
+              ID: ${productId || "-"}
+            </div>
+
+            <span class="product-status-badge ${
+              active ? "product-status-active" : "product-status-inactive"
+            }">
+              ${active ? "ขายอยู่ / Active" : "ปิดขาย / Inactive"}
+            </span>
+
+          </div>
+
+          <button
+            class="product-toggle-btn ${
+              active ? "product-toggle-off" : "product-toggle-on"
+            }"
+            onclick="toggleProductStatus('${productId}', ${active ? "false" : "true"})"
+            ${productId ? "" : "disabled"}>
+            ${active ? "ปิดขาย" : "เปิดขาย"}
+          </button>
+
+        </div>
+      `;
+    })
+    .join("");
+
+  box.innerHTML =
+    filterHtml + listHtml;
+}
+
+async function toggleProductStatus(productId, nextActive){
+
+  if(!productId){
+    alert("ไม่พบ product_id ค่ะ");
+    return;
+  }
+
+  const product =
+    maintainProducts.find(p =>
+      String(p.product_id || "").trim() === String(productId).trim()
+    );
+
+  const productName =
+    product?.product_name || productId;
+
+  const actionText =
+    nextActive
+      ? "เปิดขาย"
+      : "ปิดขาย";
+
+  if(!confirm(`${actionText}สินค้า "${productName}" ใช่ไหมคะ?`)){
+    return;
+  }
+
+  try{
+
+    const res =
+      await fetch(UPDATE_PRODUCT_STATUS_API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          product_id: productId,
+          is_active: nextActive
+        })
+      });
+
+    const data =
+      await res.json();
+
+    if(!data.success){
+      alert(data.message || "อัปเดตสินค้าไม่สำเร็จค่ะ");
+      return;
+    }
+
+    maintainProducts =
+      maintainProducts.map(p => {
+
+        if(String(p.product_id || "").trim() === String(productId).trim()){
+          return {
+            ...p,
+            is_active: nextActive
+          };
+        }
+
+        return p;
+      });
+
+    renderProductMaintain();
+
+    // ให้ Walk-in โหลดสินค้าใหม่รอบหน้า
+    walkinProducts = [];
+
+    // ล้าง cache เมนูลูกค้าบนอุปกรณ์นี้ด้วย เผื่อ admin เปิดจากเครื่องเดียวกัน
+    localStorage.removeItem("patae_products_cache_v2");
+    localStorage.removeItem("patae_products_cache_v3");
+    localStorage.removeItem("patae_products_cache_v4");
+    localStorage.removeItem("patae_products_cache_v5");
+
+    alert(`${actionText}สินค้าเรียบร้อยค่ะ`);
+
+  }catch(err){
+
+    console.error(err);
+    alert("ระบบขัดข้องค่ะ");
+
+  }
+}
+  
+function setMaintainCategory(category){
+
+  maintainCategory = category;
+  renderProductMaintain();
+
 }
   
 async function loadStoreStatus(){
