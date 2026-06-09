@@ -105,7 +105,8 @@ if(isFresh && Array.isArray(parsed.products)){
   buildTabs();
   renderProducts();
 
-  // ใช้ cache อย่างเดียวก่อน เพื่อไม่ให้หน้าเมนู render ซ้ำ
+  // แสดง cache ก่อนให้หน้าเร็ว แล้วค่อยโหลดข้อมูลใหม่เงียบ ๆ
+  refreshProductsInBackground();
   return;
 }
     }catch(err){
@@ -194,7 +195,7 @@ function buildTabs(){
   const categories = [
     ...new Set(
       allProducts
-        .map(p => p.category)
+        .map(p => String(p.category || "").trim())
         .filter(Boolean)
     )
   ];
@@ -258,18 +259,29 @@ function renderProducts(){
   container.innerHTML = "";
 
   const products = allProducts.filter(
-    p => p.category === currentCategory
+    p => String(p.category || "").trim() === currentCategory
   );
 
-  products.forEach(product => {
+  if(products.length === 0){
+    container.innerHTML = `
+      <div class="loading">
+        ไม่พบสินค้าในหมวดนี้ค่ะ
+      </div>
+    `;
+    return;
+  }
+
+  products.forEach((product, index) => {
     const productId =
-      String(product.product_id || "").trim();
+      String(product.product_id || `NO_ID_${index}`).trim();
 
     const productName =
-      product.product_name ||
-      product.name ||
-      product.menu_name ||
-      "-";
+      String(
+        product.product_name ||
+        product.name ||
+        product.menu_name ||
+        "-"
+      ).trim();
 
     const productPrice =
       Number(product.price || product.unit_price || 0);
