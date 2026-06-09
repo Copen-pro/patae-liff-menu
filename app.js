@@ -192,13 +192,39 @@ function buildTabs(){
   const tabs = document.getElementById("category-tabs");
   tabs.innerHTML = "";
 
-  const categories = [
-    ...new Set(
-      allProducts
-        .map(p => String(p.category || "").trim())
-        .filter(Boolean)
-    )
-  ];
+  const categoryMap = new Map();
+
+  allProducts.forEach(p => {
+    const category =
+      String(p.category || "").trim();
+
+    if(!category){
+      return;
+    }
+
+    const categoryOrder =
+      Number(p.category_order || 999);
+
+    if(!categoryMap.has(category)){
+      categoryMap.set(category, categoryOrder);
+    }else{
+      categoryMap.set(
+        category,
+        Math.min(categoryMap.get(category), categoryOrder)
+      );
+    }
+  });
+
+  const categories = Array
+    .from(categoryMap.entries())
+    .sort((a, b) => {
+      if(a[1] !== b[1]){
+        return a[1] - b[1];
+      }
+
+      return a[0].localeCompare(b[0]);
+    })
+    .map(([category]) => category);
 
   if(categories.length === 0){
     document.getElementById("products").innerHTML =
@@ -258,9 +284,21 @@ function renderProducts(){
   const container = document.getElementById("products");
   container.innerHTML = "";
 
-  const products = allProducts.filter(
+const products = allProducts
+  .filter(
     p => String(p.category || "").trim() === currentCategory
-  );
+  )
+  .sort((a, b) => {
+    const orderA = Number(a.product_order || 999);
+    const orderB = Number(b.product_order || 999);
+
+    if(orderA !== orderB){
+      return orderA - orderB;
+    }
+
+    return String(a.product_name || "")
+      .localeCompare(String(b.product_name || ""));
+  });
 
   if(products.length === 0){
     container.innerHTML = `
